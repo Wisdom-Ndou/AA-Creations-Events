@@ -1,0 +1,508 @@
+﻿/* =========================================================
+   AA Creations & Events — Admin Registration
+   Translated from the React/TSX (Tailwind + inline style) source
+   ========================================================= */
+
+:root {
+    --bg: #0f0810;
+    --pink: #d4006a;
+    --pink-dim-25: rgba(212, 0, 106, 0.25);
+    --pink-dim-15: rgba(212, 0, 106, 0.15);
+    --pink-dim-10: rgba(212, 0, 106, 0.1);
+    --pink-dim-30: rgba(212, 0, 106, 0.3);
+    --pink-dim-40: rgba(212, 0, 106, 0.4);
+    --text-light: #f5e8ef;
+    --text-muted: #a08090;
+    --text-dim: #806070;
+    --text-dimmer: #604050;
+    --text-faint: #504040;
+    --error: #e8007a;
+    --font-display: "Playfair Display", serif;
+    --font-body: "Outfit", sans-serif;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+html, body {
+    margin: 0;
+    padding: 0;
+    background: var(--bg);
+    font-family: var(--font-body);
+    color: var(--text-light);
+}
+
+a {
+    text-decoration: none;
+}
+
+button {
+    cursor: pointer;
+    font-family: inherit;
+}
+
+/* ---------- Page layout ---------- */
+.page {
+    min-height: 100vh;
+    display: flex;
+}
+
+/* ================= LEFT: BRAND PANEL ================= */
+.brand-panel {
+    display: none; /* shown at >= 1024px, see media query */
+    width: 41.6667%; /* 5/12 */
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 20px;
+    position: relative;
+    overflow: hidden;
+    border-right: 1px solid var(--pink-dim-15);
+}
+
+.bg-grid {
+    position: absolute;
+    inset: 0;
+    opacity: 0.05;
+    background-image: repeating-linear-gradient(0deg, transparent, transparent 39px, rgba(212, 0, 106, 0.5) 39px, rgba(212, 0, 106, 0.5) 40px), repeating-linear-gradient(90deg, transparent, transparent 39px, rgba(212, 0, 106, 0.5) 39px, rgba(212, 0, 106, 0.5) 40px);
+}
+
+.bg-glow {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 384px;
+    height: 384px;
+    border-radius: 50%;
+    opacity: 0.05;
+    background: radial-gradient(circle, #d4006a, transparent);
+}
+
+.brand-top,
+.brand-mid,
+.brand-bottom {
+    position: relative;
+}
+
+.back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: rgba(212, 0, 106, 0.6);
+    transition: color 150ms ease;
+}
+
+    .back-link:hover {
+        color: var(--pink);
+    }
+
+.badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 12px;
+    border-radius: 9999px;
+    font-size: 12px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    background: var(--pink-dim-10);
+    border: 1px solid var(--pink-dim-30);
+    color: var(--pink);
+    margin-bottom: 24px;
+}
+
+.badge-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--pink);
+}
+
+.brand-title {
+    font-family: var(--font-display);
+    font-size: 36px;
+    line-height: 1.35;
+    color: var(--text-light);
+    margin: 0 0 20px;
+    font-weight: 400;
+}
+
+    .brand-title em {
+        color: var(--pink);
+        font-style: normal;
+    }
+
+.divider {
+    width: 48px;
+    height: 1px;
+    background: var(--pink-dim-40);
+    margin-bottom: 20px;
+}
+
+.brand-desc {
+    font-size: 14px;
+    line-height: 1.7;
+    color: var(--text-dim);
+    margin: 0;
+}
+
+.brand-bottom {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.privileges-label {
+    font-size: 11px;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: var(--text-dimmer);
+    margin: 0 0 4px;
+}
+
+.privileges-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+    .privileges-list li {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        font-size: 12px;
+        color: var(--text-dim);
+    }
+
+.check-icon {
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--pink-dim-10);
+    border: 1px solid var(--pink-dim-30);
+}
+
+.check-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--pink);
+}
+
+/* ================= RIGHT: FORM PANEL ================= */
+.form-panel {
+    flex: 1;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 24px;
+    overflow-y: auto;
+}
+
+.form-wrap {
+    width: 100%;
+    max-width: 32rem; /* ~512px, matches max-w-lg */
+    padding: 16px 0;
+}
+
+.mobile-back {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 24px;
+    font-size: 12px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--pink);
+}
+
+.mobile-badge {
+    margin-bottom: 16px;
+}
+
+.form-title {
+    font-family: var(--font-display);
+    font-size: 30px;
+    font-weight: 400;
+    margin: 0 0 4px;
+    text-align: center;
+    color: var(--text-light);
+}
+
+.form-subtitle {
+    font-size: 14px;
+    margin: 0 0 32px;
+    text-align: center;
+    color: var(--text-dim);
+}
+
+.form-section {
+    margin-bottom: 20px;
+}
+
+.section-label {
+    font-size: 11px;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: var(--pink);
+    margin: 0 0 16px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--pink-dim-15);
+}
+
+.grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+}
+
+.field {
+    margin-bottom: 16px;
+}
+
+.grid-2 .field {
+    margin-bottom: 16px;
+}
+
+.field label {
+    display: block;
+    font-size: 11px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--text-dimmer);
+    margin-bottom: 8px;
+}
+
+input[type="text"],
+input[type="email"],
+input[type="tel"],
+input[type="password"],
+select {
+    width: 100%;
+    padding: 12px 16px;
+    border-radius: 12px;
+    font-size: 14px;
+    background: var(--bg);
+    border: 1px solid var(--pink-dim-25);
+    color: var(--text-light);
+    font-family: var(--font-body);
+    transition: border-color 150ms ease, box-shadow 150ms ease;
+    outline: none;
+}
+
+input::placeholder {
+    color: #5a4552;
+}
+
+input:focus,
+select:focus {
+    border-color: var(--pink);
+    box-shadow: 0 0 0 3px rgba(212, 0, 106, 0.1);
+}
+
+input.mono {
+    font-family: "Courier New", monospace;
+}
+
+select {
+    cursor: pointer;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23d4006a' stroke-width='1.5' fill='none' fill-rule='evenodd'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 16px center;
+    padding-right: 40px;
+}
+
+.hint {
+    font-size: 11px;
+    color: var(--text-faint);
+    margin: 4px 0 0;
+}
+
+.phone-row {
+    display: flex;
+    gap: 12px;
+}
+
+.phone-prefix {
+    display: flex;
+    align-items: center;
+    padding: 0 12px;
+    border-radius: 12px;
+    min-width: 56px;
+    font-size: 14px;
+    color: var(--text-dimmer);
+    background: var(--bg);
+    border: 1px solid var(--pink-dim-25);
+}
+
+.phone-row input {
+    flex: 1;
+}
+
+.password-row {
+    position: relative;
+}
+
+    .password-row input {
+        padding-right: 56px;
+    }
+
+.toggle-pass {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--pink);
+}
+
+/* Confirm-password match/mismatch states set via JS (see script.js) */
+#confirm.match {
+    border-color: rgba(212, 0, 106, 0.6);
+}
+
+#confirm.mismatch {
+    border-color: var(--error);
+}
+
+.terms-box {
+    border-radius: 12px;
+    padding: 16px;
+    background: rgba(212, 0, 106, 0.05);
+    border: 1px solid var(--pink-dim-15);
+    margin-bottom: 24px;
+}
+
+.terms-label {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    cursor: pointer;
+}
+
+    .terms-label input[type="checkbox"] {
+        margin-top: 2px;
+        accent-color: var(--pink);
+    }
+
+    .terms-label span {
+        font-size: 14px;
+        color: var(--text-light);
+    }
+
+.terms-link {
+    color: var(--pink);
+    cursor: pointer;
+}
+
+.submit-btn {
+    width: 100%;
+    padding: 14px;
+    border-radius: 12px;
+    border: none;
+    font-size: 14px;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: #fff;
+    background: linear-gradient(135deg, #5c1040, #d4006a);
+    transition: opacity 200ms ease, transform 200ms ease;
+    text-align: center;
+    display: inline-block;
+}
+
+    .submit-btn:hover {
+        opacity: 0.9;
+    }
+
+    .submit-btn:active {
+        transform: scale(0.98);
+    }
+
+.footer-text {
+    text-align: center;
+    font-size: 14px;
+    color: var(--text-dimmer);
+    margin: 8px 0 0;
+}
+
+.footer-link {
+    font-weight: 600;
+    color: var(--pink);
+}
+
+/* ================= SUCCESS STATE ================= */
+.success-page {
+    min-height: 100vh;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+}
+
+.success-content {
+    text-align: center;
+    max-width: 24rem;
+}
+
+.success-icon {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    margin: 0 auto 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 30px;
+    background: var(--pink-dim-15);
+    border: 1px solid var(--pink-dim-40);
+}
+
+.success-content h2 {
+    font-family: var(--font-display);
+    font-size: 30px;
+    color: var(--text-light);
+    margin: 0 0 12px;
+    font-weight: 400;
+}
+
+.success-content p {
+    font-size: 14px;
+    line-height: 1.7;
+    color: var(--text-muted);
+    margin: 0 0 32px;
+}
+
+.back-btn {
+    width: auto;
+    padding: 12px 32px;
+}
+
+/* ================= RESPONSIVE (Tailwind lg: = 1024px) ================= */
+@media (min-width: 1024px) {
+    .brand-panel {
+        display: flex;
+    }
+
+    .mobile-back,
+    .mobile-badge {
+        display: none;
+    }
+}

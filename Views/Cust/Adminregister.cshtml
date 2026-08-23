@@ -1,0 +1,183 @@
+﻿
+@{
+    ViewBag.Title = "Adminregister";
+}
+
+<h2>Adminregister</h2>
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Admin Registration Portal | AA Creations &amp; Events</title>
+
+    <!-- Fonts used by the Figma design -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital@0;1&family=Outfit:wght@400;500;600&display=swap"
+          rel="stylesheet" />
+
+    <link rel="stylesheet" href="~/Content/Styles.css" />
+</head>
+<body>
+
+    <div class="page">
+
+        <!-- ============ LEFT: BRAND PANEL (hidden on small screens) ============ -->
+        <aside class="brand-panel">
+            <div class="bg-grid" aria-hidden="true"></div>
+            <div class="bg-glow" aria-hidden="true"></div>
+
+            <div class="brand-top">
+                    <span aria-hidden="true">&larr;</span> <li>@Html.ActionLink(" ", "Login", "Cust", new { area = "" }, new { @class = "badge" })</li>
+
+                </a>
+            </div>
+
+            <div class="brand-mid">
+                <div class="badge">
+                    <span class="badge-dot" aria-hidden="true"></span>
+                    Admin Access
+                </div>
+
+                <h1 class="brand-title">
+                    Admin<br />
+                    <em>Registration</em><br />
+                    Portal
+                </h1>
+
+                <div class="divider"></div>
+
+                <p class="brand-desc">
+                    All admin accounts are subject to verification by senior management.
+                    Please ensure all details are accurate and your employee ID is valid.
+                </p>
+            </div>
+
+            <div class="brand-bottom">
+                <p class="privileges-label">Admin Responsibilities</p>
+                <ul class="privileges-list">
+                    <li><span class="check-icon"><span class="check-dot"></span></span>Appointement of Bookings</li>
+                    <li><span class="check-icon"><span class="check-dot"></span></span>User Account Management</li>
+                    <li><span class="check-icon"><span class="check-dot"></span></span>Portfolio Editing &amp; Review</li>
+                    <li><span class="check-icon"><span class="check-dot"></span></span>Financial Reporting</li>
+                    <li><span class="check-icon"><span class="check-dot"></span></span>Staff Communication</li>
+                </ul>
+            </div>
+        </aside>
+
+        <!-- ============ RIGHT: FORM PANEL ============ -->
+        <main class="form-panel">
+            <div class="form-wrap" id="formWrap">
+
+                    <span aria-hidden="true">&larr;</span> Back to Login
+                    <li>@Html.ActionLink("Back to Login", "Login", "Cust", new { area = "" }, new { @class = "mobile-back" })</li>
+
+                
+
+                <div class="badge mobile-badge">Admin Access Request</div>
+
+                <h2 class="form-title">Create Admin Account</h2>
+                <p class="form-subtitle">
+                    All fields are required — your request will be reviewed before activation
+                </p>
+
+                <form id="adminForm" novalidate>
+
+                    <!-- Identity -->
+                    <section class="form-section">
+                        <p class="section-label">Identity</p>
+                        <div class="grid-2">
+                            <div class="field">
+                                <label for="firstName">First Name</label>
+                                <input type="text" id="firstName" name="firstName" placeholder="Thabo" required />
+                            </div>
+                            <div class="field">
+                                <label for="lastName">Last Name</label>
+                                <input type="text" id="lastName" name="lastName" placeholder="Sithole" required />
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Contact -->
+                    <section class="form-section">
+                        <p class="section-label">Contact</p>
+                        <div class="field">
+                            <label for="email">Work Email</label>
+                            <input type="email" id="email" name="email" placeholder="thabo@aacreations.co.za" required />
+                        </div>
+                        <div class="field">
+                            <label for="phone">Mobile Number</label>
+                            <div class="phone-row">
+                                <span class="phone-prefix">+27</span>
+                                <input type="tel" id="phone" name="phone" placeholder="083 456 7890" required />
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Security -->
+                    <section class="form-section">
+                        <p class="section-label">Security</p>
+
+                        <div class="grid-2">
+                            <div class="field">
+                                <label for="password">Password</label>
+                                <div class="password-row">
+                                    <input type="password" id="password" name="password" placeholder="••••••••" required />
+                                    <button type="button" class="toggle-pass" id="togglePass">Show</button>
+                                </div>
+                            </div>
+                            <div class="field">
+                                <label for="confirm">Confirm</label>
+                                <input type="password" id="confirm" name="confirm" placeholder="••••••••" required />
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Terms -->
+                    <div class="terms-box">
+                        <label class="terms-label">
+                            <input type="checkbox" id="termsAccepted" name="termsAccepted" required />
+                            <span>
+                                I confirm that all information provided is accurate and I agree to AA Creations &amp; Events
+                                <span class="terms-link" tabindex="0">Admin Terms of Use</span>.
+                            </span>
+                        </label>
+                    </div>
+
+                    <button type="submit" class="submit-btn">Submit Admin Request</button>
+                </form>
+
+                <p class="footer-text">
+                    Already have an account?
+                    <li>@Html.ActionLink("Sign-In", "Login", "Cust", new { area = "" }, new { @class = "footer-link" })</li>
+
+                </p>
+                <p class="footer-text">
+                    Looking for customer registration?
+                    <a href="CustomerRegister.html" class="footer-link">Register as Customer</a>
+                    <li>@Html.ActionLink("Register as Customer", "Customerregister", "Cust", new { area = "" }, new { @class = "footer-link" })</li>
+
+                </p>
+            </div>
+
+            <!-- ============ SUCCESS STATE (hidden until form submit) ============ -->
+            <div class="success-page" id="successPage" hidden>
+                <div class="success-content">
+                    <div class="success-icon">✓</div>
+                    <h2>Request Submitted</h2>
+                    <p>
+                        Your admin access request has been submitted. A senior administrator
+                        will review and activate your account within 24–48 hours.
+                    </p>
+                    <li>@Html.ActionLink("Back to Login", "Login", "Cust", new { area = "" }, new { @class = "submit-btn back-btn" })</li>
+                </div>
+            </div>
+        </main>
+
+    </div>
+
+    <script src="~/Scripts/Script.js"></script>
+</body>
+</html>

@@ -1,0 +1,129 @@
+﻿
+@{
+    ViewBag.Title = "Login";
+}
+
+<h2>Login</h2>
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sign In | AA Creations &amp; Events</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital@0;1&family=Outfit:wght@400;500;600&display=swap"
+          rel="stylesheet" />
+
+    <link rel="stylesheet" href="~/Content/Login Style.css" />
+</head>
+<body>
+
+    <div class="page">
+
+        <!-- ============ LEFT: BRAND PANEL (hidden on small screens) ============ -->
+        <aside class="brand-panel">
+            <div class="circle circle-top" aria-hidden="true"></div>
+            <div class="circle circle-bottom" aria-hidden="true"></div>
+
+            <div class="brand-top">
+                <p class="eyebrow">Welcome to</p>
+                <h1 class="brand-title">AA Creations<br />&amp; Events</h1>
+                <div class="divider"></div>
+                <p class="tagline">Crafting Moments</p>
+            </div>
+
+            <div class="brand-quote">
+                <p class="quote-text">"Every celebration deserves<br />to be unforgettable."</p>
+                <p class="quote-attr">— AA Creations &amp; Events</p>
+            </div>
+
+
+        </aside>
+
+        <!-- ============ RIGHT: FORM PANEL ============ -->
+        <main class="form-panel">
+            <div class="form-wrap">
+
+                <nav>
+                    <div class="nav-icons">
+                        <li>@Html.ActionLink("Back to dashboard", "Index", "Cust", new { area = "" }, new { @class = "sale-btn" })</li>
+                    </div>
+                </nav>
+
+
+                <!-- Mobile logo -->
+                <div class="mobile-logo">
+                    <h1>AA Creations <em>&amp; Events</em></h1>
+                    <p class="mobile-tagline">Crafting Moments</p>
+                </div>
+
+
+
+                <h2 class="form-title">Sign In</h2>
+                <p class="form-subtitle">Welcome back — choose your role to continue</p>
+
+                <!-- Role segmented control -->
+                <div class="role-switch" role="tablist" aria-label="Select role">
+                    <button type="button" class="role-btn active" id="roleCustomerBtn" data-role="customer" role="tab" aria-selected="true">
+                        Customer
+                    </button>
+                    <button type="button" class="role-btn" id="roleAdminBtn" data-role="admin" role="tab" aria-selected="false">
+                        Admin
+                    </button>
+                </div>
+
+                <form id="loginForm" novalidate>
+                    <div class="field">
+                        <label for="email">Email Address</label>
+                        <input type="email" id="email" name="email" placeholder="you@example.com" required />
+                    </div>
+
+                    <div class="field">
+                        <label for="password">Password</label>
+                        <div class="password-row">
+                            <input type="password" id="password" name="password" placeholder="••••••••" required />
+                            <button type="button" class="toggle-pass" id="togglePass">Show</button>
+                        </div>
+                    </div>
+
+                    <!-- Admin-only field, shown/hidden via JS -->
+                    <div class="field" id="accessCodeField" hidden>
+                        <label for="accessCode">Admin Access Code</label>
+                        <input type="password" id="accessCode" name="accessCode" placeholder="Enter access code" />
+                    </div>
+
+                    <div class="options-row">
+                        <label class="remember-label">
+                            <input type="checkbox" id="rememberMe" name="rememberMe" class="remember-checkbox" />
+                            <span class="remember-box" aria-hidden="true"><span class="remember-dot"></span></span>
+                            <span class="remember-text">Remember me</span>
+                        </label>
+                        <button type="button" class="forgot-link">Forgot password?</button>
+                    </div>
+
+                    <button type="submit" class="submit-btn" id="submitBtn">Sign In</button>
+                </form>
+
+                <div class="register-row">
+                    <p>
+                        Don't have an account?
+                        <li>@Html.ActionLink("Create Account", "Customerregister", "Cust", new { area = "" }, new { @class = "register-link" }/*, new { id = "registerLink" }*/)</li>
+
+                    </p>
+                </div>
+
+                <div class="role-indicator">
+                    <span class="indicator-dot" id="indicatorDot"></span>
+                    <p id="indicatorText">Signing in as customer</p>
+                </div>
+            </div>
+        </main>
+
+    </div>
+
+    <script src="~/Scripts/Login script.js"></script>
+</body>
+</html>

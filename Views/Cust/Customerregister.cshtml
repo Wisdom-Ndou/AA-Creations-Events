@@ -1,0 +1,165 @@
+﻿
+@{
+    ViewBag.Title = "Customerregister";
+}
+
+<h2>Customerregister</h2>
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Customer Registration | AA Creations &amp; Events</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital@0;1&family=Outfit:wght@400;500;600&display=swap"
+          rel="stylesheet" />
+
+    <link rel="stylesheet" href="~/Content/Customer register styles.css" />
+</head>
+<body>
+
+    <div class="page">
+
+        <!-- ============ LEFT: BRAND PANEL (hidden on small screens) ============ -->
+        <aside class="brand-panel">
+            <div class="circle" aria-hidden="true"></div>
+
+            <div class="brand-mid" style="position: relative; width: 70%; height: 50%;">
+                <p class="eyebrow">Join the Celebration</p>
+                <h1 class="brand-title">
+                    Create Your <br />Customer <br />Account
+                </h1>
+            </div>
+
+            <div class="divider"></div>
+            <h1 class="brand-desc">
+                Book celebrations, track your events, and stay inspired with AA Creations &amp; Events.
+            </h1>
+        </aside>
+
+        <!-- ============ RIGHT: FORM PANEL ============ -->
+        <main class="form-panel">
+            <div class="form-wrap">
+
+                <span aria-hidden="true">&larr;</span> Back to Login
+                    <li>@Html.ActionLink("Back to Login", "Login", "Cust", new { area = "" }, new { @class = "mobile-back" })</li>
+
+                
+
+                <h2 class="form-title">Customer Registration</h2>
+                <p class="form-subtitle">Fill in your details to get started</p>
+
+                <form id="registerForm" novalidate>
+
+                    <!-- ===== Step 0: Personal ===== -->
+                    <div class="step-panel" id="panel0">
+                        <div class="grid-2">
+                            <div class="field">
+                                <label for="firstName">First Name</label>
+                                <input type="text" id="firstName" name="firstName" placeholder="Nomsa" required />
+                            </div>
+                            <div class="field">
+                                <label for="lastName">Last Name</label>
+                                <input type="text" id="lastName" name="lastName" placeholder="Mabaso" required />
+                            </div>
+                        </div>
+
+                        <div class="field">
+                            <label for="city">City / Town</label>
+                            <input type="text" id="city" name="city" placeholder="Johannesburg" required />
+                        </div>
+                    </div>
+
+                    <!-- ===== Step 1: Contact ===== -->
+                    <div class="step-panel" id="panel1" hidden>
+                        <div class="field">
+                            <label for="email">Email Address</label>
+                            <input type="email" id="email" name="email" placeholder="nomsa@example.com" required />
+                        </div>
+
+                        <div class="field">
+                            <label for="phone">Phone Number</label>
+                            <div class="phone-row">
+                                <span class="phone-prefix">+27</span>
+                                <input type="tel" id="phone" name="phone" placeholder="072 345 6789" required />
+                            </div>
+                        </div>
+
+                        <div class="note-box">
+                            <p class="note-title">Why we need your contact details</p>
+                            <p class="note-body">
+                                We use your email and phone to send booking confirmations and
+                                important updates about your events. We never share your information.
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- ===== Step 2: Security ===== -->
+                    <div class="step-panel" id="panel2" hidden>
+                        <div class="field">
+                            <label for="password">Create Password</label>
+                            <div class="password-row">
+                                <input type="password" id="password" name="password" placeholder="••••••••" required />
+                                <button type="button" class="toggle-pass" id="togglePass">Show</button>
+                            </div>
+                            <!-- Strength bar -->
+                            <div class="strength-bar" id="strengthBar">
+                                <div class="strength-seg" id="seg1"></div>
+                                <div class="strength-seg" id="seg2"></div>
+                                <div class="strength-seg" id="seg3"></div>
+                                <div class="strength-seg" id="seg4"></div>
+                            </div>
+                        </div>
+
+                        <div class="field">
+                            <label for="confirm">Confirm Password</label>
+                            <input type="password" id="confirm" name="confirm" placeholder="••••••••" required />
+                            <p class="error-text" id="mismatchText" hidden>Passwords do not match</p>
+                        </div>
+
+                        <div class="info-box">
+                            <p class="req-title">Password requirements:</p>
+                            <p class="req-item"><span class="req-dot">·</span> At least 8 characters</p>
+                            <p class="req-item"><span class="req-dot">·</span> One uppercase letter</p>
+                            <p class="req-item"><span class="req-dot">·</span> One number</p>
+                        </div>
+                    </div>
+
+                    <!-- Navigation -->
+                    <div class="nav-row">
+                        <li>@Html.ActionLink("Back", "Login", "Cust", new { area = "" }, new { @class = "btn btn-back" })</li>
+
+                        <button type="button" class="btn btn-primary" id="continueBtn">Continue</button>
+                        <button type="submit" class="btn btn-primary" id="submitBtn">Create Account</button>
+                    </div>
+                </form>
+
+                <p class="footer-text">
+                    Already have an account?
+                    <li>@Html.ActionLink("Sign In", "Login", "Cust", new { area = "" }, new { @class = "sale-btn" })</li>
+
+                </p>
+            </div>
+
+            <!-- ============ SUCCESS STATE ============ -->
+            <div class="success-page" id="successPage" hidden>
+                <div class="success-content">
+                    <div class="success-icon">✓</div>
+                    <h2>Account Created</h2>
+                    <p>
+                        Welcome to AA Creations &amp; Events! Your customer account has been
+                        created — you can now sign in and start booking.
+                    </p>
+                    <li>@Html.ActionLink("Go to Sign In", "Login", "Cust", new { area = "" }, new { @class = "sale-btn" })</li>
+                </div>
+            </div>
+        </main>
+
+    </div>
+
+    <script src="~/Scripts/Customer register script.js"></script>
+</body>
+</html>

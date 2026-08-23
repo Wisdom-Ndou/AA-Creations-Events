@@ -1,0 +1,120 @@
+﻿
+@{
+    ViewBag.Title = "Index";
+}
+
+<h2>Index</h2>
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AA Creations & Events</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="~/Content/Site.css"/>
+</head>
+<body>
+
+    <nav>
+        <!--- You should probably remove Services & Portfllio buttons as they are alrwady prsent bellow/-->
+        <div class="logo">AA Creations & Events</div>
+        <ul class="nav-links">
+            <li><a href="#">ABOUT</a></li>
+            <li><a href="#">PORTFOLIO</a></li>
+            <li><a href="#">SERVICES</a></li>
+            <li><a href="#">CONTACT</a></li>
+        </ul>
+        <div class="nav-icons">
+            <div>
+                <a href="https://shorturl.at/hRi2x" target="_blank"> 🎵 TikTok</a> |
+                <a href="https://wa.me/27123456789" target="_blank">💬 WhatsApp</a> |
+                <a href="https://www.instagram.com/aacreation.events?igsi=d2d5OGxkZnFxcDIy&utm_source=qr" target="_blank">📸 Instagram</a>
+            </div>
+        </div>
+    </nav>
+
+    <section class="hero">
+        <div class="hero-bg"></div>
+        <div class="hero-content">
+            <h1 class="serif">AA Creations & Events</h1>
+            <div class="subtitle">Crafting Moments</div>
+            <p>Helping you turn ordinary rooms into unforgettable celebratory moments...one balloon arch, one backdrop, one perfectly styled corner at a time.</p>
+            <div class="hero-buttons">
+                <a href="#" class="btn-fill">SERVICES</a>
+                <a href="#" class="btn-outline">PORTFOLIO</a>
+            </div>
+        </div>
+    </section>
+
+    <section class="about">
+        <div class="about-text">
+            <h2 class="serif">ABOUT US</h2>
+            <p>
+                AA Creations & Events started in July 2025. We wanted to make every celebration an unforgettable experience. We believe every special occasion should be celebrated to the fullest. From first birthdays to milestone moments, we take care of the details...balloon arches, backdrops, table styling, and all the little touches that turn a regular room into a celebration. You bring the guest of honor. We'll bring the wow.
+                <br><br>
+                Every setup is designed with care, so all you have to do is show up, celebrate, and enjoy the moment.
+            </p>
+        </div>
+        <div class="about-img">
+            <img src="~/Content/Images/A1.JPEG" alt="About AA Creations">
+        </div>
+    </section>
+
+    <div class="marquee">
+        <span>Crafting Moments / Crafting Moments / Crafting Moments / Crafting Moments / Crafting Moments / Crafting Moments / Crafting Moments / Crafting Moments / Crafting Moments / Crafting Moments / Crafting Moments / Crafting Moments /</span>
+    </div>
+
+    <section class="explore">
+        <h2 class="serif">TIME TO EXPLORE</h2>
+        <div class="explore-grid">
+            <div class="explore-card">
+                <img src="~/Content/Images/A1.JPEG" alt="ROOM">
+                <div class="cap">PORTFOLIO</div>
+            </div>
+
+            <div class="explore-card">
+                <img src="~/Content/Images/A3.JPEG" alt="Shop">
+                <div class="cap">SERVICES</div>
+            </div>
+
+            <div class="explore-card">
+                <img src="~/Content/Images/A2.JPEG" alt="Services">
+                <div class="cap">SHOP</div>
+            </div>
+        </div>
+    </section>
+
+    <section class="testimonial">
+        <p class="quote">"Thank You AA Creations for turning my small celebration into an unforgettable experience."</p>
+        <div class="name">— Slindy Mabaso</div>
+        <div class="stars">★★★★★</div>
+    </section>
+
+    <section class="sound">
+        <div class="sound-inner">
+            <div class="sound-img">
+                <img src="~/Content/Images/A4.JPEG" alt="Working on laptop">
+            </div>
+            <div class="sound-text">
+                <h2 class="serif">DOES THIS SOUND LIKE YOU?</h2>
+                <p>
+                    • You've spent hours scrolling Pinterest, but turning those ideas into an actual room still feels overwhelming?<br>
+                    • You want the party to look amazing, but you don't have time to DIY balloon arches and backdrops yourself?
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        © 2026 AA Creations & Events.
+    </footer>
+
+    @Html.ActionLink("Back to List", "Index")
+
+</body>
+
+</html>
