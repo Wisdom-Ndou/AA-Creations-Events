@@ -1,0 +1,43 @@
+﻿<html lang="en-ZA">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Book an AA Creations & Events celebration setup.">
+    <title>Book a Celebration | AA Creations & Events</title>
+    <link rel="stylesheet" href="~/Content/sstyle.css">
+</head>
+<body data-page="booking">
+
+    <main id="bookingApp">
+        <section class="booking-page">
+            <div class="narrow">
+                <div class="booking-head">
+                    <p class="eyebrow">Reserve Your Setup</p>
+                    <h1>Book a Celebration</h1>
+                    <p>Complete the form below — we'll confirm via WhatsApp within 24 hours.</p>
+                </div>
+
+                <div class="progress-steps" aria-label="Booking progress">
+                    <div class="step-wrap"><div class="step-circle" data-step-circle>1</div><div class="step-line"></div></div>
+                    <div class="step-wrap"><div class="step-circle" data-step-circle>2</div><div class="step-line"></div></div>
+                    <div class="step-wrap"><div class="step-circle" data-step-circle>3</div></div>
+                </div>
+
+                <div class="step-labels">
+                    <span>Your Details</span>
+                    <span>Event Info</span>
+                    <span>Review</span>
+                </div>
+
+                <form class="form-card" id="bookingForm" novalidate>
+                    <div id="bookingStep"></div>
+                </form>
+            </div>
+        </section>
+    </main>
+
+    <script src="~/Scripts/Common.js"></script>
+
+    <script src="~/Scripts/Booking.js"></script>
+</body>
+</html>

@@ -201,10 +201,12 @@
     <Content Include="Content\bootstrap.rtl.min.css" />
     <Content Include="Content\Customer register styles.css" />
     <Content Include="Content\Login Style.css" />
+    <Content Include="Content\sstyle.css" />
     <Content Include="Content\Styles.css" />
     <Content Include="favicon.ico" />
     <Content Include="Global.asax" />
     <Content Include="Content\Site.css" />
+    <Content Include="Scripts\Booking.js" />
     <Content Include="Scripts\bootstrap.bundle.js" />
     <Content Include="Scripts\bootstrap.bundle.min.js" />
     <Content Include="Scripts\bootstrap.esm.js" />
@@ -212,6 +214,7 @@
     <Content Include="Scripts\bootstrap.js" />
     <Content Include="Scripts\bootstrap.min.js" />
     <None Include="Scripts\jquery-3.7.0.intellisense.js" />
+    <Content Include="Scripts\Common.js" />
     <Content Include="Scripts\Customer register script.js" />
     <Content Include="Scripts\jquery-3.7.0.js" />
     <Content Include="Scripts\jquery-3.7.0.min.js" />
@@ -225,6 +228,7 @@
     <Content Include="Scripts\Login script.js" />
     <Content Include="Scripts\modernizr-2.8.3.js" />
     <Content Include="Scripts\Script.js" />
+    <Content Include="Scripts\ViewBooking.js" />
     <Content Include="Web.config" />
     <Content Include="Web.Debug.config">
       <DependentUpon>Web.config</DependentUpon>
@@ -243,6 +247,9 @@
     <Content Include="Views\Cust\Login.cshtml" />
     <Content Include="Views\Cust\Customerregister.cshtml" />
     <Content Include="Views\Cust\Adminregister.cshtml" />
+    <Content Include="Views\Cust\Portfolio.cshtml" />
+    <Content Include="Views\Cust\Booking.cshtml" />
+    <Content Include="Views\Cust\ViewBooking.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />
