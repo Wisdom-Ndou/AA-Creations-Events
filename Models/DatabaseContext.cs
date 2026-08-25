@@ -16,6 +16,7 @@ namespace WebApplication1.Models
 
         public DbSet<Customer> objCustomers { get; set; }
         public DbSet<Admin> objAdmin { get; set; }
+        public DbSet<Booking> Bookings { get; set; }
 
     }
 
