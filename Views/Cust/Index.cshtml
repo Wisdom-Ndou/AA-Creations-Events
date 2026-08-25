@@ -1,12 +1,4 @@
-﻿
-@{
-    ViewBag.Title = "Index";
-}
-
-<h2>Index</h2>
-
-<!DOCTYPE html>
-<html lang="en">
+﻿<html lang="en">
 
 <head>
     <meta charset="UTF-8">
@@ -19,34 +11,16 @@
 </head>
 <body>
 
-    <nav>
-        <!--- You should probably remove Services & Portfllio buttons as they are alrwady prsent bellow/-->
-        <div class="logo">AA Creations & Events</div>
-        <ul class="nav-links">
-            <li><a href="#">ABOUT</a></li>
-            <li><a href="#">PORTFOLIO</a></li>
-            <li><a href="#">SERVICES</a></li>
-            <li><a href="#">CONTACT</a></li>
-        </ul>
-        <div class="nav-icons">
-            <div>
-                <a href="https://shorturl.at/hRi2x" target="_blank"> 🎵 TikTok</a> |
-                <a href="https://wa.me/27123456789" target="_blank">💬 WhatsApp</a> |
-                <a href="https://www.instagram.com/aacreation.events?igsi=d2d5OGxkZnFxcDIy&utm_source=qr" target="_blank">📸 Instagram</a>
-            </div>
-        </div>
-    </nav>
-
     <section class="hero">
         <div class="hero-bg"></div>
         <div class="hero-content">
             <h1 class="serif">AA Creations & Events</h1>
             <div class="subtitle">Crafting Moments</div>
             <p>Helping you turn ordinary rooms into unforgettable celebratory moments...one balloon arch, one backdrop, one perfectly styled corner at a time.</p>
-            <div class="hero-buttons">
-                <a href="#" class="btn-fill">SERVICES</a>
-                <a href="#" class="btn-outline">PORTFOLIO</a>
-            </div>
+            <ul class="hero-buttons">
+                <a href="@Url.Action("Portfolio", "Cust")" class="btn-fill">PORTFOLIO</a>
+                <a href="@Url.Action("Booking", "Cust")" class="btn-outline">BOOKING</a>
+            </ul>
         </div>
     </section>
 
@@ -64,8 +38,21 @@
         </div>
     </section>
 
-    <div class="marquee">
-        <span>Crafting Moments / Crafting Moments / Crafting Moments / Crafting Moments / Crafting Moments / Crafting Moments / Crafting Moments / Crafting Moments / Crafting Moments / Crafting Moments / Crafting Moments / Crafting Moments /</span>
+    <div class="ticker" aria-hidden="true">
+        <div class="ticker-track">
+            <span>Crafting Moments ✦</span>
+            <span>Crafting Moments ✦</span>
+            <span>Crafting Moments ✦</span>
+            <span>Crafting Moments ✦</span>
+            <span>Crafting Moments ✦</span>
+            <span>Crafting Moments ✦</span>
+            <span>Crafting Moments ✦</span>
+            <span>Crafting Moments ✦</span>
+            <span>Crafting Moments ✦</span>
+            <span>Crafting Moments ✦</span>
+            <span>Crafting Moments ✦</span>
+            <span>Crafting Moments ✦</span>
+        </div>
     </div>
 
     <section class="explore">
@@ -73,17 +60,23 @@
         <div class="explore-grid">
             <div class="explore-card">
                 <img src="~/Content/Images/A1.JPEG" alt="ROOM">
-                <div class="cap">PORTFOLIO</div>
+                <div>
+                    <a href="@Url.Action("Portfolio", "Cust")" class="cap">PORTFOLIO</a>
+                </div>
             </div>
 
             <div class="explore-card">
                 <img src="~/Content/Images/A3.JPEG" alt="Shop">
-                <div class="cap">SERVICES</div>
+                <div>
+                    <a href="@Url.Action("Booking", "Cust")" class="cap">MAKE A BOOKING</a>
+                </div>
             </div>
 
             <div class="explore-card">
                 <img src="~/Content/Images/A2.JPEG" alt="Services">
-                <div class="cap">SHOP</div>
+                <div>
+                    <a href="@Url.Action("ViewBooking", "Cust")" class="cap">VIEW BOOKINGS</a>
+                </div>
             </div>
         </div>
     </section>
@@ -108,13 +101,5 @@
             </div>
         </div>
     </section>
-
-    <footer>
-        © 2026 AA Creations & Events.
-    </footer>
-
-    @Html.ActionLink("Back to List", "Index")
-
 </body>
-
 </html>

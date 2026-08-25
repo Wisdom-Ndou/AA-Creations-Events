@@ -8,29 +8,34 @@
     @Scripts.Render("~/bundles/modernizr")
 </head>
 <body>
-    <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-dark bg-dark">
-        <div class="container">
-            @Html.ActionLink("Application name", "Index", "Home", new { area = "" }, new { @class = "navbar-brand" })
-            <button type="button" class="navbar-toggler" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" title="Toggle navigation" aria-controls="navbarSupportedContent"
-                    aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse d-sm-inline-flex justify-content-between">
-                <ul class="navbar-nav flex-grow-1">
-                    <li>@Html.ActionLink("Dashboard", "Index", "Home", new { area = "" }, new { @class = "nav-link" })</li>
-                    <li>@Html.ActionLink("About", "About", "Home", new { area = "" }, new { @class = "nav-link" })</li>
-                    <li>@Html.ActionLink("Contact", "Contact", "Home", new { area = "" }, new { @class = "nav-link" })</li>
-                    <li>@Html.ActionLink("Login", "Login", "Cust", new { area = "" }, new { @class = "sale-btn" })</li>
 
-                </ul>
+        <nav class="desktop-nav" aria-label="Main navigation">
+            <!--- You should probably remove Services & Portfllio buttons as they are alrwady prsent bellow/-->
+            <a href="@Url.Action("Index", "Cust")" class="logo">AA Creations & Events</a>
+            <ul class="nav-links">
+                <li><a href="@Url.Action("Portfolio", "Cust")">PORTFOLIO</a></li>
+                <li><a href="@Url.Action("Booking", "Cust")">MAKE A BOOKING</a></li>
+                <li><a href="@Url.Action("ViewBooking", "Cust")">VIEW BOOKING</a></li>
+                <li><a href="#">CONTACT US</a></li>
+                <li><a href="@Url.Action("Login", "Cust")">LOGIN</a></li>
+
+            </ul>
+            <div class="nav-icons">
+                <div>
+                    <a href="https://shorturl.at/hRi2x" target="_blank"> 🎵 TikTok</a> |
+                    <a href="https://wa.me/27123456789" target="_blank">💬 WhatsApp</a> |
+                    <a href="https://www.instagram.com/aacreation.events?igsi=d2d5OGxkZnFxcDIy&utm_source=qr" target="_blank">📸 Instagram</a>
+                </div>
             </div>
-        </div>
-    </nav>
+        </nav>
     <div class="container body-content">
         @RenderBody()
         <hr />
         <footer>
-            <p>&copy; @DateTime.Now.Year - My ASP.NET Application</p>
+            <p class="quote">"Every celebration deserves to be unforgettable."</p>
+            <p>&copy; @DateTime.Now.Year - AA Creations &amp; Events.  All rights reserved.</p>
+            <p class="footer-contact">Contact: 073 123 2660 / 069 843 2686</p>
+
         </footer>
     </div>
 

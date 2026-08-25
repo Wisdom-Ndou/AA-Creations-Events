@@ -1,12 +1,4 @@
-﻿
-@{
-    ViewBag.Title = "Login";
-}
-
-<h2>Login</h2>
-
-<!DOCTYPE html>
-<html lang="en">
+﻿<html lang="en">
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -46,13 +38,6 @@
         <!-- ============ RIGHT: FORM PANEL ============ -->
         <main class="form-panel">
             <div class="form-wrap">
-
-                <nav>
-                    <div class="nav-icons">
-                        <li>@Html.ActionLink("Back to dashboard", "Index", "Cust", new { area = "" }, new { @class = "sale-btn" })</li>
-                    </div>
-                </nav>
-
 
                 <!-- Mobile logo -->
                 <div class="mobile-logo">
@@ -110,8 +95,7 @@
                 <div class="register-row">
                     <p>
                         Don't have an account?
-                        <li>@Html.ActionLink("Create Account", "Customerregister", "Cust", new { area = "" }, new { @class = "register-link" }/*, new { id = "registerLink" }*/)</li>
-
+                        <a>@Html.ActionLink("Create Account", "Customerregister", "Cust", new { area = "" }, new { @class = "register-link" }/*, new { id = "registerLink" }*/)</a>
                     </p>
                 </div>
 

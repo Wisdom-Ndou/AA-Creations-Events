@@ -35,5 +35,20 @@ namespace WebApplication1.Controllers
         {
             return View(obj);
         }
+
+        public ActionResult Portfolio(Customer obj)
+        {
+            return View(obj);
+        }
+
+        public ActionResult Booking(Customer obj)
+        {
+            return View(obj);
+        }
+
+        public ActionResult ViewBooking(Customer obj)
+        {
+            return View(obj);
+        }
     }
 }
