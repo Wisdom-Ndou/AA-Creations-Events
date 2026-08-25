@@ -379,6 +379,41 @@ footer {
         padding: 60px 30px;
     }
 }
+.ticker {
+    overflow: hidden;
+    width: 100%;
+    background: #fff; /* or your preferred background */
+    border-top: 1px solid #eee;
+    border-bottom: 1px solid #eee;
+    height: 40px; /* adjust as needed */
+    position: relative;
+}
+
+.ticker-track {
+    display: flex;
+    width: max-content;
+    animation: ticker-scroll 20s linear infinite;
+    align-items: center;
+    height: 100%;
+}
+
+    .ticker-track span {
+        margin-right: 2rem;
+        font-size: 1.2rem;
+        white-space: nowrap;
+        color: #333;
+    }
+
+@keyframes ticker-scroll {
+    0% {
+        transform: translateX(0);
+    }
+
+    100% {
+        transform: translateX(-50%);
+    }
+}
+
 
 /*<a href="https://www.tiktok.com/@aa.creation.event" target="_blank" > 🎵 TikTok</a > |*/
 
