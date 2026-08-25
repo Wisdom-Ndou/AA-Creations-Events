@@ -359,17 +359,57 @@ function handleFormInput(event) {
     }
 }
 
-function submitBooking() {
+async function submitBooking() {
+    const bookingUrl = document.body.dataset.bookingUrl;
+
     const booking = {
-        ...state.form,
-        id: `BK${Date.now()}`,
-        createdAt: new Date().toISOString(),
-        status: "Confirmed"
+        firstName: state.form.firstName,
+        lastName: state.form.lastName,
+        email: state.form.email,
+        phone: state.form.phone,
+        occasion: state.form.occasion,
+
+        eventDate: state.form.date,
+        eventTime: state.form.time,
+
+        address: state.form.address,
+        city: state.form.city,
+        notes: state.form.notes,
+
+        packageId: state.form.packageId,
+        totalPrice: getTotal()
     };
 
-    saveBooking(booking);
-    state.submitted = true;
-    renderConfirmation();
+    try {
+        const response = await fetch(bookingUrl, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(booking)
+        });
+
+        const result = await response.json();
+
+        if (!response.ok || !result.success) {
+            throw new Error(result.message || "Unable to create booking.");
+        }
+
+        state.submitted = true;
+
+        // Keep the database-generated ID for the confirmation screen.
+        state.form.bookingId = result.bookingId;
+
+        renderConfirmation();
+
+    } catch (error) {
+        console.error("Booking submission failed:", error);
+
+        alert(
+            error.message ||
+            "Something went wrong while submitting your booking. Please try again."
+        );
+    }
 }
 
 function renderConfirmation() {
