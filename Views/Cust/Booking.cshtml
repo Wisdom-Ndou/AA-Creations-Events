@@ -21,21 +21,52 @@
                 <div class="progress-steps" aria-label="Booking progress">
                     <div class="step-wrap"><div class="step-circle" data-step-circle>1</div><div class="step-line"></div></div>
                     <div class="step-wrap"><div class="step-circle" data-step-circle>2</div><div class="step-line"></div></div>
-                    <div class="step-wrap"><div class="step-circle" data-step-circle>3</div></div>
+                    <div class="step-wrap"><div class="step-circle" data-step-circle>3</div><div class="step-line"></div></div>
+                    <div class="step-wrap"><div class="step-circle" data-step-circle>4</div><div class="step-line"></div></div>
                 </div>
 
                 <div class="step-labels">
                     <span>Your Details</span>
                     <span>Event Info</span>
-                    <span>Review</span>
+                    <span> Review</span>
+                    <span>   Payment</span>
+
                 </div>
 
                 <form class="form-card" id="bookingForm" novalidate>
                     <div id="bookingStep"></div>
                 </form>
+
+                <div id="bookingSummary" style="display:none; margin-top:24px;">
+    <h2>Booking Summary</h2>
+    <ul>
+        <li><strong>Name:</strong> <span id="summaryName"></span></li>
+        <li><strong>Event Date:</strong> <span id="summaryDate"></span></li>
+        <li><strong>Event Type:</strong> <span id="summaryType"></span></li>
+        <li><strong>Total:</strong> <span id="summaryTotal"></span></li>
+        <!-- Add more fields as needed -->
+    </ul>
+</div>
+
+
+                <!-- Add this where you want the redirect button to appear, e.g., after booking confirmation -->
+                <form class="form-card" id="bookingForm" novalidate>
+                    <div id="bookingStep"></div>
+                    <button type="button" class="pink-btn" id="confirmBookingBtn" onclick="confirmBooking()">
+                        Confirm Booking ✓
+                    </button>
+                </form>
+
+                <a href="@Url.Action("Bankingdetails", "Cust")" class="pink-btn" id="proceedToPaymentBtn" style="display:none;">
+                    Proceed to Payment
+                </a>
+
+
+
             </div>
         </section>
     </main>
+
 
     <script src="~/Scripts/Common.js"></script>
 
