@@ -1,4 +1,10 @@
-﻿const STORAGE_KEY = "aa_bookings";
+﻿/* Booking.js
+   Client-side booking form logic.
+   Enforces phone: exactly 9 digits and must not start with 0.
+   Adds FirstName/LastName validation: letters only (A–Z / a–z).
+*/
+
+const STORAGE_KEY = "aa_bookings";
 
 const packages = [
     {
@@ -89,12 +95,22 @@ function saveBooking(booking) {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(existing));
 }
 
+function isPhoneValid(value) {
+    // Exactly 9 digits and first digit is 1-9 (not 0)
+    return /^[1-9][0-9]{8}$/.test(String(value || "").trim());
+}
+
+function isNameValid(value) {
+    // Letters only (ASCII A–Z / a–z). Adjust if you need accents or spaces/hyphens.
+    return /^[A-Za-z]+$/.test(String(value || "").trim());
+}
+
 function isStep1Valid() {
     return Boolean(
-        state.form.firstName.trim() &&
-        state.form.lastName.trim() &&
+        isNameValid(state.form.firstName) &&
+        isNameValid(state.form.lastName) &&
         state.form.email.includes("@") &&
-        state.form.phone.trim() &&
+        isPhoneValid(state.form.phone) &&
         state.form.occasion
     );
 }
@@ -133,11 +149,13 @@ function renderBookingStep() {
       <div class="form-grid two">
         <div class="form-group">
           <label class="form-label" for="firstName">First Name</label>
-          <input class="form-control" id="firstName" name="firstName" value="${escapeHtml(state.form.firstName)}" placeholder="Nomsa" required>
+          <input class="form-control" id="firstName" name="firstName" inputmode="text" pattern="^[A-Za-z]+$" maxlength="50" value="${escapeHtml(state.form.firstName)}" placeholder="Nomsa" required>
+          <small class="muted">Letters only (A–Z).</small>
         </div>
         <div class="form-group">
           <label class="form-label" for="lastName">Last Name</label>
-          <input class="form-control" id="lastName" name="lastName" value="${escapeHtml(state.form.lastName)}" placeholder="Mabaso" required>
+          <input class="form-control" id="lastName" name="lastName" inputmode="text" pattern="^[A-Za-z]+$" maxlength="50" value="${escapeHtml(state.form.lastName)}" placeholder="Mabaso" required>
+          <small class="muted">Letters only (A–Z).</small>
         </div>
         <div class="form-group">
           <label class="form-label" for="email">Email Address</label>
@@ -147,8 +165,9 @@ function renderBookingStep() {
           <label class="form-label" for="phone">Phone / WhatsApp</label>
           <div class="phone-row">
             <div class="phone-prefix">+27</div>
-            <input class="form-control" id="phone" name="phone" value="${escapeHtml(state.form.phone)}" placeholder="072 345 6789" required>
+            <input class="form-control" id="phone" name="phone" inputmode="numeric" pattern="^[1-9][0-9]{8}$" maxlength="9" value="${escapeHtml(state.form.phone)}" placeholder="723456789" required>
           </div>
+          <small class="muted">Enter 9 digits (do not include leading 0).</small>
         </div>
         <div class="form-group full">
           <label class="form-label" for="occasion">Occasion Type</label>
@@ -346,6 +365,30 @@ function attachStepHandlers() {
 function handleFormInput(event) {
     const control = event.target;
     if (!control.name) return;
+
+    if (control.name === "phone") {
+        // keep only digits and limit to 9 characters
+        let v = String(control.value || "");
+        v = v.replace(/\D/g, "");
+        v = v.slice(0, 9);
+        control.value = v;
+        state.form.phone = v;
+        const btn = document.getElementById("nextStep1");
+        if (btn) btn.disabled = !isStep1Valid();
+        return;
+    }
+
+    if (control.name === "firstName" || control.name === "lastName") {
+        // Allow letters only (A–Z / a–z), max 50 chars
+        let v = String(control.value || "");
+        v = v.replace(/[^A-Za-z]/g, ""); // strip anything that's not ASCII letter
+        v = v.slice(0, 50);
+        control.value = v;
+        state.form[control.name] = v;
+        const btn = document.getElementById("nextStep1");
+        if (btn) btn.disabled = !isStep1Valid();
+        return;
+    }
 
     state.form[control.name] = control.value;
 

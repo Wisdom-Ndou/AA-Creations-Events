@@ -55,6 +55,14 @@ namespace WebApplication1.Controllers
             return View();
         }
 
+        // NEW: ContactUs page action (GET)
+        [HttpGet]
+        public ActionResult ContactUs()
+        {
+            // By default this will return Views/Cust/ContactUs.cshtml
+            return View();
+        }
+
         [HttpPost]
         public JsonResult CreateBooking(CreateBookingRequest request)
         {
