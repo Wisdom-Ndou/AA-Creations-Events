@@ -1,0 +1,171 @@
+﻿
+
+:root {
+    --bg: #fff;
+    --card: #ffffff;
+    --muted: #666;
+    --accent: #ff6a00;
+    --radius: 10px;
+    --gap: 16px;
+    font-family: "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+body.contact-page {
+    margin: 0;
+    background: linear-gradient(180deg,#fafafa,#fff);
+    color: #222;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+.site-header {
+    padding: 18px 24px;
+    border-bottom: 1px solid #eee;
+    background: #fff;
+}
+
+.site-brand {
+    font-weight: 600;
+    color: var(--accent);
+}
+
+.contact-container {
+    max-width: 980px;
+    margin: 28px auto;
+    padding: 20px;
+}
+
+.contact-hero {
+    text-align: left;
+    margin-bottom: 18px;
+}
+
+    .contact-hero h2 {
+        margin: 0 0 6px;
+        font-size: 22px;
+    }
+
+    .contact-hero p {
+        margin: 0;
+        color: var(--muted);
+    }
+
+.contact-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--gap);
+    align-items: start;
+}
+
+/* Single column on small screens */
+@media (max-width:720px) {
+    .contact-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.card {
+    background: var(--card);
+    border-radius: var(--radius);
+    padding: 16px;
+    box-shadow: 0 6px 18px rgba(12,20,30,0.05);
+}
+
+.contact-card h3 {
+    margin: 0 0 10px;
+    font-size: 16px;
+}
+
+.address-block div {
+    margin-bottom: 4px;
+    color: var(--muted);
+}
+
+.contact-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+    .contact-list li {
+        padding: 10px 0;
+        border-top: 1px dashed #f0f0f0;
+        display: block;
+    }
+
+        .contact-list li:first-child {
+            border-top: 0;
+        }
+
+.contact-row {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    margin-top: 6px;
+    flex-wrap: wrap;
+}
+
+.contact-link {
+    color: #111;
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.btn {
+    display: inline-block;
+    padding: 6px 10px;
+    border-radius: 6px;
+    border: 1px solid #e6e6e6;
+    background: #fff;
+    cursor: pointer;
+    font-size: 13px;
+}
+
+.btn-plain {
+    background: transparent;
+    border: 1px solid #eee;
+    color: var(--accent);
+}
+
+.whatsapp {
+    background: #25D366;
+    color: #fff;
+    border: 0;
+}
+
+.socials-row {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+.social-link {
+    text-decoration: none;
+    display: inline-flex;
+    gap: 8px;
+    align-items: center;
+    padding: 8px 10px;
+    border-radius: 8px;
+    border: 1px solid #eee;
+    color: var(--muted);
+}
+
+.social-handle {
+    color: #111;
+    font-weight: 600;
+}
+
+.muted {
+    color: var(--muted);
+    font-size: 14px;
+}
+
+.sr-only {
+    position: absolute;
+    left: -9999px;
+    top: auto;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+}

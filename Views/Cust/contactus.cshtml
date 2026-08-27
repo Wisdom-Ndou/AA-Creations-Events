@@ -1,0 +1,33 @@
+﻿@{
+    ViewBag.Title = "Contact Us";
+}
+<!doctype html>
+<html lang="en-ZA">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>@ViewBag.Title | AA Creations &amp; Events</title>
+    <link rel="stylesheet" href="~/Content/contactus.css" />
+</head>
+<body class="contact-page">
+    <header class="site-header">
+        <div class="site-brand">AA Creations &amp; Events</div>
+    </header>
+
+    <main id="contactApp" class="contact-container" aria-labelledby="contactTitle">
+        <!-- Contact UI is rendered by Scripts/contactus.js -->
+        <noscript>
+            <section class="card">
+                <h1 id="contactTitle">Contact Us</h1>
+                <p>Please enable JavaScript to view contact details and actions.</p>
+            </section>
+        </noscript>
+    </main>
+
+    <footer class="site-footer">
+        <p>&copy; AA Creations &amp; Events</p>
+    </footer>
+
+    <script src="~/Scripts/contactus.js"></script>
+</body>
+</html>
