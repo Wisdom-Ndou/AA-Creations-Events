@@ -1,8 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Web;
-using System.ComponentModel.DataAnnotations;
 
 namespace WebApplication1.Models
 {
@@ -44,6 +45,13 @@ namespace WebApplication1.Models
         [Required]
         public string PackageId { get; set; }
 
+        [ForeignKey("PackageId")]
+        public virtual Package Package { get; set; }
+
+        public virtual ICollection<BookingAddOn> BookingAddOns { get; set; }
+        = new List<BookingAddOn>();
+
+        [Required]
         public decimal TotalPrice { get; set; }
 
         public DateTime CreatedAt { get; set; }

@@ -14,9 +14,17 @@ namespace WebApplication1.Models
 
         }
 
-        public DbSet<Customer> objCustomers { get; set; }
-        public DbSet<Admin> objAdmin { get; set; }
+        public DbSet<Customer> Customers { get; set; }
+
+        public DbSet<Admin> Admin { get; set; }
+
         public DbSet<Booking> Bookings { get; set; }
+
+        public DbSet<Package> Packages { get; set; }
+
+        public DbSet<AddOn> AddOns { get; set; }
+
+        public DbSet<BookingAddOn> BookingAddOns { get; set; }
 
     }
 

@@ -33,6 +33,7 @@ const addOns = [
 const state = {
     step: 1,
     submitted: false,
+    serverTotalPrice: null,
     form: {
         firstName: "",
         lastName: "",
@@ -377,7 +378,7 @@ async function submitBooking() {
         notes: state.form.notes,
 
         packageId: state.form.packageId,
-        totalPrice: getTotal()
+        addOns: state.form.addOns,
     };
 
     try {
@@ -400,6 +401,13 @@ async function submitBooking() {
         // Keep the database-generated ID for the confirmation screen.
         state.form.bookingId = result.bookingId;
 
+        // Keep the server-calculated price for the confirmation screen.
+        if (result.totalPrice === undefined || result.totalPrice === null) {
+            throw new Error("The server did not return a booking total.");
+        }
+
+        state.serverTotalPrice = Number(result.totalPrice);
+
         renderConfirmation();
 
     } catch (error) {
@@ -414,7 +422,7 @@ async function submitBooking() {
 
 function renderConfirmation() {
     const pkg = getSelectedPackage();
-    const total = getTotal();
+    const total = state.serverTotalPrice;
     const root = document.getElementById("bookingApp");
 
     root.innerHTML = `
