@@ -4,12 +4,20 @@ using System.Linq;
 using System.Web;
 using System.Web.Mvc;
 using WebApplication1.Models;
+using static WebApplication1.Models.Bankingdetailsviewmodel;
 
 namespace WebApplication1.Controllers
 {
     public class CustController : Controller
     {
         private readonly DatabaseContext db = new DatabaseContext();
+
+        [HttpPost]
+        public ActionResult Bankingdetails()
+        {
+            var model = new BankingDetailsViewModel(); // or fetch/populate as needed
+            return View(model);
+        }
         // GET: Cust
         public ActionResult Index()
         {
