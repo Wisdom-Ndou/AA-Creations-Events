@@ -4,12 +4,20 @@ using System.Linq;
 using System.Web;
 using System.Web.Mvc;
 using WebApplication1.Models;
+using static WebApplication1.Models.Bankingdetailsviewmodel;
 
 namespace WebApplication1.Controllers
 {
     public class CustController : Controller
     {
         private readonly DatabaseContext db = new DatabaseContext();
+
+        [HttpPost]
+        public ActionResult Bankingdetails()
+        {
+            var model = new BankingDetailsViewModel(); // or fetch/populate as needed
+            return View(model);
+        }
         // GET: Cust
         public ActionResult Index()
         {
@@ -48,7 +56,7 @@ namespace WebApplication1.Controllers
         }
 
         [HttpPost]
-        public JsonResult CreateBooking(Booking booking)
+        public JsonResult CreateBooking(CreateBookingRequest request)
         {
             if (!ModelState.IsValid)
             {
@@ -59,18 +67,109 @@ namespace WebApplication1.Controllers
                 });
             }
 
+            if (request == null)
+            {
+                return Json(new
+                {
+                    success = false,
+                    message = "No booking information was received."
+                });
+            }
+
             try
             {
-                booking.CreatedAt = DateTime.Now;
-                booking.Status = "Pending";
+                // Find the package in the database
+                var package = db.Packages
+                    .FirstOrDefault(p => p.PackageId == request.PackageId);
 
-                db.Bookings.Add(booking);
-                db.SaveChanges();
+                if (package == null)
+                {
+                    return Json(new
+                    {
+                        success = false,
+                        message = "The selected package is invalid."
+                    });
+                }
+
+                // Get the submitted add-on IDs
+                var requestedAddOnIds = request.AddOns ?? new List<string>();
+
+                // Look up the actual add-ons and their prices from the database
+                var selectedAddOns = db.AddOns
+                    .Where(a => requestedAddOnIds.Contains(a.AddOnId))
+                    .ToList();
+
+                // Make sure every submitted add-on actually exists
+                if (selectedAddOns.Count != requestedAddOnIds.Count)
+                {
+                    return Json(new
+                    {
+                        success = false,
+                        message = "One or more selected add-ons are invalid."
+                    });
+                }
+
+                // SERVER-AUTHORITATIVE PRICE CALCULATION
+                decimal totalPrice = package.Price;
+
+                totalPrice += selectedAddOns.Sum(a => a.Price);
+
+                // Create the Booking entity
+                var booking = new Booking
+                {
+                    FirstName = request.FirstName,
+                    LastName = request.LastName,
+                    Email = request.Email,
+                    Phone = request.Phone,
+                    Occasion = request.Occasion,
+                    EventDate = request.EventDate,
+                    EventTime = request.EventTime,
+                    Address = request.Address,
+                    City = request.City,
+                    Notes = request.Notes,
+
+                    // Use the validated package ID
+                    PackageId = package.PackageId,
+
+                    // Use the SERVER-CALCULATED price
+                    TotalPrice = totalPrice,
+
+                    CreatedAt = DateTime.Now,
+                    Status = "Pending"
+                };
+
+                // Add selected add-ons to the booking
+                foreach (var addOn in selectedAddOns)
+                {
+                    booking.BookingAddOns.Add(new BookingAddOn
+                    {
+                        AddOnId = addOn.AddOnId
+                    });
+                }
+
+                // Save everything as one transaction
+                using (var transaction = db.Database.BeginTransaction())
+                {
+                    try
+                    {
+                        db.Bookings.Add(booking);
+
+                        db.SaveChanges();
+
+                        transaction.Commit();
+                    }
+                    catch
+                    {
+                        transaction.Rollback();
+                        throw;
+                    }
+                }
 
                 return Json(new
                 {
                     success = true,
                     bookingId = booking.BookingId,
+                    totalPrice = totalPrice,
                     message = "Booking created successfully."
                 });
             }
@@ -83,6 +182,7 @@ namespace WebApplication1.Controllers
                 });
             }
         }
+
         public ActionResult ViewBooking(Customer obj)
         {
             return View(obj);

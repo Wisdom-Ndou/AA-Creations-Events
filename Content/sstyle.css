@@ -1557,3 +1557,184 @@ a {
 .bigbanner {
     position: sticky;
 }
+
+/* ── Payment Step ─────────────────────────────────── */
+
+.payment-heading {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.4rem;
+    color: #1a1a1a;
+    margin: 0 0 4px 0;
+}
+
+.payment-subtext {
+    font-size: 0.75rem;
+    color: #999;
+    margin: 0 0 16px 0;
+}
+
+.order-summary-strip {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #fce8f0;
+    border-radius: 12px;
+    padding: 12px 16px;
+    margin-bottom: 20px;
+    font-size: 0.875rem;
+}
+
+.summary-label {
+    color: #666;
+}
+
+.summary-total {
+    font-weight: 700;
+    color: #d4006a;
+}
+
+/* Fields */
+
+.field-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-bottom: 14px;
+    flex: 1;
+}
+
+.field-label {
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    color: #d4006a;
+    font-family: 'Outfit', sans-serif;
+    margin: 0;
+}
+
+.field-input {
+    width: 100%;
+    border: 1px solid #f9d0e3;
+    border-radius: 10px;
+    padding: 10px 14px;
+    font-size: 0.875rem;
+    font-family: 'Outfit', sans-serif;
+    color: #1a1a1a;
+    outline: none;
+    box-sizing: border-box;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+    .field-input:focus {
+        border-color: #d4006a;
+        box-shadow: 0 0 0 3px #fce8f0;
+    }
+
+.field-row {
+    display: flex;
+    gap: 12px;
+}
+
+/* Card number */
+
+.card-number-wrap {
+    position: relative;
+}
+
+    .card-number-wrap .field-input {
+        padding-right: 80px;
+        letter-spacing: 0.05em;
+        font-family: monospace;
+    }
+
+.card-brand {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #d4006a;
+    font-family: 'Outfit', sans-serif;
+}
+
+/* Billing section */
+
+.billing-section {
+    border-top: 1px solid #f9d0e3;
+    padding-top: 16px;
+    margin-top: 4px;
+}
+
+/* Security badges */
+
+.security-badges {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 0.75rem;
+    color: #bbb;
+    margin: 8px 0 20px;
+}
+
+/* Actions */
+
+.payment-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.confirm-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 4px;
+}
+
+.fill-hint {
+    font-size: 0.75rem;
+    color: #bbb;
+    margin: 0;
+}
+
+.pink-btn {
+    background: #d4006a;
+    color: #fff;
+    border: none;
+    border-radius: 999px;
+    padding: 10px 22px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    font-family: 'Outfit', sans-serif;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+    .pink-btn:hover {
+        background: #a8005a;
+    }
+
+.ghost-btn {
+    background: transparent;
+    color: #d4006a;
+    border: 1px solid #f9d0e3;
+    border-radius: 999px;
+    padding: 10px 22px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    font-family: 'Outfit', sans-serif;
+    cursor: pointer;
+    transition: border-color 0.2s;
+}
+
+    .ghost-btn:hover {
+        border-color: #d4006a;
+    }
+
+/* Responsive */
+@media (max-width: 480px) {
+    .field-row {
+        flex-direction: column;
+    }
+}

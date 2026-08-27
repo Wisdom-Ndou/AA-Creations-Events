@@ -181,14 +181,24 @@
     <Compile Include="Migrations\202608251303244_InitialCreate.Designer.cs">
       <DependentUpon>202608251303244_InitialCreate.cs</DependentUpon>
     </Compile>
+    <Compile Include="Migrations\202608261919448_AddPackagesAndAddOns.cs" />
+    <Compile Include="Migrations\202608261919448_AddPackagesAndAddOns.Designer.cs">
+      <DependentUpon>202608261919448_AddPackagesAndAddOns.cs</DependentUpon>
+    </Compile>
     <Compile Include="Migrations\Configuration.cs" />
+    <Compile Include="Models\AddOn.cs" />
     <Compile Include="Models\Admin.cs" />
+    <Compile Include="Models\Bankingdetailsviewmodel.cs" />
     <Compile Include="Models\Booking.cs" />
+    <Compile Include="Models\BookingAddOn.cs" />
+    <Compile Include="Models\CreateBookingRequest.cs" />
     <Compile Include="Models\Customer.cs" />
     <Compile Include="Models\DatabaseContext.cs" />
+    <Compile Include="Models\Package.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="Content\Bankingdetails.css" />
     <Content Include="Content\bootstrap-grid.css" />
     <Content Include="Content\bootstrap-grid.min.css" />
     <Content Include="Content\bootstrap-grid.rtl.css" />
@@ -212,6 +222,7 @@
     <Content Include="favicon.ico" />
     <Content Include="Global.asax" />
     <Content Include="Content\Site.css" />
+    <Content Include="Scripts\Bankingdetails.js" />
     <Content Include="Scripts\Booking.js" />
     <Content Include="Scripts\bootstrap.bundle.js" />
     <Content Include="Scripts\bootstrap.bundle.min.js" />
@@ -256,6 +267,7 @@
     <Content Include="Views\Cust\Portfolio.cshtml" />
     <Content Include="Views\Cust\Booking.cshtml" />
     <Content Include="Views\Cust\ViewBooking.cshtml" />
+    <Content Include="Views\Cust\Bankingdetails.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />
@@ -291,6 +303,9 @@
   <ItemGroup>
     <EmbeddedResource Include="Migrations\202608251303244_InitialCreate.resx">
       <DependentUpon>202608251303244_InitialCreate.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\202608261919448_AddPackagesAndAddOns.resx">
+      <DependentUpon>202608261919448_AddPackagesAndAddOns.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <PropertyGroup>
