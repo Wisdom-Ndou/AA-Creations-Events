@@ -1,0 +1,136 @@
+﻿@model WebApplication1.Models.Bankingdetailsviewmodel.BankingDetailsViewModel
+
+
+
+@{
+    ViewBag.Title = "Process Payment";
+    Layout = null; // Remove this if you are plugging this into an existing _Layout.cshtml
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewBag.Title</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+    <link rel="stylesheet" href="~/Content/bankingdetails.css" />
+</head>
+<body>
+
+    <div class="payment-page">
+
+        <header class="payment-header">
+            <p class="eyebrow">Reserve Your Setup</p>
+            <h1 class="page-title">Process Payment</h1>
+            <p class="page-subtitle">Enter your card details to complete your booking.</p>
+
+            <ol class="step-track" aria-label="Booking progress">
+                <li class="step is-complete">
+                    <span class="step-circle" aria-hidden="true">&#10003;</span>
+                    <span class="step-label">Your Details</span>
+                </li>
+                <li class="step-connector is-complete"></li>
+                <li class="step is-complete">
+                    <span class="step-circle" aria-hidden="true">&#10003;</span>
+                    <span class="step-label">Event Info</span>
+                </li>
+                <li class="step-connector is-complete"></li>
+                <li class="step is-complete">
+                    <span class="step-circle" aria-hidden="true">&#10003;</span>
+                    <span class="step-label">Review</span>
+                </li>
+                <li class="step-connector is-complete"></li>
+                <li class="step is-current">
+                    <span class="step-circle" aria-hidden="true">4</span>
+                    <span class="step-label">Payment</span>
+                </li>
+            </ol>
+        </header>
+
+        <main class="card-panel">
+
+            @using (Html.BeginForm("ProcessPayment", "Payment", FormMethod.Post, new { id = "bankingDetailsForm", novalidate = "novalidate" }))
+            {
+                @Html.AntiForgeryToken()
+
+                <div class="card-panel-header">
+                    <h2>Card Details</h2>
+                    <p class="secure-note">Your payment is secured with 256-bit SSL encryption.</p>
+                </div>
+
+                <div class="booking-total">
+                    <span>Booking Total</span>
+                    <span class="booking-total-amount">@Model.BookingTotalDisplay</span>
+                </div>
+
+                <div class="field-group">
+                    <label for="CardholderName">Cardholder Name</label>
+                    @Html.TextBoxFor(m => m.CardholderName, new { id = "CardholderName", placeholder = "Name as it appears on card", autocomplete = "cc-name", required = "required" })
+                </div>
+
+                <div class="field-group">
+                    <label for="CardNumber">Card Number</label>
+                    @Html.TextBoxFor(m => m.CardNumber, new { id = "CardNumber", placeholder = "0000 0000 0000 0000", autocomplete = "cc-number", inputmode = "numeric", maxlength = "19", required = "required" })
+                </div>
+
+                <div class="field-row">
+                    <div class="field-group">
+                        <label for="ExpiryDate">Expiry Date</label>
+                        @Html.TextBoxFor(m => m.ExpiryDate, new { id = "ExpiryDate", placeholder = "MM/YY", autocomplete = "cc-exp", inputmode = "numeric", maxlength = "5", required = "required" })
+                    </div>
+                    <div class="field-group">
+                        <label for="Cvv">CVV / CVC</label>
+                        @Html.TextBoxFor(m => m.Cvv, new { id = "Cvv", placeholder = "3 or 4 digits", autocomplete = "cc-csc", inputmode = "numeric", maxlength = "4", required = "required" })
+                    </div>
+                </div>
+
+                <div class="section-divider"></div>
+
+                <div class="billing-heading">Billing Address</div>
+
+                <div class="field-group">
+                    <label for="StreetAddress">Street Address</label>
+                    @Html.TextBoxFor(m => m.StreetAddress, new { id = "StreetAddress", placeholder = "123 Main Street", autocomplete = "address-line1", required = "required" })
+                </div>
+
+                <div class="field-row">
+                    <div class="field-group">
+                        <label for="City">City</label>
+                        @Html.TextBoxFor(m => m.City, new { id = "City", placeholder = "Durban", autocomplete = "address-level2", required = "required" })
+                    </div>
+                    <div class="field-group">
+                        <label for="PostalCode">Postal Code</label>
+                        @Html.TextBoxFor(m => m.PostalCode, new { id = "PostalCode", placeholder = "4001", autocomplete = "postal-code", inputmode = "numeric", maxlength = "4", required = "required" })
+                    </div>
+                </div>
+
+                <div class="trust-badges">
+                    <span>&#128274; SSL Secured</span>
+                    <span class="dot">&bull;</span>
+                    <span>PCI DSS Compliant</span>
+                    <span class="dot">&bull;</span>
+                    <span>3D Secure</span>
+                </div>
+
+                <div class="form-actions">
+                    <a href="@Url.Action("Review", "Payment")" class="btn-back">&larr; Back</a>
+                    <button type="submit" id="confirmButton" class="btn-confirm" disabled>Fill all fields to confirm</button>
+                </div>
+            }
+
+        </main>
+
+        <footer class="payment-footer">
+            AA Creations &amp; Events &middot; Durban &middot; WhatsApp confirmation within 24 hours
+        </footer>
+
+    </div>
+
+    <script src="~/Scripts/bankingdetails.js"></script>
+</body>
+</html>
+

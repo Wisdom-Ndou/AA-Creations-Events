@@ -451,4 +451,108 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!app) return;
 
     renderBookingStep();
+
+    // ── Payment step helpers ──────────────────────────────────────────
+
+    function showPaymentStep(total) {
+        // Hide all other steps and show payment
+        document.querySelectorAll('.booking-step').forEach(function (s) {
+            s.style.display = 'none';
+        });
+        document.getElementById('paymentStep').style.display = 'block';
+
+        // Display the total passed from the review step
+        document.getElementById('paymentTotal').textContent = 'R' + Number(total).toLocaleString('en-ZA');
+
+        // Update progress indicator to step 4 if you have one
+        updateProgressStep(4);
+    }
+
+    function formatCardNumber(input) {
+        var digits = input.value.replace(/\D/g, '').slice(0, 16);
+        var formatted = digits.replace(/(.{4})/g, '$1 ').trim();
+        input.value = formatted;
+
+        // Detect card brand
+        var brand = '';
+        if (/^4/.test(digits)) brand = 'Visa';
+        else if (/^5[1-5]/.test(digits)) brand = 'Mastercard';
+        else if (/^3[47]/.test(digits)) brand = 'Amex';
+        document.getElementById('cardBrand').textContent = brand;
+
+        // Highlight filled
+        input.style.borderColor = digits.length === 16 ? '#d4006a' : '#f9d0e3';
+    }
+
+    function formatExpiry(input) {
+        var digits = input.value.replace(/\D/g, '').slice(0, 4);
+        if (digits.length >= 3) {
+            input.value = digits.slice(0, 2) + '/' + digits.slice(2);
+        } else {
+            input.value = digits;
+        }
+        input.style.borderColor = input.value.length === 5 ? '#d4006a' : '#f9d0e3';
+    }
+
+    function checkCardForm() {
+        var name = document.getElementById('cardholderName').value.trim();
+        var number = document.getElementById('cardNumber').value.replace(/\s/g, '');
+        var expiry = document.getElementById('expiryDate').value;
+        var cvv = document.getElementById('cvv').value;
+        var address = document.getElementById('billingAddress').value.trim();
+        var city = document.getElementById('billingCity').value.trim();
+        var postal = document.getElementById('billingPostal').value.trim();
+
+        // Highlight each field
+        setFieldColor('cardholderName', name.length > 2);
+        setFieldColor('expiryDate', expiry.length === 5);
+        setFieldColor('cvv', cvv.length >= 3);
+        setFieldColor('billingAddress', address.length > 3);
+        setFieldColor('billingCity', city.length > 1);
+        setFieldColor('billingPostal', postal.length >= 4);
+
+        var complete = name.length > 2
+            && number.length === 16
+            && expiry.length === 5
+            && cvv.length >= 3
+            && address.length > 3
+            && city.length > 1
+            && postal.length >= 4;
+
+        document.getElementById('confirmBookingBtn').style.display = complete ? 'inline-block' : 'none';
+        document.getElementById('fillHint').style.display = complete ? 'none' : 'block';
+    }
+
+    function setFieldColor(id, filled) {
+        var el = document.getElementById(id);
+        if (el) el.style.borderColor = filled ? '#d4006a' : '#f9d0e3';
+    }
+
+    function confirmBooking() {
+        // Example: Get values from your form fields
+        // Adjust selectors to match your actual input IDs/names
+        var name = document.getElementById('customerName')?.value || '';
+        var date = document.getElementById('eventDate')?.value || '';
+        var type = document.getElementById('eventType')?.value || '';
+        var total = document.getElementById('bookingTotal')?.value || 'R0';
+
+        // Populate the summary fields
+        document.getElementById('summaryName').textContent = name;
+        document.getElementById('summaryDate').textContent = date;
+        document.getElementById('summaryType').textContent = type;
+        document.getElementById('summaryTotal').textContent = total;
+
+        // Show the summary section
+        document.getElementById('bookingSummary').style.display = 'block';
+        alert('Booking confirmed! We will contact you via WhatsApp within 24 hours.');
+
+        // Show the Proceed to Payment button
+        document.getElementById('proceedToPaymentBtn').style.display = 'inline-block';
+    }
+
+
+    // Call this from your Review step's "Process Payment" button:
+    // showPaymentStep(totalAmount);
+
+
 });
