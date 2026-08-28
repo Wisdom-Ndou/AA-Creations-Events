@@ -1,75 +1,42 @@
-﻿<html lang="en-ZA">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Book an AA Creations & Events celebration setup.">
-    <title>Book a Celebration | AA Creations & Events</title>
-    <link rel="stylesheet" href="~/Content/sstyle.css">
-</head>
-<body data-page="booking"
-      data-booking-url="@Url.Action("CreateBooking", "Cust")">
+﻿@{
+    ViewBag.Title = "Book a Celebration";
+}
 
-    <main id="bookingApp">
-        <section class="booking-page">
-            <div class="narrow">
-                <div class="booking-head">
-                    <p class="eyebrow">Reserve Your Setup</p>
-                    <h1>Book a Celebration</h1>
-                    <p>Complete the form below — we'll confirm via WhatsApp within 24 hours.</p>
-                </div>
+<link rel="stylesheet" href="~/Content/sstyle.css">
 
-                <div class="progress-steps" aria-label="Booking progress">
-                    <div class="step-wrap"><div class="step-circle" data-step-circle>1</div><div class="step-line"></div></div>
-                    <div class="step-wrap"><div class="step-circle" data-step-circle>2</div><div class="step-line"></div></div>
-                    <div class="step-wrap"><div class="step-circle" data-step-circle>3</div><div class="step-line"></div></div>
-                    <div class="step-wrap"><div class="step-circle" data-step-circle>4</div><div class="step-line"></div></div>
-                </div>
+<main id="bookingApp" data-booking-url="@Url.Action("CreateBooking", "Cust")">
+    <section class="booking-page">
+        <div class="narrow">
 
-                <div class="step-labels">
-                    <span>Your Details</span>
-                    <span>Event Info</span>
-                    <span> Review</span>
-                    <span>   Payment</span>
-
-                </div>
-
-                <form class="form-card" id="bookingForm" novalidate>
-                    <div id="bookingStep"></div>
-                </form>
-
-                <div id="bookingSummary" style="display:none; margin-top:24px;">
-    <h2>Booking Summary</h2>
-    <ul>
-        <li><strong>Name:</strong> <span id="summaryName"></span></li>
-        <li><strong>Event Date:</strong> <span id="summaryDate"></span></li>
-        <li><strong>Event Type:</strong> <span id="summaryType"></span></li>
-        <li><strong>Total:</strong> <span id="summaryTotal"></span></li>
-        <!-- Add more fields as needed -->
-    </ul>
-</div>
-
-
-                <!-- Add this where you want the redirect button to appear, e.g., after booking confirmation -->
-                <form class="form-card" id="bookingForm" novalidate>
-                    <div id="bookingStep"></div>
-                    <button type="button" class="pink-btn" id="confirmBookingBtn" onclick="confirmBooking()">
-                        Confirm Booking ✓
-                    </button>
-                </form>
-
-                <a href="@Url.Action("Bankingdetails", "Cust")" class="pink-btn" id="proceedToPaymentBtn" style="display:none;">
-                    Proceed to Payment
-                </a>
-
-
-
+            <div class="booking-head">
+                <p class="eyebrow">Reserve Your Setup</p>
+                <h1>Book a Celebration</h1>
+                <p>Complete the form below — we'll confirm via WhatsApp within 24 hours.</p>
             </div>
-        </section>
-    </main>
 
+            <div class="progress-steps" aria-label="Booking progress">
+                <div class="step-wrap"><div class="step-circle" data-step-circle>1</div><div class="step-line"></div></div>
+                <div class="step-wrap"><div class="step-circle" data-step-circle>2</div><div class="step-line"></div></div>
+                <div class="step-wrap"><div class="step-circle" data-step-circle>3</div><div class="step-line"></div></div>
+                <div class="step-wrap"><div class="step-circle" data-step-circle>4</div><div class="step-line"></div></div>
+            </div>
 
+            <div class="step-labels">
+                <span>Your Details</span>
+                <span>Event Info</span>
+                <span>Review</span>
+                <span>Banking Details</span>
+            </div>
+
+            <form class="form-card" id="bookingForm" novalidate>
+                <div id="bookingStep"></div>
+            </form>
+
+        </div>
+    </section>
+</main>
+
+@section scripts {
     <script src="~/Scripts/Common.js"></script>
-
     <script src="~/Scripts/Booking.js"></script>
-</body>
-</html>
+}
