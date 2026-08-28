@@ -1,30 +1,16 @@
 ﻿/* Booking.js
-   Client-side booking form logic.
+   Client-side booking form logic — four-step state machine.
+   Step 4 (Banking Details) is a simulated payment step: fields are
+   validated client-side but NEVER sent to the server. Only the real
+   booking payload goes to /Cust/CreateBooking.
    Enforces phone: exactly 9 digits and must not start with 0.
-   Adds FirstName/LastName validation: letters only (A–Z / a–z).
+   Enforces FirstName/LastName: letters only (A–Z / a–z).
 */
 
-const STORAGE_KEY = "aa_bookings";
-
 const packages = [
-    {
-        id: "basic",
-        name: "Basic Package",
-        price: 650,
-        badge: "Starter"
-    },
-    {
-        id: "standard",
-        name: "Standard Package",
-        price: 850,
-        badge: "Popular"
-    },
-    {
-        id: "premium",
-        name: "Premium Package",
-        price: 1000,
-        badge: "Premium"
-    }
+    { id: "basic", name: "Basic Package", price: 650, badge: "Starter" },
+    { id: "standard", name: "Standard Package", price: 850, badge: "Popular" },
+    { id: "premium", name: "Premium Package", price: 1000, badge: "Premium" }
 ];
 
 const addOns = [
@@ -53,6 +39,16 @@ const state = {
         notes: "",
         packageId: "",
         addOns: []
+    },
+    // Step 4 — UI-only. Never sent to the server, never touches the booking payload.
+    banking: {
+        cardholderName: "",
+        cardNumber: "",     // digits only, formatted for display at render time
+        expiryDate: "",     // "MM/YY"
+        cvv: "",
+        streetAddress: "",
+        billingCity: "",
+        postalCode: ""
     }
 };
 
@@ -89,19 +85,12 @@ function loadQueryPackage() {
     }
 }
 
-function saveBooking(booking) {
-    const existing = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
-    existing.push(booking);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(existing));
-}
-
 function isPhoneValid(value) {
-    // Exactly 9 digits and first digit is 1-9 (not 0)
+    // Exactly 9 digits, first digit 1-9 (no leading 0)
     return /^[1-9][0-9]{8}$/.test(String(value || "").trim());
 }
 
 function isNameValid(value) {
-    // Letters only (ASCII A–Z / a–z). Adjust if you need accents or spaces/hyphens.
     return /^[A-Za-z]+$/.test(String(value || "").trim());
 }
 
@@ -125,6 +114,54 @@ function isStep2Valid() {
     );
 }
 
+// ---- Step 4 (banking) helpers ----
+
+function digitsOnly(value) {
+    return String(value || "").replace(/\D/g, "");
+}
+
+function formatCardNumberDisplay(digits) {
+    const groups = digits.match(/.{1,4}/g);
+    return groups ? groups.join(" ") : "";
+}
+
+function detectCardBrand(digits) {
+    if (/^4/.test(digits)) return "Visa";
+    if (/^5[1-5]/.test(digits)) return "Mastercard";
+    if (/^3[47]/.test(digits)) return "Amex";
+    return "";
+}
+
+function isExpiryValid(value) {
+    const match = /^(\d{2})\/(\d{2})$/.exec(value || "");
+    if (!match) return false;
+    const month = parseInt(match[1], 10);
+    return month >= 1 && month <= 12;
+}
+
+function isStep4Valid() {
+    const b = state.banking;
+    return Boolean(
+        b.cardholderName.trim().length > 1 &&
+        digitsOnly(b.cardNumber).length >= 13 &&
+        isExpiryValid(b.expiryDate) &&
+        (b.cvv.length === 3 || b.cvv.length === 4) &&
+        b.streetAddress.trim().length > 0 &&
+        b.billingCity.trim().length > 0 &&
+        b.postalCode.length === 4
+    );
+}
+
+function updateStep4Button() {
+    const button = document.getElementById("confirmBookingFinal");
+    const hint = document.getElementById("fillHint");
+    const valid = isStep4Valid();
+    if (button) button.disabled = !valid;
+    if (hint) hint.hidden = valid;
+}
+
+// ---- Progress indicator ----
+
 function renderProgress() {
     document.querySelectorAll(".step-circle").forEach((circle, index) => {
         circle.classList.toggle("active", state.step >= index + 1);
@@ -138,6 +175,8 @@ function renderProgress() {
         label.classList.toggle("active", state.step >= index + 1);
     });
 }
+
+// ---- Main render ----
 
 function renderBookingStep() {
     const root = document.getElementById("bookingStep");
@@ -305,7 +344,75 @@ function renderBookingStep() {
 
       <div class="form-actions">
         <button type="button" class="btn btn-outline" id="backStep3">← Edit</button>
-        <button type="button" class="btn btn-gradient" id="confirmBooking">Confirm Booking ✓</button>
+        <button type="button" class="btn btn-gradient" id="nextStep3">Continue to Banking Details →</button>
+      </div>
+    `;
+    }
+
+    if (state.step === 4) {
+        const total = getTotal();
+        const cardDigits = digitsOnly(state.banking.cardNumber);
+
+        root.innerHTML = `
+      <div class="payment-heading">Banking Details</div>
+      <p class="payment-subtext">This is a simulated payment step for demonstration purposes — no real charge will be made.</p>
+
+      <div class="order-summary-strip">
+        <span class="summary-label">Estimated Total</span>
+        <span class="summary-total">R${formatMoney(total)}</span>
+      </div>
+
+      <div class="field-group">
+        <label class="field-label" for="cardholderName">Cardholder Name</label>
+        <input class="field-input" id="cardholderName" name="cardholderName" value="${escapeHtml(state.banking.cardholderName)}" placeholder="Name as it appears on card" required>
+      </div>
+
+      <div class="field-group card-number-wrap">
+        <label class="field-label" for="cardNumber">Card Number</label>
+        <input class="field-input" id="cardNumber" name="cardNumber" inputmode="numeric" maxlength="19" value="${escapeHtml(formatCardNumberDisplay(cardDigits))}" placeholder="0000 0000 0000 0000" required>
+        <span class="card-brand" id="cardBrandLabel">${detectCardBrand(cardDigits)}</span>
+      </div>
+
+      <div class="field-row">
+        <div class="field-group">
+          <label class="field-label" for="expiryDate">Expiry Date</label>
+          <input class="field-input" id="expiryDate" name="expiryDate" inputmode="numeric" maxlength="5" value="${escapeHtml(state.banking.expiryDate)}" placeholder="MM/YY" required>
+        </div>
+        <div class="field-group">
+          <label class="field-label" for="cvv">CVV</label>
+          <input class="field-input" id="cvv" name="cvv" inputmode="numeric" maxlength="4" value="${escapeHtml(state.banking.cvv)}" placeholder="123" required>
+        </div>
+      </div>
+
+      <div class="section-divider" style="height:1px;background:var(--border-pink,#f9d0e3);margin:6px 0 20px;"></div>
+
+      <div class="billing-section">
+        <div class="field-group">
+          <label class="field-label" for="streetAddress">Street Address</label>
+          <input class="field-input" id="streetAddress" name="streetAddress" value="${escapeHtml(state.banking.streetAddress)}" placeholder="123 Main Street" required>
+        </div>
+        <div class="field-row">
+          <div class="field-group">
+            <label class="field-label" for="billingCity">City</label>
+            <input class="field-input" id="billingCity" name="billingCity" value="${escapeHtml(state.banking.billingCity)}" placeholder="Durban" required>
+          </div>
+          <div class="field-group">
+            <label class="field-label" for="postalCode">Postal Code</label>
+            <input class="field-input" id="postalCode" name="postalCode" inputmode="numeric" maxlength="4" value="${escapeHtml(state.banking.postalCode)}" placeholder="4001" required>
+          </div>
+        </div>
+      </div>
+
+      <div class="security-badges">
+        <span>🔒 Simulated step — card details are never stored or sent anywhere.</span>
+      </div>
+
+      <div class="payment-actions">
+        <button type="button" class="ghost-btn" id="backStep4">← Back to Review</button>
+        <div class="confirm-wrap">
+          <p class="fill-hint" id="fillHint" ${isStep4Valid() ? "hidden" : ""}>Fill all fields to confirm</p>
+          <button type="button" class="pink-btn" id="confirmBookingFinal" ${isStep4Valid() ? "" : "disabled"}>Confirm Booking ✓</button>
+        </div>
       </div>
     `;
     }
@@ -341,6 +448,21 @@ function attachStepHandlers() {
         renderBookingStep();
     });
 
+    document.getElementById("nextStep3")?.addEventListener("click", () => {
+        state.step = 4;
+        renderBookingStep();
+    });
+
+    document.getElementById("backStep4")?.addEventListener("click", () => {
+        state.step = 3;
+        renderBookingStep();
+    });
+
+    document.getElementById("confirmBookingFinal")?.addEventListener("click", () => {
+        if (!isStep4Valid()) return;
+        submitBooking();
+    });
+
     document.querySelectorAll("[data-package]").forEach(button => {
         button.addEventListener("click", () => {
             state.form.packageId = button.dataset.package;
@@ -358,8 +480,6 @@ function attachStepHandlers() {
             renderBookingStep();
         });
     });
-
-    document.getElementById("confirmBooking")?.addEventListener("click", submitBooking);
 }
 
 function handleFormInput(event) {
@@ -367,10 +487,7 @@ function handleFormInput(event) {
     if (!control.name) return;
 
     if (control.name === "phone") {
-        // keep only digits and limit to 9 characters
-        let v = String(control.value || "");
-        v = v.replace(/\D/g, "");
-        v = v.slice(0, 9);
+        let v = digitsOnly(control.value).slice(0, 9);
         control.value = v;
         state.form.phone = v;
         const btn = document.getElementById("nextStep1");
@@ -379,16 +496,57 @@ function handleFormInput(event) {
     }
 
     if (control.name === "firstName" || control.name === "lastName") {
-        // Allow letters only (A–Z / a–z), max 50 chars
-        let v = String(control.value || "");
-        v = v.replace(/[^A-Za-z]/g, ""); // strip anything that's not ASCII letter
-        v = v.slice(0, 50);
+        let v = String(control.value || "").replace(/[^A-Za-z]/g, "").slice(0, 50);
         control.value = v;
         state.form[control.name] = v;
         const btn = document.getElementById("nextStep1");
         if (btn) btn.disabled = !isStep1Valid();
         return;
     }
+
+    // ---- Step 4 banking fields ----
+
+    if (control.name === "cardNumber") {
+        const digits = digitsOnly(control.value).slice(0, 16);
+        control.value = formatCardNumberDisplay(digits);
+        state.banking.cardNumber = digits;
+        const brandLabel = document.getElementById("cardBrandLabel");
+        if (brandLabel) brandLabel.textContent = detectCardBrand(digits);
+        updateStep4Button();
+        return;
+    }
+
+    if (control.name === "expiryDate") {
+        const digits = digitsOnly(control.value).slice(0, 4);
+        control.value = digits.length >= 3 ? digits.slice(0, 2) + "/" + digits.slice(2) : digits;
+        state.banking.expiryDate = control.value;
+        updateStep4Button();
+        return;
+    }
+
+    if (control.name === "cvv") {
+        const digits = digitsOnly(control.value).slice(0, 4);
+        control.value = digits;
+        state.banking.cvv = digits;
+        updateStep4Button();
+        return;
+    }
+
+    if (control.name === "postalCode") {
+        const digits = digitsOnly(control.value).slice(0, 4);
+        control.value = digits;
+        state.banking.postalCode = digits;
+        updateStep4Button();
+        return;
+    }
+
+    if (control.name === "cardholderName" || control.name === "streetAddress" || control.name === "billingCity") {
+        state.banking[control.name] = control.value;
+        updateStep4Button();
+        return;
+    }
+
+    // ---- Steps 1–2 generic fields ----
 
     state.form[control.name] = control.value;
 
@@ -404,8 +562,15 @@ function handleFormInput(event) {
 }
 
 async function submitBooking() {
-    const bookingUrl = document.body.dataset.bookingUrl;
+    const bookingUrl = document.getElementById("bookingApp").dataset.bookingUrl;
 
+    const confirmBtn = document.getElementById("confirmBookingFinal");
+    if (confirmBtn) {
+        confirmBtn.disabled = true;
+        confirmBtn.textContent = "Confirming…";
+    }
+
+    // Only real booking data is sent — never card/banking fields.
     const booking = {
         firstName: state.form.firstName,
         lastName: state.form.lastName,
@@ -440,11 +605,8 @@ async function submitBooking() {
         }
 
         state.submitted = true;
-
-        // Keep the database-generated ID for the confirmation screen.
         state.form.bookingId = result.bookingId;
 
-        // Keep the server-calculated price for the confirmation screen.
         if (result.totalPrice === undefined || result.totalPrice === null) {
             throw new Error("The server did not return a booking total.");
         }
@@ -460,6 +622,11 @@ async function submitBooking() {
             error.message ||
             "Something went wrong while submitting your booking. Please try again."
         );
+
+        if (confirmBtn) {
+            confirmBtn.disabled = !isStep4Valid();
+            confirmBtn.textContent = "Confirm Booking ✓";
+        }
     }
 }
 
@@ -502,108 +669,4 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!app) return;
 
     renderBookingStep();
-
-    // ── Payment step helpers ──────────────────────────────────────────
-
-    function showPaymentStep(total) {
-        // Hide all other steps and show payment
-        document.querySelectorAll('.booking-step').forEach(function (s) {
-            s.style.display = 'none';
-        });
-        document.getElementById('paymentStep').style.display = 'block';
-
-        // Display the total passed from the review step
-        document.getElementById('paymentTotal').textContent = 'R' + Number(total).toLocaleString('en-ZA');
-
-        // Update progress indicator to step 4 if you have one
-        updateProgressStep(4);
-    }
-
-    function formatCardNumber(input) {
-        var digits = input.value.replace(/\D/g, '').slice(0, 16);
-        var formatted = digits.replace(/(.{4})/g, '$1 ').trim();
-        input.value = formatted;
-
-        // Detect card brand
-        var brand = '';
-        if (/^4/.test(digits)) brand = 'Visa';
-        else if (/^5[1-5]/.test(digits)) brand = 'Mastercard';
-        else if (/^3[47]/.test(digits)) brand = 'Amex';
-        document.getElementById('cardBrand').textContent = brand;
-
-        // Highlight filled
-        input.style.borderColor = digits.length === 16 ? '#d4006a' : '#f9d0e3';
-    }
-
-    function formatExpiry(input) {
-        var digits = input.value.replace(/\D/g, '').slice(0, 4);
-        if (digits.length >= 3) {
-            input.value = digits.slice(0, 2) + '/' + digits.slice(2);
-        } else {
-            input.value = digits;
-        }
-        input.style.borderColor = input.value.length === 5 ? '#d4006a' : '#f9d0e3';
-    }
-
-    function checkCardForm() {
-        var name = document.getElementById('cardholderName').value.trim();
-        var number = document.getElementById('cardNumber').value.replace(/\s/g, '');
-        var expiry = document.getElementById('expiryDate').value;
-        var cvv = document.getElementById('cvv').value;
-        var address = document.getElementById('billingAddress').value.trim();
-        var city = document.getElementById('billingCity').value.trim();
-        var postal = document.getElementById('billingPostal').value.trim();
-
-        // Highlight each field
-        setFieldColor('cardholderName', name.length > 2);
-        setFieldColor('expiryDate', expiry.length === 5);
-        setFieldColor('cvv', cvv.length >= 3);
-        setFieldColor('billingAddress', address.length > 3);
-        setFieldColor('billingCity', city.length > 1);
-        setFieldColor('billingPostal', postal.length >= 4);
-
-        var complete = name.length > 2
-            && number.length === 16
-            && expiry.length === 5
-            && cvv.length >= 3
-            && address.length > 3
-            && city.length > 1
-            && postal.length >= 4;
-
-        document.getElementById('confirmBookingBtn').style.display = complete ? 'inline-block' : 'none';
-        document.getElementById('fillHint').style.display = complete ? 'none' : 'block';
-    }
-
-    function setFieldColor(id, filled) {
-        var el = document.getElementById(id);
-        if (el) el.style.borderColor = filled ? '#d4006a' : '#f9d0e3';
-    }
-
-    function confirmBooking() {
-        // Example: Get values from your form fields
-        // Adjust selectors to match your actual input IDs/names
-        var name = document.getElementById('customerName')?.value || '';
-        var date = document.getElementById('eventDate')?.value || '';
-        var type = document.getElementById('eventType')?.value || '';
-        var total = document.getElementById('bookingTotal')?.value || 'R0';
-
-        // Populate the summary fields
-        document.getElementById('summaryName').textContent = name;
-        document.getElementById('summaryDate').textContent = date;
-        document.getElementById('summaryType').textContent = type;
-        document.getElementById('summaryTotal').textContent = total;
-
-        // Show the summary section
-        document.getElementById('bookingSummary').style.display = 'block';
-        alert('Booking confirmed! We will contact you via WhatsApp within 24 hours.');
-
-        // Show the Proceed to Payment button
-        document.getElementById('proceedToPaymentBtn').style.display = 'inline-block';
-    }
-
-
-    // Call this from your Review step's "Process Payment" button:
-    // showPaymentStep(totalAmount);
-
-
 });

@@ -1,16 +1,21 @@
-﻿<html lang="en-ZA">
+﻿@model IEnumerable<WebApplication1.Models.Booking>
+
+<!DOCTYPE html>
+<html lang="en-ZA">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="View and manage AA Creations & Events bookings.">
     <title>My Bookings | AA Creations & Events</title>
+
     <link rel="stylesheet" href="~/Content/sstyle.css">
 </head>
-<body data-page="bookings">
 
+<body data-page="bookings">
 
     <main class="bookings-page">
         <div class="narrow">
+
             <div class="booking-head">
                 <p class="eyebrow">Your Reservations</p>
                 <h1>My Bookings</h1>
@@ -18,30 +23,97 @@
             </div>
 
             <div class="filter-tabs" role="tablist" aria-label="Booking filters">
-                <button class="filter-tab active" type="button" data-filter="upcoming">Upcoming</button>
-                <button class="filter-tab" type="button" data-filter="all">All</button>
-                <button class="filter-tab" type="button" data-filter="past">Past</button>
+
+                <button class="filter-tab active"
+                        type="button"
+                        data-filter="upcoming">
+                    Upcoming
+                </button>
+
+                <button class="filter-tab"
+                        type="button"
+                        data-filter="all">
+                    All
+                </button>
+
+                <button class="filter-tab"
+                        type="button"
+                        data-filter="past">
+                    Past
+                </button>
+
             </div>
 
             <p class="booking-count" id="bookingCount"></p>
 
             <div id="emptyState" class="empty-state" hidden>
+
                 <div class="empty-icon">🎈</div>
+
                 <h3 id="emptyTitle">No Upcoming Bookings</h3>
-                <p id="emptyCopy">You haven't made any bookings yet. Book your first celebration setup!</p>
-                <a href="~/Views/Cust/Booking.cshtml" class="btn btn-primary">Book a Setup</a>
+
+                <p id="emptyCopy">
+                    You haven't made any bookings yet.
+                    Book your first celebration setup!
+                </p>
+
+                <a href="@Url.Action("Booking", "Cust")"
+                   class="btn btn-primary">
+                    Book a Setup
+                </a>
+
             </div>
 
             <div class="booking-list" id="bookingList"></div>
 
-            <div id="bookAnother" style="margin-top:40px;text-align:center;">
-                <a href="@Url.Action("Booking", "Cust")" class="btn btn-gradient">+ Book Another Setup</a>
+            <div id="bookAnother"
+                 style="margin-top:40px;text-align:center;">
+
+                <a href="@Url.Action("Booking", "Cust")"
+                   class="btn btn-gradient">
+                    + Book Another Setup
+                </a>
+
             </div>
+
         </div>
     </main>
 
-    <script src="~/Scripts/Common.js"></script>
+    <script>
+        window.databaseBookings = @Html.Raw(
+            Newtonsoft.Json.JsonConvert.SerializeObject(
+                Model.Select(b => new
+                {
+                    id = b.BookingId,
+                    firstName = b.FirstName,
+                    lastName = b.LastName,
+                    email = b.Email,
+                    phone = b.Phone,
+                    occasion = b.Occasion,
+                    date = b.EventDate.ToString("yyyy-MM-dd"),
+                    time = b.EventTime,
+                    address = b.Address,
+                    city = b.City,
+                    notes = b.Notes,
+                    packageId = b.PackageId,
+                    packageName = b.Package != null ? b.Package.Name : "Unknown Package",
+                    packagePrice = b.Package != null ? b.Package.Price : 0,
+                    addOns = b.BookingAddOns.Select(ba => new
+                    {
+                        id = ba.AddOnId,
+                        name = ba.AddOn != null ? ba.AddOn.Name : "Unknown Add-On",
+                        price = ba.AddOn != null ? ba.AddOn.Price : 0
+                    }),
+                    totalPrice = b.TotalPrice,
+                    createdAt = b.CreatedAt,
+                    status = b.Status
+                })
+            )
+        );
+    </script>
 
+    <script src="~/Scripts/Common.js"></script>
     <script src="~/Scripts/ViewBooking.js"></script>
+
 </body>
 </html>

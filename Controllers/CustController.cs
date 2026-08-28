@@ -5,6 +5,7 @@ using System.Web;
 using System.Web.Mvc;
 using WebApplication1.Models;
 using static WebApplication1.Models.Bankingdetailsviewmodel;
+using System.Data.Entity;
 
 namespace WebApplication1.Controllers
 {
@@ -191,9 +192,15 @@ namespace WebApplication1.Controllers
             }
         }
 
-        public ActionResult ViewBooking(Customer obj)
+        public ActionResult ViewBooking()
         {
-            return View(obj);
+            var bookings = db.Bookings
+                .Include("Package")
+                .Include("BookingAddOns.AddOn")
+                .OrderByDescending(b => b.EventDate)
+                .ToList();
+
+            return View(bookings);
         }
 
         public JsonResult TestDatabase()
