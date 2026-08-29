@@ -420,16 +420,15 @@ function renderDetails(booking, isPast) {
             : [];
 
     return `
-       return `
-        < div class="booking-details" >
+        <div class="booking-details">
 
             <h4 class="progress-heading">
                 Booking Progress
             </h4>
 
-        ${ renderBookingProgress(booking.status) }
+            ${renderBookingProgress(booking.status)}
 
-    <div class="details-grid"> 
+            <div class="details-grid">
 
                 <div class="detail-box">
 
@@ -584,49 +583,21 @@ function renderDetails(booking, isPast) {
 
 function cancelBooking(id) {
 
-    /*
-     * IMPORTANT:
-     *
-     * We are not deleting the database booking here yet.
-     *
-     * This button previously deleted localStorage data.
-     * That is no longer appropriate now that SQL Server
-     * is the source of truth.
-     *
-     * Database cancellation will be implemented through
-     * a controller action.
-     */
+    alert("This feature will be implemented soon. Please contact us via WhatsApp for cancellation.");
 
-    alert(
-        "Booking cancellation will be connected to the database in the next step."
-    );
 }
 
-document.addEventListener(
-    "DOMContentLoaded",
-    () => {
+document.addEventListener("DOMContentLoaded", function () {
 
-        document
-            .querySelectorAll(".filter-tab")
-            .forEach(button => {
+    // Attach filter button listeners
+    document.querySelectorAll(".filter-tab").forEach(button => {
+        button.addEventListener("click", () => {
+            filter = button.dataset.filter;
+            renderBookings();
+        });
+    });
 
-                button.addEventListener(
-                    "click",
-                    () => {
+    // Initial render
+    renderBookings();
 
-                        filter =
-                            button.dataset.filter;
-
-                        expanded = null;
-
-                        renderBookings();
-
-                    }
-                );
-
-            });
-
-        renderBookings();
-
-    }
-);
+});
