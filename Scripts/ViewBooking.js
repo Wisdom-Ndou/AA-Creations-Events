@@ -72,6 +72,114 @@ function getDaysUntil(dateStr, today) {
     return `${Math.abs(diff)} days ago`;
 }
 
+// ----------------------------
+// BOOKING STATUS HELPERS
+// ----------------------------
+
+function getStatusClass(status) {
+    switch ((status || "").toLowerCase()) {
+
+        case "confirmed":
+            return "confirmed";
+
+        case "preparing":
+            return "preparing";
+
+        case "in progress":
+            return "in-progress";
+
+        case "completed":
+            return "completed";
+
+        case "cancelled":
+            return "cancelled";
+
+        default:
+            return "pending";
+    }
+}
+
+function renderBookingProgress(status) {
+
+    const steps = [
+        { key: "Pending", label: "Booking Submitted" },
+        { key: "Confirmed", label: "Booking Confirmed" },
+        { key: "Preparing", label: "Preparing Decorations" },
+        { key: "In Progress", label: "Setup In Progress" },
+        { key: "Completed", label: "Completed" }
+    ];
+
+    const current = (status || "Pending").toLowerCase();
+
+    if (current === "cancelled") {
+        return `
+            <div class="booking-progress cancelled-progress">
+
+                <div class="cancel-icon">✕</div>
+
+                <div>
+                    <strong>Booking Cancelled</strong>
+                    <p>This booking has been cancelled.</p>
+                </div>
+
+            </div>
+        `;
+    }
+
+    let currentIndex = steps.findIndex(
+        step => step.key.toLowerCase() === current
+    );
+
+    if (currentIndex === -1) currentIndex = 0;
+
+    return `
+        <div class="booking-progress">
+
+            ${steps.map((step, index) => {
+
+        const completed = index < currentIndex;
+        const active = index === currentIndex;
+
+        return `
+                    <div class="progress-row">
+
+                        <div class="progress-circle
+                            ${completed ? "completed" : ""}
+                            ${active ? "active" : ""}">
+
+                            ${completed ? "✓" : index + 1}
+
+                        </div>
+
+                        <div class="progress-content">
+
+                            <div class="progress-title">
+                                ${step.label}
+                            </div>
+
+                            ${active ? `
+                                <div class="progress-current">
+                                    Current Status
+                                </div>
+                            ` : ""}
+
+                        </div>
+
+                    </div>
+
+                    ${index !== steps.length - 1
+                ? `<div class="progress-line ${completed ? "completed" : ""}"></div>`
+                : ""
+            }
+
+                `;
+
+    }).join("")}
+
+        </div>
+    `;
+}
+
 function getVisibleBookings() {
 
     const today =
@@ -177,19 +285,14 @@ function renderBookings() {
 
     root.innerHTML = visible.map(booking => {
 
-        const isPast =
-            booking.date < today;
+        const isPast = booking.date < today;
 
-        const isOpen =
-            expanded === booking.id;
+        const isOpen = expanded === booking.id;
 
-        const statusClass =
-            isPast ? "past" : "upcoming";
+        // ALWAYS USE DATABASE STATUS
+        const statusText = booking.status || "Pending";
 
-        const statusText =
-            isPast
-                ? "Completed"
-                : (booking.status || "Pending");
+        const statusClass = getStatusClass(statusText);
 
         const icon =
             occasionIcons[booking.occasion] || "🎉";
@@ -317,9 +420,16 @@ function renderDetails(booking, isPast) {
             : [];
 
     return `
-        <div class="booking-details">
+       return `
+        < div class="booking-details" >
 
-            <div class="details-grid">
+            <h4 class="progress-heading">
+                Booking Progress
+            </h4>
+
+        ${ renderBookingProgress(booking.status) }
+
+    <div class="details-grid"> 
 
                 <div class="detail-box">
 

@@ -182,12 +182,19 @@ namespace WebApplication1.Controllers
                     message = "Booking created successfully."
                 });
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                var message = ex.ToString();
+
+                if (ex.InnerException != null)
+                {
+                    message += "\n\nINNER:\n" + ex.InnerException.ToString();
+                }
+
                 return Json(new
                 {
                     success = false,
-                    message = "An error occurred while saving the booking."
+                    message = message
                 });
             }
         }
