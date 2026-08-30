@@ -12,10 +12,13 @@ document.addEventListener('DOMContentLoaded', function () {
     var passwordInput = document.getElementById('password');
     var togglePassBtn = document.getElementById('togglePass');
     var submitBtn = document.getElementById('submitBtn');
-    var registerLink = document.getElementById('registerLink');
     var indicatorDot = document.getElementById('indicatorDot');
     var indicatorText = document.getElementById('indicatorText');
     var loginForm = document.getElementById('loginForm');
+
+    // New: Register rows for customer and admin
+    var customerRegisterRow = document.getElementById('customerRegisterRow');
+    var adminRegisterRow = document.getElementById('adminRegisterRow');
 
     function applyRole(newRole) {
         role = newRole;
@@ -36,13 +39,13 @@ document.addEventListener('DOMContentLoaded', function () {
         // Submit button label
         submitBtn.textContent = role === 'admin' ? 'Sign In as Admin' : 'Sign In';
 
-        // Register link — points at admin vs customer registration page
-        registerLink.href = role === 'admin' ? 'AdminRegister.html' : 'CustomerRegister.html';
-        registerLink.textContent = role === 'admin' ? 'Request Admin Access' : 'Create Account';
-
         // Role indicator dot + text
         indicatorDot.style.background = role === 'admin' ? '#d4006a' : '#5c1040';
         indicatorText.textContent = 'Signing in as ' + role;
+
+        // Show/hide registration links
+        if (customerRegisterRow) customerRegisterRow.style.display = (role === 'customer') ? 'block' : 'none';
+        if (adminRegisterRow) adminRegisterRow.style.display = (role === 'admin') ? 'block' : 'none';
     }
 
     roleCustomerBtn.addEventListener('click', function () {
@@ -60,9 +63,6 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     // --- Submit handler ---
-    // The original TSX only called e.preventDefault() and did nothing else
-    // (no API call existed yet). Kept that behaviour, plus a console log
-    // and a TODO for wiring this to the MVC controller later.
     loginForm.addEventListener('submit', function (e) {
         e.preventDefault();
 

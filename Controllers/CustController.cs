@@ -14,12 +14,22 @@ namespace WebApplication1.Controllers
         private readonly DatabaseContext db = new DatabaseContext();
 
         [HttpPost]
+        // Handles GET requests (page load)
+        [HttpGet]
         public ActionResult Bankingdetails()
         {
-            var model = new BankingDetailsViewModel(); // or fetch/populate as needed
+            var model = new Bankingdetailsviewmodel.BankingDetailsViewModel();
             return View(model);
         }
-        // GET: Cust
+
+        // Handles POST requests (form submission)
+        [HttpPost]
+        public ActionResult Bankingdetails(Bankingdetailsviewmodel.BankingDetailsViewModel model)
+        {
+            // Handle form submission here (e.g., save payment details)
+            return View(model);
+        }
+
         public ActionResult Index()
         {
             return View();
@@ -182,12 +192,19 @@ namespace WebApplication1.Controllers
                     message = "Booking created successfully."
                 });
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                var message = ex.ToString();
+
+                if (ex.InnerException != null)
+                {
+                    message += "\n\nINNER:\n" + ex.InnerException.ToString();
+                }
+
                 return Json(new
                 {
                     success = false,
-                    message = "An error occurred while saving the booking."
+                    message = message
                 });
             }
         }

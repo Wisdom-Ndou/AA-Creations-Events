@@ -43,6 +43,11 @@
         <main class="form-panel">
             <div class="form-wrap">
 
+                
+                
+
+
+
                 <h2 class="form-title">Customer Registration</h2>
                 <p class="form-subtitle">Fill in your details to get started</p>
 
@@ -134,8 +139,19 @@
                         @Html.ActionLink("Back to Login", "Login", "Cust", new { area = "" }, new { @class = "btn btn-back" })
 
                         <button type="submit" class="btn btn-primary" id="submitBtn">Create Account</button>
-
+                        <button type="button" class="btn btn-primary" id="adminRegisterBtn"
+                                onclick="window.location.href='@Url.Action("Adminregister", "Cust")'">
+                            Sign up as Admin
+                        </button>
                     </div>
+
+
+                </form>
+
+                
+
+
+                </form>
 
                     <div class="nav-row">
                        
@@ -157,9 +173,12 @@
             <div class="success-page" id="successPage" hidden>
                 <div class="success-content" role="status" aria-live="polite">
                     <div class="success-icon">✓</div>
-                    <h2 id="successTitle">Registration successful</h2>
-                    <p id="successMessage">Your registration was successful. You can now sign in and start booking.</p>
-                    @Html.ActionLink("Go to Sign ", "Login", "Cust", new { area = "" }, new { @class = "sale-btn" })
+                    <h2>Account Created</h2>
+                    <p>
+                        Welcome to AA Creations &amp; Events! Your customer account has been
+                        created — you can now sign in and start booking.
+                    </p>
+                   
                 </div>
             </div>
         </main>
