@@ -44,10 +44,10 @@
         <main class="form-panel">
             <div class="form-wrap">
 
-                <span aria-hidden="true">&larr;</span> Back to Login
-                    <li>@Html.ActionLink("Back to Login", "Login", "Cust", new { area = "" }, new { @class = "mobile-back" })</li>
-
                 
+                
+
+
 
                 <h2 class="form-title">Customer Registration</h2>
                 <p class="form-subtitle">Fill in your details to get started</p>
@@ -134,7 +134,18 @@
 
                         <button type="button" class="btn btn-primary" id="continueBtn">Continue</button>
                         <button type="submit" class="btn btn-primary" id="submitBtn">Create Account</button>
+                        <button type="button" class="btn btn-primary" id="adminRegisterBtn"
+                                onclick="window.location.href='@Url.Action("Adminregister", "Cust")'">
+                            Sign up as Admin
+                        </button>
                     </div>
+
+
+                </form>
+
+                
+
+
                 </form>
 
                 <p class="footer-text">
@@ -153,7 +164,7 @@
                         Welcome to AA Creations &amp; Events! Your customer account has been
                         created — you can now sign in and start booking.
                     </p>
-                    <li>@Html.ActionLink("Go to Sign In", "Login", "Cust", new { area = "" }, new { @class = "sale-btn" })</li>
+                   
                 </div>
             </div>
         </main>

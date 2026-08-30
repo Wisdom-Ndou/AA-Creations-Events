@@ -189,7 +189,7 @@ function renderBookingStep() {
         <div class="form-group">
           <label class="form-label" for="firstName">First Name</label>
           <input class="form-control" id="firstName" name="firstName" inputmode="text" pattern="^[A-Za-z]+$" maxlength="50" value="${escapeHtml(state.form.firstName)}" placeholder="Nomsa" required>
-          <small class="muted">Letters only (A–Z).</small>
+          <small class="muted">Letters only .</small>
         </div>
         <div class="form-group">
           <label class="form-label" for="lastName">Last Name</label>
