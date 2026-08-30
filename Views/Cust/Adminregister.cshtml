@@ -26,18 +26,14 @@
 
         <!-- ============ LEFT: BRAND PANEL (hidden on small screens) ============ -->
         <aside class="brand-panel">
-            <div class="bg-grid" aria-hidden="true"></div>
-            <div class="bg-glow" aria-hidden="true"></div>
+            
 
             <div class="brand-top">
-                    <span aria-hidden="true">&larr;</span> <li>@Html.ActionLink(" ", "Login", "Cust", new { area = "" }, new { @class = "badge" })</li>
-
-                </a>
+                
             </div>
 
             <div class="brand-mid">
                 <div class="badge">
-                    <span class="badge-dot" aria-hidden="true"></span>
                     Admin Access
                 </div>
 
@@ -71,10 +67,7 @@
         <main class="form-panel">
             <div class="form-wrap" id="formWrap">
 
-                    <span aria-hidden="true">&larr;</span> Back to Login
-                    <li>@Html.ActionLink("Back to Login", "Login", "Cust", new { area = "" }, new { @class = "mobile-back" })</li>
 
-                
 
                 <div class="badge mobile-badge">Admin Access Request</div>
 
@@ -92,11 +85,14 @@
                             <div class="field">
                                 <label for="firstName">First Name</label>
                                 <input type="text" id="firstName" name="firstName" placeholder="Thabo" required />
+                                <span class="error-message" id="firstNameError"></span>
                             </div>
                             <div class="field">
                                 <label for="lastName">Last Name</label>
                                 <input type="text" id="lastName" name="lastName" placeholder="Sithole" required />
+                                <span class="error-message" id="lastNameError"></span>
                             </div>
+
                         </div>
                     </section>
 
@@ -112,8 +108,10 @@
                             <div class="phone-row">
                                 <span class="phone-prefix">+27</span>
                                 <input type="tel" id="phone" name="phone" placeholder="083 456 7890" required />
+                                <span class="error-message" id="phoneError"></span>
                             </div>
                         </div>
+
                     </section>
 
                     <!-- Security -->
@@ -146,35 +144,37 @@
                         </label>
                     </div>
 
+
+
+
                     <button type="submit" class="submit-btn">Submit Admin Request</button>
                 </form>
 
+
                 <p class="footer-text">
-                    Already have an account?
-                    <li>@Html.ActionLink("Sign-In", "Login", "Cust", new { area = "" }, new { @class = "footer-link" })</li>
-
+                    Back to admin sign in page
+                    @Html.ActionLink("Back to Admin Login", "Login", "Cust", new { area = "" }, new { @class = "footer-link" })
                 </p>
-                <p class="footer-text">
-                    Looking for customer registration?
-                    <a href="CustomerRegister.html" class="footer-link">Register as Customer</a>
-                    <li>@Html.ActionLink("Register as Customer", "Customerregister", "Cust", new { area = "" }, new { @class = "footer-link" })</li>
 
-                </p>
-            </div>
 
-            <!-- ============ SUCCESS STATE (hidden until form submit) ============ -->
-            <div class="success-page" id="successPage" hidden>
-                <div class="success-content">
-                    <div class="success-icon">✓</div>
-                    <h2>Request Submitted</h2>
-                    <p>
-                        Your admin access request has been submitted. A senior administrator
-                        will review and activate your account within 24–48 hours.
-                    </p>
-                    <li>@Html.ActionLink("Back to Login", "Login", "Cust", new { area = "" }, new { @class = "submit-btn back-btn" })</li>
+                <!-- ============ SUCCESS STATE (hidden until form submit) ============ -->
+                <div class="success-page" id="successPage" hidden>
+                    <div class="success-content">
+                        <div class="success-icon">
+                            <svg width="80" height="80" viewBox="0 0 80 80">
+                                <circle cx="40" cy="40" r="36" fill="#f9e6f0" stroke="#d4006a" stroke-width="2" />
+                                <polyline points="28,42 38,52 54,32" fill="none" stroke="#d4006a" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />
+                            </svg>
+                        </div>
+                        <h2 class="success-title">Registration successful</h2>
+                        <p class="success-message">
+                            Welcome, <b id="successName"></b>. Registration successful.
+                        </p>
+                        <button class="success-btn" onclick="window.location.href='@Url.Action("Login", "Cust")'">Go to Sign</button>
+                    </div>
                 </div>
-            </div>
-        </main>
+
+</main>
 
     </div>
 

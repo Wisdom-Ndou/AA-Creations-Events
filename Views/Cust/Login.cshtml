@@ -81,23 +81,38 @@
                     </div>
 
                     <div class="options-row">
-                        <label class="remember-label">
-                            <input type="checkbox" id="rememberMe" name="rememberMe" class="remember-checkbox" />
-                            <span class="remember-box" aria-hidden="true"><span class="remember-dot"></span></span>
-                            <span class="remember-text">Remember me</span>
-                        </label>
-                        <button type="button" class="forgot-link">Forgot password?</button>
-                    </div>
 
-                    <button type="submit" class="submit-btn" id="submitBtn">Sign In</button>
+
+                        <div>
+                            <button type="submit" class="submit-btn" id="submitBtn">Sign In as Addy</button>
+                        </div>
+
+                        <div class="register-row" hidden>
+
+                           
+
+                        </div>
+                    </div>
+                    <!-- From here the code shows evrything from all types of users -->
+
                 </form>
 
-                <div class="register-row">
+                <!-- Customer registration link (shown only for Customer role) -->
+                <div class="register-row" id="customerRegisterRow">
                     <p>
                         Don't have an account?
-                        <a>@Html.ActionLink("Create Account", "Customerregister", "Cust", new { area = "" }, new { @class = "register-link" }/*, new { id = "registerLink" }*/)</a>
+                        <a class="register-link" href="@Url.Action("Customerregister", "Cust")">Create Account</a>
                     </p>
                 </div>
+
+                <!-- Admin registration link (shown only for Admin role) -->
+                <div class="register-row" id="adminRegisterRow">
+                    <p>
+                        Don't have an admin account?
+                        <a class="register-link" href="@Url.Action("Adminregister", "Cust")">Create Admin Account</a>
+                    </p>
+                </div>
+
 
                 <div class="role-indicator">
                     <span class="indicator-dot" id="indicatorDot"></span>

@@ -9,6 +9,9 @@ document.addEventListener('DOMContentLoaded', function () {
     var passwordInput = document.getElementById('password');
     var confirmInput = document.getElementById('confirm');
     var togglePassBtn = document.getElementById('togglePass');
+    var firstName = document.getElementById('firstName');
+    var lastName = document.getElementById('lastName');
+    var phone = document.getElementById('phone');
 
     // --- Show / hide password (mirrors the showPass state) ---
     togglePassBtn.addEventListener('click', function () {
@@ -31,29 +34,83 @@ document.addEventListener('DOMContentLoaded', function () {
     passwordInput.addEventListener('input', checkConfirmMatch);
 
     // --- Submit handler (mirrors setSubmitted(true)) ---
-    form.addEventListener('submit', function (e) {
-        e.preventDefault();
+   form.addEventListener('submit', function (e) {
+    e.preventDefault();
 
-        // Basic client-side sanity check before "submitting".
-        // NOTE: this is NOT real validation/security — see the notes
-        // handed back with these files for what still needs to be added
-        // server-side once this is wired into the MVC project.
-        if (passwordInput.value !== confirmInput.value) {
-            confirmInput.classList.add('mismatch');
-            confirmInput.focus();
-            return;
+    // Basic client-side sanity check before "submitting".
+    if (passwordInput.value !== confirmInput.value) {
+        confirmInput.classList.add('mismatch');
+        confirmInput.focus();
+        return;
+    }
+
+    if (!form.checkValidity()) {
+        form.reportValidity();
+        return;
+    }
+
+    // Live validations
+    let valid = true;
+    if (!validateName(firstName, 'firstNameError')) valid = false;
+    if (!validateName(lastName, 'lastNameError')) valid = false;
+    if (!validatePhone(phone, 'phoneError')) valid = false;
+    if (!valid) return;
+
+    // --- SHOW THE POPUP MESSAGE HERE ---
+    alert('Registration successful!\nWelcome, ' + firstName.value.trim() + ' ' + lastName.value.trim() + '!');
+
+    // Continue with your success logic
+    formWrap.hidden = true;
+    successPage.hidden = false;
+});
+
+
+    // --- Live validations ---
+    if (firstName) {
+        firstName.addEventListener('input', function () {
+            validateName(this, 'firstNameError');
+        });
+    }
+    if (lastName) {
+        lastName.addEventListener('input', function () {
+            validateName(this, 'lastNameError');
+        });
+    }
+    if (phone) {
+        phone.addEventListener('input', function () {
+            validatePhone(this, 'phoneError');
+        });
+    }
+
+    function validateName(input, errorId) {
+        if (!input) return false;
+        const value = input.value.trim();
+        const regex = /^[A-Za-z]+$/;
+        if (!value) {
+            showError(errorId, 'This field is required.');
+            return false;
+        } else if (!regex.test(value)) {
+            showError(errorId, 'Only letters are allowed.');
+            return false;
         }
+        showError(errorId, '');
+        return true;
+    }
 
-        if (!form.checkValidity()) {
-            form.reportValidity();
-            return;
+    function validatePhone(input, errorId) {
+        if (!input) return false;
+        let value = input.value.replace(/\D/g, '');
+        input.value = value; // Only allow digits in the field
+        if (value.length !== 9) {
+            showError(errorId, 'Phone number must be exactly 9 digits.');
+            return false;
         }
+        showError(errorId, '');
+        return true;
+    }
 
-        // TODO: replace this with an actual POST to your MVC controller action,
-        // e.g. fetch('/Admin/Register', { method: 'POST', body: new FormData(form) })
-        console.log('Admin registration form data:', Object.fromEntries(new FormData(form)));
-
-        formWrap.hidden = true;
-        successPage.hidden = false;
-    });
+    function showError(errorId, message) {
+        const el = document.getElementById(errorId);
+        if (el) el.textContent = message;
+    }
 });
