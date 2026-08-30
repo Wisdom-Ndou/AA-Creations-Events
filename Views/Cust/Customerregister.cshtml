@@ -43,11 +43,6 @@
         <main class="form-panel">
             <div class="form-wrap">
 
-                
-                
-
-
-
                 <h2 class="form-title">Customer Registration</h2>
                 <p class="form-subtitle">Fill in your details to get started</p>
 
@@ -68,7 +63,7 @@
                             </div>
                         </div>
 
-                       
+
                     </div>
 
                     <!-- ===== Step 1: Contact ===== -->
@@ -102,16 +97,16 @@
                         <div class="field">
                             <label for="password">Create Password</label>
                             <div class="password-row">
-                                <input
-                                    type="password"
-                                    id="password"
-                                    name="password"
-                                    placeholder="******"
-                                    required
-                                    pattern="(?=.*[A-Za-z])(?=.*\d).{6,}"
-                                    title="At least 6 characters and must include letters and numbers"
-                                    aria-describedby="passwordError"
-                                    aria-invalid="false" />
+                                <input 
+                                       type="password"
+                                       id="password"
+                                       name="password"
+                                       placeholder="******"
+                                       required
+                                       pattern="(?=.*[A-Za-z])(?=.*\d).{6,}"
+                                       title="At least 6 characters and must include letters and numbers"
+                                       aria-describedby="passwordError"
+                                       aria-invalid="false" />
                                 <button type="button" class="toggle-pass" id="togglePass">Show</button>
                             </div>
                             <!-- Strength bar -->
@@ -139,22 +134,11 @@
                         @Html.ActionLink("Back to Login", "Login", "Cust", new { area = "" }, new { @class = "btn btn-back" })
 
                         <button type="submit" class="btn btn-primary" id="submitBtn">Create Account</button>
-                        <button type="button" class="btn btn-primary" id="adminRegisterBtn"
-                                onclick="window.location.href='@Url.Action("Adminregister", "Cust")'">
-                            Sign up as Admin
-                        </button>
+
                     </div>
 
-
-                </form>
-
-                
-
-
-                </form>
-
                     <div class="nav-row">
-                       
+
 
                     </div>
 
@@ -167,18 +151,15 @@
 
                 </form>
 
-            </div>      
+            </div>
 
             <!-- ============ SUCCESS STATE ============ -->
             <div class="success-page" id="successPage" hidden>
                 <div class="success-content" role="status" aria-live="polite">
                     <div class="success-icon">✓</div>
-                    <h2>Account Created</h2>
-                    <p>
-                        Welcome to AA Creations &amp; Events! Your customer account has been
-                        created — you can now sign in and start booking.
-                    </p>
-                   
+                    <h2 id="successTitle">Registration successful</h2>
+                    <p id="successMessage">Your registration was successful. You can now sign in and start booking.</p>
+                    @Html.ActionLink("Go to Sign ", "Login", "Cust", new { area = "" }, new { @class = "sale-btn" })
                 </div>
             </div>
         </main>

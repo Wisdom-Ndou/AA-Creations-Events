@@ -34,7 +34,7 @@ document.addEventListener('DOMContentLoaded', function () {
         elError.hidden = !show;
     }
 
-        // Update strength bar: simple scoring based on length, letters present, digits present
+    // Update strength bar: simple scoring based on length, letters present, digits present
     function updateStrengthBar() {
         if (!passwordInput) return;
         var val = passwordInput.value || '';
