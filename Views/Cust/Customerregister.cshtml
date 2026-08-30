@@ -1,5 +1,4 @@
-﻿
-@{
+﻿@{
     ViewBag.Title = "Customerregister";
 }
 
@@ -59,22 +58,21 @@
                         <div class="grid-2">
                             <div class="field">
                                 <label for="firstName">First Name</label>
-                                <input type="text" id="firstName" name="firstName" placeholder="Nomsa" required />
+                                <input type="text" id="firstName" name="firstName" placeholder="Nomsa" required pattern="^[A-Za-z]+$" title="Only letters allowed" aria-describedby="firstNameError" aria-invalid="false" maxlength="60" />
+                                <p class="error-text" id="firstNameError" aria-live="polite" hidden>Only letters allowed</p>
                             </div>
                             <div class="field">
                                 <label for="lastName">Last Name</label>
-                                <input type="text" id="lastName" name="lastName" placeholder="Mabaso" required />
+                                <input type="text" id="lastName" name="lastName" placeholder="Mabaso" required pattern="^[A-Za-z]+$" title="Only letters allowed" aria-describedby="lastNameError" aria-invalid="false" maxlength="60" />
+                                <p class="error-text" id="lastNameError" aria-live="polite" hidden>Only letters allowed</p>
                             </div>
                         </div>
 
-                        <div class="field">
-                            <label for="city">City / Town</label>
-                            <input type="text" id="city" name="city" placeholder="Johannesburg" required />
-                        </div>
+                       
                     </div>
 
                     <!-- ===== Step 1: Contact ===== -->
-                    <div class="step-panel" id="panel1" hidden>
+                    <div class="step-panel" id="panel1">
                         <div class="field">
                             <label for="email">Email Address</label>
                             <input type="email" id="email" name="email" placeholder="nomsa@example.com" required />
@@ -84,25 +82,36 @@
                             <label for="phone">Phone Number</label>
                             <div class="phone-row">
                                 <span class="phone-prefix">+27</span>
-                                <input type="tel" id="phone" name="phone" placeholder="072 345 6789" required />
+                                <input type="tel"
+                                       id="phone"
+                                       name="phone"
+                                       placeholder="734627868"
+                                       required
+                                       pattern="^[1-9]\d{8}$"
+                                       title="Enter 9 digits and do not start with 0"
+                                       maxlength="9"
+                                       aria-describedby="phoneError"
+                                       aria-invalid="false" />
                             </div>
-                        </div>
-
-                        <div class="note-box">
-                            <p class="note-title">Why we need your contact details</p>
-                            <p class="note-body">
-                                We use your email and phone to send booking confirmations and
-                                important updates about your events. We never share your information.
-                            </p>
+                            <p class="error-text" id="phoneError" aria-live="polite" hidden>Enter 9 digits and do not start with 0</p>
                         </div>
                     </div>
 
                     <!-- ===== Step 2: Security ===== -->
-                    <div class="step-panel" id="panel2" hidden>
+                    <div class="step-panel" id="panel2">
                         <div class="field">
                             <label for="password">Create Password</label>
                             <div class="password-row">
-                                <input type="password" id="password" name="password" placeholder="••••••••" required />
+                                <input
+                                    type="password"
+                                    id="password"
+                                    name="password"
+                                    placeholder="******"
+                                    required
+                                    pattern="(?=.*[A-Za-z])(?=.*\d).{6,}"
+                                    title="At least 6 characters and must include letters and numbers"
+                                    aria-describedby="passwordError"
+                                    aria-invalid="false" />
                                 <button type="button" class="toggle-pass" id="togglePass">Show</button>
                             </div>
                             <!-- Strength bar -->
@@ -112,27 +121,23 @@
                                 <div class="strength-seg" id="seg3"></div>
                                 <div class="strength-seg" id="seg4"></div>
                             </div>
+                            <p class="error-text" id="passwordError" aria-live="polite" hidden>
+                                Password must be at least 6 characters and include letters and numbers.
+                            </p>
                         </div>
 
                         <div class="field">
                             <label for="confirm">Confirm Password</label>
-                            <input type="password" id="confirm" name="confirm" placeholder="••••••••" required />
-                            <p class="error-text" id="mismatchText" hidden>Passwords do not match</p>
+                            <input type="password" id="confirm" name="confirm" placeholder="******" required />
+                            <p class="error-text" id="mismatchText">Passwords do not match</p>
                         </div>
 
-                        <div class="info-box">
-                            <p class="req-title">Password requirements:</p>
-                            <p class="req-item"><span class="req-dot">·</span> At least 8 characters</p>
-                            <p class="req-item"><span class="req-dot">·</span> One uppercase letter</p>
-                            <p class="req-item"><span class="req-dot">·</span> One number</p>
-                        </div>
                     </div>
 
                     <!-- Navigation -->
                     <div class="nav-row">
-                        <li>@Html.ActionLink("Back", "Login", "Cust", new { area = "" }, new { @class = "btn btn-back" })</li>
+                        @Html.ActionLink("Back to Login", "Login", "Cust", new { area = "" }, new { @class = "btn btn-back" })
 
-                        <button type="button" class="btn btn-primary" id="continueBtn">Continue</button>
                         <button type="submit" class="btn btn-primary" id="submitBtn">Create Account</button>
                         <button type="button" class="btn btn-primary" id="adminRegisterBtn"
                                 onclick="window.location.href='@Url.Action("Adminregister", "Cust")'">
@@ -148,16 +153,25 @@
 
                 </form>
 
-                <p class="footer-text">
-                    Already have an account?
-                    <li>@Html.ActionLink("Sign In", "Login", "Cust", new { area = "" }, new { @class = "sale-btn" })</li>
+                    <div class="nav-row">
+                       
 
-                </p>
-            </div>
+                    </div>
+
+                    <div class="note-box">
+                        <p class="note-title">Why we need your contact details</p>
+                        <p class="note-body">
+                            We use your email and phone to send booking confirmations and important updates about your events. We never share your information.
+                        </p>
+                    </div>
+
+                </form>
+
+            </div>      
 
             <!-- ============ SUCCESS STATE ============ -->
             <div class="success-page" id="successPage" hidden>
-                <div class="success-content">
+                <div class="success-content" role="status" aria-live="polite">
                     <div class="success-icon">✓</div>
                     <h2>Account Created</h2>
                     <p>
