@@ -182,6 +182,10 @@
     <Compile Include="Migrations\202608261919448_AddPackagesAndAddOns.Designer.cs">
       <DependentUpon>202608261919448_AddPackagesAndAddOns.cs</DependentUpon>
     </Compile>
+    <Compile Include="Migrations\202608282329047_AddBookingCreatedAtStatus.cs" />
+    <Compile Include="Migrations\202608282329047_AddBookingCreatedAtStatus.Designer.cs">
+      <DependentUpon>202608282329047_AddBookingCreatedAtStatus.cs</DependentUpon>
+    </Compile>
     <Compile Include="Migrations\Configuration.cs" />
     <Compile Include="Models\AddOn.cs" />
     <Compile Include="Models\Admin.cs" />
@@ -306,6 +310,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Migrations\202608261919448_AddPackagesAndAddOns.resx">
       <DependentUpon>202608261919448_AddPackagesAndAddOns.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\202608282329047_AddBookingCreatedAtStatus.resx">
+      <DependentUpon>202608282329047_AddBookingCreatedAtStatus.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <PropertyGroup>

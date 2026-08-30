@@ -100,7 +100,8 @@ function isStep1Valid() {
         isNameValid(state.form.lastName) &&
         state.form.email.includes("@") &&
         isPhoneValid(state.form.phone) &&
-        state.form.occasion
+        state.form.occasion &&
+        state.form.city && state.form.city.trim()
     );
 }
 
@@ -109,8 +110,7 @@ function isStep2Valid() {
         state.form.packageId &&
         state.form.date &&
         state.form.time &&
-        state.form.address.trim() &&
-        state.form.city.trim()
+        state.form.address.trim()
     );
 }
 
@@ -196,6 +196,7 @@ function renderBookingStep() {
           <input class="form-control" id="lastName" name="lastName" inputmode="text" pattern="^[A-Za-z]+$" maxlength="50" value="${escapeHtml(state.form.lastName)}" placeholder="Mabaso" required>
           <small class="muted">Letters only (A–Z).</small>
         </div>
+
         <div class="form-group">
           <label class="form-label" for="email">Email Address</label>
           <input class="form-control" id="email" name="email" type="email" value="${escapeHtml(state.form.email)}" placeholder="nomsa@example.com" required>
@@ -208,6 +209,7 @@ function renderBookingStep() {
           </div>
           <small class="muted">Enter 9 digits (do not include leading 0).</small>
         </div>
+
         <div class="form-group full">
           <label class="form-label" for="occasion">Occasion Type</label>
           <select class="form-control" id="occasion" name="occasion" required>
@@ -215,6 +217,17 @@ function renderBookingStep() {
             ${["Birthday", "Anniversary", "Graduation", "Valentine's Day", "Baby Shower", "Other"]
                 .map(o => `<option value="${escapeHtml(o)}" ${state.form.occasion === o ? "selected" : ""}>${escapeHtml(o)}</option>`).join("")}
           </select>
+        </div>
+
+        <div class="form-group full">
+          <label class="form-label" for="city">City / Town</label>
+          <select class="form-control" id="city" name="city" required>
+            <option value="">Select city…</option>
+            <option value="Pietermaritzburg" ${state.form.city === "Pietermaritzburg" ? "selected" : ""}>Pietermaritzburg</option>
+            <option value="Durban" ${state.form.city === "Durban" ? "selected" : ""}>Durban</option>
+            <option value="Mandeni" ${state.form.city === "Mandeni" ? "selected" : ""}>Mandeni</option>
+          </select>
+         
         </div>
       </div>
       <div class="form-actions" style="justify-content:flex-end;">

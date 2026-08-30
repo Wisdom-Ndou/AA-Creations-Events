@@ -1,180 +1,168 @@
-﻿// AA Creations & Events — Customer Registration
-// Vanilla JS replacement for the React useState logic in the original .tsx
+﻿// Customer register page script
+// - Relaxed password rule: minimum 6 chars, must include at least one letter and one number
+// - Live strength bar, inline error, aria updates
+// - Password/confirm must match before submit
 
 document.addEventListener('DOMContentLoaded', function () {
-    var steps = ['Personal', 'Contact', 'Security'];
-    var step = 0; // mirrors useState(0)
+    function el(id) { return document.getElementById(id); }
 
-    var panels = [
-        document.getElementById('panel0'),
-        document.getElementById('panel1'),
-        document.getElementById('panel2'),
-    ];
-    var badges = [
-        document.getElementById('badge0'),
-        document.getElementById('badge1'),
-        document.getElementById('badge2'),
-    ];
-    var labels = [
-        document.getElementById('label0'),
-        document.getElementById('label1'),
-        document.getElementById('label2'),
-    ];
-    var connectors = document.querySelectorAll('.step-connector');
-
-    var backBtn = document.getElementById('backBtn');
-    var continueBtn = document.getElementById('continueBtn');
-    var submitBtn = document.getElementById('submitBtn');
-    var form = document.getElementById('registerForm');
+    var form = el('registerForm');
     var formWrap = document.querySelector('.form-wrap');
-    var successPage = document.getElementById('successPage');
+    var successPage = el('successPage');
+    var successMessage = el('successMessage');
 
-    var passwordInput = document.getElementById('password');
-    var confirmInput = document.getElementById('confirm');
-    var togglePassBtn = document.getElementById('togglePass');
-    var mismatchText = document.getElementById('mismatchText');
-    var strengthSegs = [
-        document.getElementById('seg1'),
-        document.getElementById('seg2'),
-        document.getElementById('seg3'),
-        document.getElementById('seg4'),
-    ];
+    var passwordInput = el('password');
+    var confirmInput = el('confirm');
+    var mismatchText = el('mismatchText');
+    var togglePassBtn = el('togglePass');
 
-    // --- Per-step required fields, so hidden panels don't block validation ---
-    var stepFieldIds = [
-        ['firstName', 'lastName', 'city'],
-        ['email', 'phone'],
-        ['password', 'confirm'],
-    ];
+    var passwordError = el('passwordError');
+    var strengthSegs = [el('seg1'), el('seg2'), el('seg3'), el('seg4')];
 
-    function renderStepIndicator() {
-        for (var i = 0; i < steps.length; i++) {
-            badges[i].classList.remove('current', 'done');
-            labels[i].classList.remove('current');
+    // Relaxed rule: at least one letter and one digit, minimum 6 chars
+    var passwordRegex = /^(?=.*[A-Za-z])(?=.*\d).{6,}$/;
 
-            if (i < step) {
-                badges[i].classList.add('done');
-                badges[i].textContent = '✓';
-            } else if (i === step) {
-                badges[i].classList.add('current');
-                labels[i].classList.add('current');
-                badges[i].textContent = String(i + 1);
-            } else {
-                badges[i].textContent = String(i + 1);
-            }
-        }
-        connectors.forEach(function (connector, i) {
-            connector.classList.toggle('done', i < step);
-        });
+    // Helper: set aria-invalid and class for an input
+    function setInvalid(inputEl, invalid) {
+        if (!inputEl) return;
+        inputEl.setAttribute('aria-invalid', invalid ? 'true' : 'false');
+        inputEl.classList.toggle('mismatch', invalid);
     }
 
-    function renderPanels() {
-        panels.forEach(function (panel, i) {
-            panel.hidden = i !== step;
-        });
-
-        backBtn.hidden = step === 0;
-        continueBtn.hidden = step === steps.length - 1;
-        submitBtn.hidden = step !== steps.length - 1;
-
-        // Only the visible step's fields are required, so browser validation
-        // doesn't complain about fields the user can't currently see.
-        stepFieldIds.forEach(function (ids, i) {
-            ids.forEach(function (id) {
-                var el = document.getElementById(id);
-                if (el) el.required = i === step && id !== 'newsletter';
-            });
-        });
+    function showError(elError, show) {
+        if (!elError) return;
+        elError.hidden = !show;
     }
 
-    function goToStep(newStep) {
-        step = newStep;
-        renderStepIndicator();
-        renderPanels();
-    }
-
-    function currentStepIsValid() {
-        var panel = panels[step];
-        var inputs = panel.querySelectorAll('input[required]');
-        for (var i = 0; i < inputs.length; i++) {
-            if (!inputs[i].checkValidity()) {
-                inputs[i].reportValidity();
-                return false;
-            }
-        }
-        if (step === 2 && passwordInput.value !== confirmInput.value) {
-            confirmInput.classList.add('mismatch');
-            mismatchText.hidden = false;
-            confirmInput.focus();
-            return false;
-        }
-        return true;
-    }
-
-    continueBtn.addEventListener('click', function () {
-        if (!currentStepIsValid()) return;
-        goToStep(step + 1);
-    });
-
-    backBtn.addEventListener('click', function () {
-        goToStep(step - 1);
-    });
-
-    // --- Show / hide password ---
-    togglePassBtn.addEventListener('click', function () {
-        var isHidden = passwordInput.type === 'password';
-        passwordInput.type = isHidden ? 'text' : 'password';
-        togglePassBtn.textContent = isHidden ? 'Hide' : 'Show';
-    });
-
-    // --- Password strength bar (mirrors the length-based bar in the TSX) ---
+        // Update strength bar: simple scoring based on length, letters present, digits present
     function updateStrengthBar() {
-        var len = passwordInput.value.length;
-        strengthSegs.forEach(function (seg, idx) {
-            var i = idx + 1; // 1..4
-            seg.classList.remove('weak', 'medium', 'strong');
-            if (len >= i * 3) {
-                if (i <= 2) seg.classList.add('weak');
-                else if (i === 3) seg.classList.add('medium');
-                else seg.classList.add('strong');
-            }
-        });
-    }
+        if (!passwordInput) return;
+        var val = passwordInput.value || '';
+        var score = 0;
+        if (val.length >= 6) score++;
+        if (/[A-Za-z]/.test(val)) score++;
+        if (/\d/.test(val)) score++;
 
-    // --- Live confirm-password match styling ---
-    function checkConfirmMatch() {
-        confirmInput.classList.remove('match', 'mismatch');
-        mismatchText.hidden = true;
-        if (!confirmInput.value) return;
-        if (passwordInput.value === confirmInput.value) {
-            confirmInput.classList.add('match');
-        } else {
-            confirmInput.classList.add('mismatch');
-            mismatchText.hidden = false;
+        // Fill up to 3 segments; use fourth as bonus for longer (>10)
+        for (var i = 0; i < strengthSegs.length; i++) {
+            var seg = strengthSegs[i];
+            if (!seg) continue;
+            seg.classList.remove('weak', 'medium', 'strong');
+            if (i < score) {
+                if (score === 1) seg.classList.add('weak');
+                else if (score === 2) seg.classList.add('medium');
+                else seg.classList.add('strong');
+            } else if (i === 3 && val.length >= 10) {
+                seg.classList.add('strong');
+            }
         }
     }
 
-    passwordInput.addEventListener('input', function () {
+    // Validate password according to the relaxed rule
+    function validatePassword(lively) {
+        if (!passwordInput) return true;
+        var val = passwordInput.value || '';
+        var ok = passwordRegex.test(val);
+
+        // Be less noisy while typing: show only when user typed something if lively=true
+        var show = !ok && (lively ? val.length > 0 : true);
+
+        showError(passwordError, show);
+        setInvalid(passwordInput, !ok);
         updateStrengthBar();
-        checkConfirmMatch();
-    });
-    confirmInput.addEventListener('input', checkConfirmMatch);
+        return ok;
+    }
 
-    // --- Final submit ---
-    form.addEventListener('submit', function (e) {
-        e.preventDefault();
+    // Password/confirm match check
+    function checkPasswordsMatch(lively) {
+        if (!passwordInput || !confirmInput) return true;
+        var p = passwordInput.value || '';
+        var c = confirmInput.value || '';
 
-        if (!currentStepIsValid()) return;
+        var strengthOk = validatePassword(true);
 
-        // TODO: replace this with an actual POST to your MVC controller action,
-        // e.g. fetch('/Customer/Register', { method: 'POST', body: new FormData(form) })
-        console.log('Customer registration data:', Object.fromEntries(new FormData(form)));
+        var showMismatch = c.length > 0 && p !== c;
+        if (lively === false) showMismatch = p !== c;
 
-        formWrap.hidden = true;
-        successPage.hidden = false;
-    });
+        if (mismatchText) mismatchText.hidden = !showMismatch;
+        setInvalid(confirmInput, showMismatch);
 
-    // Initialise UI state
-    renderStepIndicator();
-    renderPanels();
+        return !showMismatch && strengthOk;
+    }
+
+    // Wire events
+    if (passwordInput) {
+        passwordInput.addEventListener('input', function () {
+            validatePassword(true);
+            checkPasswordsMatch(true);
+        });
+        passwordInput.addEventListener('blur', function () { validatePassword(false); });
+    }
+
+    if (confirmInput) {
+        confirmInput.addEventListener('input', function () { checkPasswordsMatch(true); });
+        confirmInput.addEventListener('blur', function () { checkPasswordsMatch(false); });
+    }
+
+    if (togglePassBtn && passwordInput) {
+        togglePassBtn.addEventListener('click', function () {
+            var isHidden = passwordInput.type === 'password';
+            passwordInput.type = isHidden ? 'text' : 'password';
+            togglePassBtn.textContent = isHidden ? 'Hide' : 'Show';
+        });
+    }
+
+    // Utility: visible required inputs
+    function visibleRequiredInputs() {
+        if (!form) return [];
+        return Array.from(form.querySelectorAll('input[required], select[required]')).filter(function (i) {
+            return i.offsetParent !== null;
+        });
+    }
+
+    // Submit handler: validate visible inputs, password rule and match
+    if (form) {
+        form.addEventListener('submit', function (e) {
+            e.preventDefault();
+
+            // Browser-level checks for visible required fields
+            var visible = visibleRequiredInputs();
+            for (var i = 0; i < visible.length; i++) {
+                if (!visible[i].checkValidity()) {
+                    visible[i].reportValidity();
+                    return;
+                }
+            }
+
+            // Validate password rule and match
+            var passwordsOk = checkPasswordsMatch(false);
+            if (!passwordsOk) {
+                if (!validatePassword(false)) {
+                    if (passwordInput) passwordInput.focus();
+                } else if (confirmInput) {
+                    confirmInput.focus();
+                }
+                return;
+            }
+
+            // All client-side validation passed — show success UI
+            var fn = (el('firstName') && el('firstName').value) ? el('firstName').value.trim() : '';
+            var ln = (el('lastName') && el('lastName').value) ? el('lastName').value.trim() : '';
+            var fullName = (fn + ' ' + ln).trim() || 'Customer';
+
+            function escapeHtml(s) {
+                return String(s).replace(/[&<>"'\/]/g, function (c) {
+                    return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;', '/': '&#x2F;' }[c];
+                });
+            }
+
+            if (successMessage) {
+                successMessage.innerHTML = 'Welcome, <strong>' + escapeHtml(fullName) + '</strong>. Registration successful.';
+            }
+            if (formWrap) formWrap.hidden = true;
+            if (successPage) successPage.hidden = false;
+
+            // TODO: send to server here
+        }, false);
+    }
 });
