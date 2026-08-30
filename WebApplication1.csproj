@@ -179,6 +179,7 @@
     <Compile Include="Migrations\202608282329047_AddBookingCreatedAtStatus.cs" />
     <Compile Include="Migrations\202608282329047_AddBookingCreatedAtStatus.Designer.cs">
       <DependentUpon>202608282329047_AddBookingCreatedAtStatus.cs</DependentUpon>
+    </Compile>
     <Compile Include="Migrations\202608292251436_UpdateDatabase.cs" />
     <Compile Include="Migrations\202608292251436_UpdateDatabase.Designer.cs">
       <DependentUpon>202608292251436_UpdateDatabase.cs</DependentUpon>
@@ -310,6 +311,7 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Migrations\202608282329047_AddBookingCreatedAtStatus.resx">
       <DependentUpon>202608282329047_AddBookingCreatedAtStatus.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Migrations\202608292251436_UpdateDatabase.resx">
       <DependentUpon>202608292251436_UpdateDatabase.cs</DependentUpon>
     </EmbeddedResource>
