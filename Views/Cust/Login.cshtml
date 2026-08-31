@@ -60,7 +60,20 @@
                     </button>
                 </div>
 
-                <form id="loginForm" novalidate>
+                @if (!ViewData.ModelState.IsValid)
+                {
+                    <div class="login-error">
+                        @Html.ValidationSummary(false, "", new { @class = "text-danger" })
+                    </div>
+                }
+
+                @using (Html.BeginForm("Login", "Cust", FormMethod.Post, new { id = "loginForm" }))
+                {
+
+                    @Html.AntiForgeryToken()
+
+                    <input type="hidden" id="role" name="role" value="customer" />
+
                     <div class="field">
                         <label for="email">Email Address</label>
                         <input type="email" id="email" name="email" placeholder="you@example.com" required />
@@ -95,7 +108,7 @@
                     </div>
                     <!-- From here the code shows evrything from all types of users -->
 
-                </form>
+                }
 
                 <!-- Customer registration link (shown only for Customer role) -->
                 <div class="register-row" id="customerRegisterRow">

@@ -18,7 +18,22 @@
                 <li><a href="@Url.Action("Booking", "Cust")">MAKE A BOOKING</a></li>
                 <li><a href="@Url.Action("ViewBooking", "Cust")">VIEW BOOKING</a></li>
                 <li><a href="@Url.Action("contactus", "Cust")">CONTACT US</a></li>
-                <li><a href="@Url.Action("Login", "Cust")">LOGIN</a></li>
+
+                @if (Session["CustomerId"] != null)
+                {
+                    using (Html.BeginForm("Logout", "Cust", FormMethod.Post, new { style = "display:inline;" }))
+                    {
+                        @Html.AntiForgeryToken()
+
+                        <button type="submit" class="logout-btn">
+                            Sign Out
+                        </button>
+                    }
+                }
+                else
+                {
+                    @Html.ActionLink("Login", "Login", "Cust", null, new { @class = "login-btn" })
+                }
 
             </ul>
             <div class="nav-icons">

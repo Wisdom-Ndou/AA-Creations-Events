@@ -41,24 +41,27 @@
 
         <!-- ============ RIGHT: FORM PANEL ============ -->
         <main class="form-panel">
-            <div class="form-wrap">
+            <div class="form-wrap"
+                 @(TempData["RegistrationSuccess"] != null ? "hidden" : "")>
 
                 <h2 class="form-title">Customer Registration</h2>
                 <p class="form-subtitle">Fill in your details to get started</p>
 
-                <form id="registerForm" novalidate>
+                @using (Html.BeginForm("Customerregister", "Cust", FormMethod.Post, new { id = "registerForm" }))
+                {
+                    @Html.AntiForgeryToken()
 
                     <!-- ===== Step 0: Personal ===== -->
                     <div class="step-panel" id="panel0">
                         <div class="grid-2">
                             <div class="field">
                                 <label for="firstName">First Name</label>
-                                <input type="text" id="firstName" name="firstName" placeholder="Nomsa" required pattern="^[A-Za-z]+$" title="Only letters allowed" aria-describedby="firstNameError" aria-invalid="false" maxlength="60" />
+                                <input type="text" id="firstName" name="Cust_FName" placeholder="Nobuhle" required pattern="^[A-Za-z]+$" title="Only letters allowed" aria-describedby="firstNameError" aria-invalid="false" maxlength="60" />
                                 <p class="error-text" id="firstNameError" aria-live="polite" hidden>Only letters allowed</p>
                             </div>
                             <div class="field">
                                 <label for="lastName">Last Name</label>
-                                <input type="text" id="lastName" name="lastName" placeholder="Mabaso" required pattern="^[A-Za-z]+$" title="Only letters allowed" aria-describedby="lastNameError" aria-invalid="false" maxlength="60" />
+                                <input type="text" id="lastName" name="Cust_LName" placeholder="Zulu" required pattern="^[A-Za-z]+$" title="Only letters allowed" aria-describedby="lastNameError" aria-invalid="false" maxlength="60" />
                                 <p class="error-text" id="lastNameError" aria-live="polite" hidden>Only letters allowed</p>
                             </div>
                         </div>
@@ -70,7 +73,16 @@
                     <div class="step-panel" id="panel1">
                         <div class="field">
                             <label for="email">Email Address</label>
-                            <input type="email" id="email" name="email" placeholder="nomsa@example.com" required />
+                            <input type="email" id="email" name="Cust_Email" placeholder="nobuzulu@gmail.com" required />
+
+                            @if (ViewData.ModelState["Cust_Email"] != null &&
+                            ViewData.ModelState["Cust_Email"].Errors.Count > 0)
+                            {
+                                <p class="error-text server-error" aria-live="polite">
+                                    @ViewData.ModelState["Cust_Email"].Errors[0].ErrorMessage
+                                </p>
+                            }
+
                         </div>
 
                         <div class="field">
@@ -79,8 +91,8 @@
                                 <span class="phone-prefix">+27</span>
                                 <input type="tel"
                                        id="phone"
-                                       name="phone"
-                                       placeholder="734627868"
+                                       name="Cust_Phone"
+                                       placeholder="728467952"
                                        required
                                        pattern="^[1-9]\d{8}$"
                                        title="Enter 9 digits and do not start with 0"
@@ -97,10 +109,9 @@
                         <div class="field">
                             <label for="password">Create Password</label>
                             <div class="password-row">
-                                <input 
-                                       type="password"
+                                <input type="password"
                                        id="password"
-                                       name="password"
+                                       name="Cust_Passw"
                                        placeholder="******"
                                        required
                                        pattern="(?=.*[A-Za-z])(?=.*\d).{6,}"
@@ -124,7 +135,9 @@
                         <div class="field">
                             <label for="confirm">Confirm Password</label>
                             <input type="password" id="confirm" name="confirm" placeholder="******" required />
-                            <p class="error-text" id="mismatchText">Passwords do not match</p>
+                            <p class="error-text" id="mismatchText" hidden>
+                                Passwords do not match
+                            </p>
                         </div>
 
                     </div>
@@ -149,17 +162,27 @@
                         </p>
                     </div>
 
-                </form>
+                }
 
             </div>
 
             <!-- ============ SUCCESS STATE ============ -->
-            <div class="success-page" id="successPage" hidden>
+            <div class="success-page"
+                 id="successPage"
+                 @(TempData["RegistrationSuccess"] != null ? "" : "hidden")>
                 <div class="success-content" role="status" aria-live="polite">
                     <div class="success-icon">✓</div>
                     <h2 id="successTitle">Registration successful</h2>
-                    <p id="successMessage">Your registration was successful. You can now sign in and start booking.</p>
-                    @Html.ActionLink("Go to Sign ", "Login", "Cust", new { area = "" }, new { @class = "sale-btn" })
+                    <p id="successMessage">
+                        @(TempData["RegistrationSuccess"] ?? "Your registration was successful. You can now sign in and start booking.")
+                    </p>
+                    @Html.ActionLink(
+                        "Go to Sign In",
+                        "Login",
+                        "Cust",
+                        new { area = "" },
+                        new { @class = "sale-btn" }
+                    )
                 </div>
             </div>
         </main>

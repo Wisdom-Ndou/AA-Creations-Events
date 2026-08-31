@@ -6,6 +6,7 @@ using System.Web.Mvc;
 using WebApplication1.Models;
 using static WebApplication1.Models.Bankingdetailsviewmodel;
 using System.Data.Entity;
+using System.Web.Helpers;
 
 namespace WebApplication1.Controllers
 {
@@ -31,14 +32,131 @@ namespace WebApplication1.Controllers
             return View(obj);
         }
 
-        public ActionResult Login(Customer obj)
+        [HttpGet]
+        public ActionResult Login()
         {
-            return View(obj);
+            return View();
         }
 
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public ActionResult Login(string email, string password, string role)
+        {
+            if (string.IsNullOrWhiteSpace(email) ||
+                string.IsNullOrWhiteSpace(password))
+            {
+                ModelState.AddModelError(
+                    "",
+                    "Please enter your email address and password."
+                );
+
+                return View();
+            }
+
+            // We are only implementing customer login for now.
+            if (role != "customer")
+            {
+                ModelState.AddModelError(
+                    "",
+                    "Admin login is not available yet."
+                );
+
+                return View();
+            }
+
+            var customer = db.Customers
+                .FirstOrDefault(c => c.Cust_Email == email);
+
+            if (customer == null)
+            {
+                ModelState.AddModelError(
+                    "",
+                    "Invalid email address or password."
+                );
+
+                return View();
+            }
+
+            bool passwordValid = false;
+
+            try
+            {
+                passwordValid =
+                    Crypto.VerifyHashedPassword(
+                        customer.Cust_Passw,
+                        password
+                    );
+            }
+            catch
+            {
+                passwordValid = false;
+            }
+
+            if (!passwordValid)
+            {
+                ModelState.AddModelError(
+                    "",
+                    "Invalid email address or password."
+                );
+
+                return View();
+            }
+
+            // Store the authenticated customer
+            // information in the server-side session.
+            Session["CustomerId"] = customer.Cust_ID;
+            Session["CustomerEmail"] = customer.Cust_Email;
+            Session["CustomerFirstName"] = customer.Cust_FName;
+
+            return RedirectToAction("Index", "Cust");
+        }
+
+        [HttpGet]
+        public ActionResult Customerregister()
+        {
+            return View();
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
         public ActionResult Customerregister(Customer obj)
         {
-            return View(obj);
+            if (string.IsNullOrWhiteSpace(obj.Cust_Passw) ||
+                obj.Cust_Passw.Length < 6 ||
+                obj.Cust_Passw.Length > 15 ||
+                !obj.Cust_Passw.Any(char.IsLetter) ||
+                !obj.Cust_Passw.Any(char.IsDigit))
+            {
+                ModelState.AddModelError(
+                    "Cust_Passw",
+                    "Password must be 6 to 15 characters long and contain at least one letter and one number."
+                );
+
+                return View(obj);
+            }
+
+            // Check whether email is already registered
+            if (db.Customers.Any(c => c.Cust_Email == obj.Cust_Email))
+            {
+                ModelState.AddModelError(
+                    "Cust_Email",
+                    "An account with this email address already exists."
+                );
+
+                return View(obj);
+            }
+
+
+
+            obj.Cust_Passw = Crypto.HashPassword(obj.Cust_Passw);
+
+            db.Customers.Add(obj);
+            db.SaveChanges();
+
+            TempData["RegistrationSuccess"] =
+                "Your registration was successful. You can now sign in and start booking.";
+
+            return RedirectToAction("Customerregister", "Cust");
         }
 
         public ActionResult Adminregister(Customer obj)
@@ -53,6 +171,27 @@ namespace WebApplication1.Controllers
 
         public ActionResult Booking()
         {
+            if (Session["CustomerId"] == null)
+            {
+                return View("Booking", null);
+            }
+
+            var customerId = (int)Session["CustomerId"];
+
+            var customer = db.Customers
+                .FirstOrDefault(c => c.Cust_ID == customerId);
+
+            if (customer == null)
+            {
+                Session.Clear();
+                return RedirectToAction("Login", "Cust");
+            }
+
+            ViewBag.CustomerFirstName = customer.Cust_FName;
+            ViewBag.CustomerLastName = customer.Cust_LName;
+            ViewBag.CustomerEmail = customer.Cust_Email;
+            ViewBag.CustomerPhone = customer.Cust_Phone;
+
             return View();
         }
 
@@ -67,6 +206,16 @@ namespace WebApplication1.Controllers
         [HttpPost]
         public JsonResult CreateBooking(CreateBookingRequest request)
         {
+            if (Session["CustomerId"] == null)
+            {
+                return Json(new
+                {
+                    success = false,
+                    requiresLogin = true,
+                    message = "Please sign in before making a booking."
+                });
+            }
+
             if (!ModelState.IsValid)
             {
                 return Json(new
@@ -124,8 +273,12 @@ namespace WebApplication1.Controllers
                 totalPrice += selectedAddOns.Sum(a => a.Price);
 
                 // Create the Booking entity
+                var customerId = (int)Session["CustomerId"];
+
                 var booking = new Booking
                 {
+                    CustomerId = customerId,
+
                     FirstName = request.FirstName,
                     LastName = request.LastName,
                     Email = request.Email,
@@ -194,11 +347,19 @@ namespace WebApplication1.Controllers
 
         public ActionResult ViewBooking()
         {
-            var bookings = db.Bookings
-                .Include("Package")
-                .Include("BookingAddOns.AddOn")
-                .OrderByDescending(b => b.EventDate)
-                .ToList();
+            var bookings = new List<Booking>();
+
+            if (Session["CustomerEmail"] != null)
+            {
+                string customerEmail = Session["CustomerEmail"].ToString();
+
+                bookings = db.Bookings
+                    .Where(b => b.Email == customerEmail)
+                    .Include("Package")
+                    .Include("BookingAddOns.AddOn")
+                    .OrderByDescending(b => b.EventDate)
+                    .ToList();
+            }
 
             return View(bookings);
         }
@@ -213,6 +374,16 @@ namespace WebApplication1.Controllers
                 bookingCount = bookingCount,
                 message = "Database connection is working."
             }, JsonRequestBehavior.AllowGet);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public ActionResult Logout()
+        {
+            Session.Clear();
+            Session.Abandon();
+
+            return RedirectToAction("Index", "Cust");
         }
     }
 }

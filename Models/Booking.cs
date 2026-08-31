@@ -12,6 +12,11 @@ namespace WebApplication1.Models
         [Key]
         public int BookingId { get; set; }
 
+        [ForeignKey("Customer")]
+        public int? CustomerId { get; set; }
+
+        public virtual Customer Customer { get; set; }
+
         [Required]
         public string FirstName { get; set; }
 

@@ -184,6 +184,14 @@
     <Compile Include="Migrations\202608292251436_UpdateDatabase.Designer.cs">
       <DependentUpon>202608292251436_UpdateDatabase.cs</DependentUpon>
     </Compile>
+    <Compile Include="Migrations\202608301829110_SyncCurrentModel.cs" />
+    <Compile Include="Migrations\202608301829110_SyncCurrentModel.Designer.cs">
+      <DependentUpon>202608301829110_SyncCurrentModel.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\202608302106078_AddCustomerToBooking.cs" />
+    <Compile Include="Migrations\202608302106078_AddCustomerToBooking.Designer.cs">
+      <DependentUpon>202608302106078_AddCustomerToBooking.cs</DependentUpon>
+    </Compile>
     <Compile Include="Migrations\Configuration.cs" />
     <Compile Include="Models\AddOn.cs" />
     <Compile Include="Models\Admin.cs" />
@@ -222,6 +230,7 @@
     <Content Include="favicon.ico" />
     <Content Include="Global.asax" />
     <Content Include="Content\Site.css" />
+    <Content Include="Scripts\Adminregister.js" />
     <Content Include="Scripts\Bankingdetails.js" />
     <Content Include="Scripts\Booking.js" />
     <Content Include="Scripts\bootstrap.bundle.js" />
@@ -245,7 +254,6 @@
     <Content Include="Scripts\jquery.validate.unobtrusive.min.js" />
     <Content Include="Scripts\Login script.js" />
     <Content Include="Scripts\modernizr-2.8.3.js" />
-    <Content Include="Scripts\Script.js" />
     <Content Include="Scripts\ViewBooking.js" />
     <Content Include="Web.config" />
     <Content Include="Web.Debug.config">
@@ -314,6 +322,12 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Migrations\202608292251436_UpdateDatabase.resx">
       <DependentUpon>202608292251436_UpdateDatabase.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\202608301829110_SyncCurrentModel.resx">
+      <DependentUpon>202608301829110_SyncCurrentModel.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\202608302106078_AddCustomerToBooking.resx">
+      <DependentUpon>202608302106078_AddCustomerToBooking.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <PropertyGroup>

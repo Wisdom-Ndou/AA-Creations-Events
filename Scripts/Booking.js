@@ -672,14 +672,31 @@ function renderConfirmation() {
         </div>
       </div>
     </div>
-  `;
+  `;    
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-    loadQueryPackage();
-
     const app = document.getElementById("bookingApp");
     if (!app) return;
 
+    const isLoggedIn = app.dataset.loggedIn === "true";
+    const loginOverlay = document.getElementById("bookingLoginOverlay");
+
+    if (!isLoggedIn) {
+        if (loginOverlay) {
+            loginOverlay.classList.add("visible");
+        }
+
+        return;
+    }
+
+    // Load the signed-in customer's details from the server-rendered page.
+    // These values came from the Customers table using Session["CustomerId"].
+    state.form.firstName = app.dataset.customerFirstName || "";
+    state.form.lastName = app.dataset.customerLastName || "";
+    state.form.email = app.dataset.customerEmail || "";
+    state.form.phone = app.dataset.customerPhone || "";
+
+    loadQueryPackage();
     renderBookingStep();
 });
