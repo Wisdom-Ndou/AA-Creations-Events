@@ -1,35 +1,26 @@
-﻿
-@{
+﻿@{
     ViewBag.Title = "Adminregister";
 }
-
-<h2>Adminregister</h2>
 
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8" />
+    <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Admin Registration Portal | AA Creations &amp; Events</title>
-
-    <!-- Fonts used by the Figma design -->
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital@0;1&family=Outfit:wght@400;500;600&display=swap"
-          rel="stylesheet" />
-     
     <link rel="stylesheet" href="~/Content/Styles.css" />
 </head>
 <body>
+
 
     <div class="page">
 
         <!-- ============ LEFT: BRAND PANEL (hidden on small screens) ============ -->
         <aside class="brand-panel">
-            
+
 
             <div class="brand-top">
-                
+
             </div>
 
             <div class="brand-mid">
@@ -63,93 +54,115 @@
             </div>
         </aside>
 
-        <!-- ============ RIGHT: FORM PANEL ============ -->
+
+
+
         <main class="form-panel">
             <div class="form-wrap" id="formWrap">
-
-
-
-                <div class="badge mobile-badge">Admin Access Request</div>
-
                 <h2 class="form-title">Create Admin Account</h2>
-                <p class="form-subtitle">
-                    All fields are required — your request will be reviewed before activation
-                </p>
+                <p class="form-subtitle">All fields are required — your request will be reviewed before activation</p>
 
-                <form id="adminForm" novalidate>
+                @using (Html.BeginForm("Adminregister", "Cust", FormMethod.Post, new { id = "adminForm", novalidate = "novalidate" }))
+                {
+                    @Html.AntiForgeryToken()
 
-                    <!-- Identity -->
                     <section class="form-section">
                         <p class="section-label">Identity</p>
                         <div class="grid-2">
                             <div class="field">
                                 <label for="firstName">First Name</label>
-                                <input type="text" id="firstName" name="firstName" placeholder="Thabo" required />
-                                <span class="error-message" id="firstNameError"></span>
-                            </div>
-                            <div class="field">
-                                <label for="lastName">Last Name</label>
-                                <input type="text" id="lastName" name="lastName" placeholder="Sithole" required />
-                                <span class="error-message" id="lastNameError"></span>
+                                <input type="text"
+                                       id="firstName"
+                                       name="firstName"
+                                       placeholder="Thabo"
+                                       required
+                                       pattern="^[A-Za-z]+$"
+                                       title="Only letters allowed"
+                                       aria-describedby="firstNameError"
+                                       aria-invalid="false" />
+                                <p class="error-text" id="firstNameError" aria-live="polite" hidden>Only letters allowed</p>
                             </div>
 
+                            <div class="field">
+                                <label for="lastName">Last Name</label>
+                                <input type="text"
+                                       id="lastName"
+                                       name="lastName"
+                                       placeholder="Sithole"
+                                       required
+                                       pattern="^[A-Za-z]+$"
+                                       title="Only letters allowed"
+                                       aria-describedby="lastNameError"
+                                       aria-invalid="false" />
+                                <p class="error-text" id="lastNameError" aria-live="polite" hidden>Only letters allowed</p>
+                            </div>
                         </div>
                     </section>
 
-                    <!-- Contact -->
                     <section class="form-section">
                         <p class="section-label">Contact</p>
                         <div class="field">
                             <label for="email">Work Email</label>
-                            <input type="email" id="email" name="email" placeholder="thabo@aacreations.co.za" required />
+                            <input type="email" id="email" name="email" placeholder="thabo@aacreations.co.za" required aria-describedby="emailError" aria-invalid="false" />
+                            <p class="error-text" id="emailError" aria-live="polite" hidden>Enter a valid work email</p>
                         </div>
+
                         <div class="field">
                             <label for="phone">Mobile Number</label>
                             <div class="phone-row">
                                 <span class="phone-prefix">+27</span>
-                                <input type="tel" id="phone" name="phone" placeholder="083 456 7890" required />
-                                <span class="error-message" id="phoneError"></span>
+                                <input type="tel"
+                                       id="phone"
+                                       name="phone"
+                                       placeholder="723456789"
+                                       required
+                                       maxlength="9"
+                                       aria-describedby="phoneError"
+                                       aria-invalid="false" />
                             </div>
+                            <p class="error-text" id="phoneError" aria-live="polite" hidden>Enter 9 digits and do not start with 0</p>
                         </div>
-
                     </section>
 
-                    <!-- Security -->
                     <section class="form-section">
                         <p class="section-label">Security</p>
-
                         <div class="grid-2">
                             <div class="field">
                                 <label for="password">Password</label>
                                 <div class="password-row">
-                                    <input type="password" id="password" name="password" placeholder="••••••••" required />
-                                    <button type="button" class="toggle-pass" id="togglePass">Show</button>
+                                    <input type="password"
+                                           id="password"
+                                           name="password"
+                                           placeholder="••••••••"
+                                           required
+                                           aria-describedby="passwordError"
+                                           aria-invalid="false" />
+                                    <button type="button" class="toggle-pass" id="togglePass" aria-pressed="false">Show</button>
                                 </div>
+                                <p class="error-text" id="passwordError" aria-live="polite" hidden>
+                                    Password must be at least 8 characters, include at least 2 uppercase letters and 1 special character.
+                                </p>
                             </div>
+
                             <div class="field">
                                 <label for="confirm">Confirm</label>
-                                <input type="password" id="confirm" name="confirm" placeholder="••••••••" required />
+                                <input type="password" id="confirm" name="confirm" placeholder="••••••••" required aria-describedby="mismatchText" aria-invalid="false" />
+                                <p class="error-text" id="mismatchText" aria-live="polite" hidden>Passwords do not match</p>
                             </div>
                         </div>
                     </section>
 
-                    <!-- Terms -->
                     <div class="terms-box">
                         <label class="terms-label">
                             <input type="checkbox" id="termsAccepted" name="termsAccepted" required />
-                            <span>
-                                I confirm that all information provided is accurate and I agree to AA Creations &amp; Events
-                                <span class="terms-link" tabindex="0">Admin Terms of Use</span>.
-                            </span>
+                            <span>I confirm that all information provided is accurate and I agree to the Admin Terms of Use.</span>
                         </label>
                     </div>
 
-
-
-
-                    <button type="submit" class="submit-btn">Submit Admin Request</button>
-                </form>
-
+                    <div style="margin-top:18px;">
+                        <button type="submit" class="submit-btn" id="submitBtn">Submit Admin Request</button>
+                    </div>
+                }
 
                 <p class="footer-text">
                     Back to admin sign in page
@@ -174,10 +187,11 @@
                     </div>
                 </div>
 
-</main>
+            </div>
+        </main>
 
     </div>
 
-    <script src="~/Scripts/Script.js"></script>
+    <script src="~/Scripts/Adminregister.js"></script>
 </body>
 </html>

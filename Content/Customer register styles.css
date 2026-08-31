@@ -581,6 +581,11 @@ input:focus {
     padding: 12px 32px;
 }
 
+.server-error {
+    margin-top: 6px;
+    font-size: 12px;
+}
+
 /* ================= RESPONSIVE (Tailwind lg: = 1024px) ================= */
 @media (min-width: 1024px) {
     .brand-panel {

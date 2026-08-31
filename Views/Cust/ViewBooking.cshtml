@@ -13,7 +13,43 @@
 
 <body data-page="bookings">
 
-    <main class="bookings-page">
+    <main class="bookings-page" id="bookingsApp"
+          data-logged-in="@(Session["CustomerEmail"] != null ? "true" : "false")">
+
+        <!-- Login Overlay -->
+        <div id="bookingsLoginOverlay" class="booking-login-overlay">
+
+            <div class="booking-login-card">
+
+                <div class="booking-login-icon">🔒</div>
+
+                <p class="eyebrow">Sign In Required</p>
+
+                <h2>Ready to view your bookings?</h2>
+
+                <p>
+                    Please sign in to your customer account before viewing your bookings.
+                    Your bookings will be saved to your account so you can view them later.
+                </p>
+
+                <div class="booking-login-actions">
+
+                    <a href="@Url.Action("Login", "Cust")"
+                       class="btn btn-primary">
+                        Sign In
+                    </a>
+
+                    <a href="@Url.Action("Customerregister", "Cust")"
+                       class="btn btn-outline">
+                        Create Account
+                    </a>
+
+                </div>
+
+            </div>
+
+        </div>
+
         <div class="narrow">
 
             <div class="booking-head">
@@ -114,6 +150,22 @@
 
     <script src="~/Scripts/Common.js"></script>
     <script src="~/Scripts/ViewBooking.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+
+            const app = document.getElementById("bookingsApp");
+            const overlay = document.getElementById("bookingsLoginOverlay");
+
+            if (!app || !overlay) return;
+
+            const isLoggedIn = app.dataset.loggedIn === "true";
+
+            if (!isLoggedIn) {
+                overlay.classList.add("visible");
+            }
+
+        });
+    </script>
 
 </body>
 </html>

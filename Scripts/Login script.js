@@ -64,16 +64,30 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // --- Submit handler ---
     loginForm.addEventListener('submit', function (e) {
-        e.preventDefault();
 
-        // TODO: replace this with an actual POST to your MVC controller action,
-        // e.g. fetch('/Account/Login', { method: 'POST', body: new FormData(loginForm) })
-        console.log('Login attempt:', {
-            role: role,
-            email: emailInput.value,
-            password: passwordInput.value,
-            accessCode: role === 'admin' ? accessCodeInput.value : undefined,
-        });
+        if (!emailInput.value.trim() ||
+            !passwordInput.value.trim()) {
+
+            e.preventDefault();
+
+            if (!emailInput.value.trim()) {
+                emailInput.focus();
+            } else {
+                passwordInput.focus();
+            }
+
+            return;
+        }
+
+        // Set the role that MVC will receive.
+        var roleInput = document.getElementById('role');
+
+        if (roleInput) {
+            roleInput.value = role;
+        }
+
+        // Do NOT preventDefault().
+        // MVC will receive the POST.
     });
 
     // Initialise UI state on load

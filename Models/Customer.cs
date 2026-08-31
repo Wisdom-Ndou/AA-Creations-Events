@@ -31,11 +31,9 @@ namespace WebApplication1.Models
         public string Cust_Email { get; set; }
 
         [Required(ErrorMessage = "Password is required.")]
-        [StringLength(15, MinimumLength = 8, ErrorMessage = "Password must be at least 8 characters long.")]
-        [RegularExpression(@"^(?=.[^a-zA-Z0-9]).$", ErrorMessage = "Password must contain at least one special character.")]
+        [StringLength(255)]
         [DataType(DataType.Password)]
         public string Cust_Passw { get; set; }
-
     }
 }
 

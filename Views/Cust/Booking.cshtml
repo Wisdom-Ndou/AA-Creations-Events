@@ -4,8 +4,44 @@
 
 <link rel="stylesheet" href="~/Content/sstyle.css">
 
-<main id="bookingApp" data-booking-url="@Url.Action("CreateBooking", "Cust")">
+<main id="bookingApp"
+      data-booking-url="@Url.Action("CreateBooking", "Cust")"
+      data-logged-in="@(Session["CustomerId"] != null ? "true" : "false")"
+      data-customer-first-name="@ViewBag.CustomerFirstName"
+      data-customer-last-name="@ViewBag.CustomerLastName"
+      data-customer-email="@ViewBag.CustomerEmail"
+      data-customer-phone="@ViewBag.CustomerPhone">
+
     <section class="booking-page">
+
+        <!-- Login Required Overlay -->
+        <div class="booking-login-overlay" id="bookingLoginOverlay">
+            <div class="booking-login-card">
+                <div class="booking-login-icon">🔒</div>
+
+                <p class="eyebrow">Sign In Required</p>
+
+                <h2>Ready to make a booking?</h2>
+
+                <p>
+                    Please sign in to your customer account before making a booking.
+                    Your bookings will be saved to your account so you can view them later.
+                </p>
+
+                <div class="booking-login-actions">
+                    <a href="@Url.Action("Login", "Cust")"
+                       class="btn btn-primary">
+                        Sign In
+                    </a>
+
+                    <a href="@Url.Action("Customerregister", "Cust")"
+                       class="btn btn-outline">
+                        Create Account
+                    </a>
+                </div>
+            </div>
+        </div>
+
         <div class="narrow">
 
             <div class="booking-head">
@@ -14,12 +50,26 @@
                 <p>Complete the form below — we'll confirm via WhatsApp within 24 hours.</p>
             </div>
 
-            <!-- Progress and form area -->
             <div class="progress-steps" aria-label="Booking progress">
-                <div class="step-wrap"><div class="step-circle" data-step-circle>1</div><div class="step-line"></div></div>
-                <div class="step-wrap"><div class="step-circle" data-step-circle>2</div><div class="step-line"></div></div>
-                <div class="step-wrap"><div class="step-circle" data-step-circle>3</div><div class="step-line"></div></div>
-                <div class="step-wrap"><div class="step-circle" data-step-circle>4</div><div class="step-line"></div></div>
+                <div class="step-wrap">
+                    <div class="step-circle" data-step-circle>1</div>
+                    <div class="step-line"></div>
+                </div>
+
+                <div class="step-wrap">
+                    <div class="step-circle" data-step-circle>2</div>
+                    <div class="step-line"></div>
+                </div>
+
+                <div class="step-wrap">
+                    <div class="step-circle" data-step-circle>3</div>
+                    <div class="step-line"></div>
+                </div>
+
+                <div class="step-wrap">
+                    <div class="step-circle" data-step-circle>4</div>
+                    <div class="step-line"></div>
+                </div>
             </div>
 
             <div class="step-labels">
@@ -36,7 +86,6 @@
         </div>
     </section>
 </main>
-
 @section scripts {
     <script src="~/Scripts/Common.js"></script>
     <script src="~/Scripts/Booking.js"></script>
