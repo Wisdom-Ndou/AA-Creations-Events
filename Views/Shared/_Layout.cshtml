@@ -21,18 +21,24 @@
 
                 @if (Session["CustomerId"] != null)
                 {
-                    using (Html.BeginForm("Logout", "Cust", FormMethod.Post, new { style = "display:inline;" }))
-                    {
-                        @Html.AntiForgeryToken()
+                    @Html.ActionLink(
+                        "Manage Account",
+                        "ManageAccount",
+                        "Cust",
+                        null,
+                        new { @class = "login-btn" }
+                    )
 
-                        <button type="submit" class="logout-btn">
-                            Sign Out
-                        </button>
-                    }
                 }
                 else
                 {
-                    @Html.ActionLink("Login", "Login", "Cust", null, new { @class = "login-btn" })
+                    @Html.ActionLink(
+                        "Login",
+                        "Login",
+                        "Cust",
+                        null,
+                        new { @class = "login-btn" }
+                    )
                 }
 
             </ul>

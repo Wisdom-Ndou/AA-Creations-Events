@@ -192,6 +192,22 @@
     <Compile Include="Migrations\202608302106078_AddCustomerToBooking.Designer.cs">
       <DependentUpon>202608302106078_AddCustomerToBooking.cs</DependentUpon>
     </Compile>
+    <Compile Include="Migrations\202608311319112_SyncCustomerModel.cs" />
+    <Compile Include="Migrations\202608311319112_SyncCustomerModel.Designer.cs">
+      <DependentUpon>202608311319112_SyncCustomerModel.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\202608311322420_StandardizeCustomerPhoneNumber.cs" />
+    <Compile Include="Migrations\202608311322420_StandardizeCustomerPhoneNumber.Designer.cs">
+      <DependentUpon>202608311322420_StandardizeCustomerPhoneNumber.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\202608311326006_StandardizeCustomerPhoneNumber1.cs" />
+    <Compile Include="Migrations\202608311326006_StandardizeCustomerPhoneNumber1.Designer.cs">
+      <DependentUpon>202608311326006_StandardizeCustomerPhoneNumber1.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\202608311332315_StandardizeCustomerPhoneNumber9Digits.cs" />
+    <Compile Include="Migrations\202608311332315_StandardizeCustomerPhoneNumber9Digits.Designer.cs">
+      <DependentUpon>202608311332315_StandardizeCustomerPhoneNumber9Digits.cs</DependentUpon>
+    </Compile>
     <Compile Include="Migrations\Configuration.cs" />
     <Compile Include="Models\AddOn.cs" />
     <Compile Include="Models\Admin.cs" />
@@ -225,6 +241,7 @@
     <Content Include="Content\contactus.css" />
     <Content Include="Content\Customer register styles.css" />
     <Content Include="Content\Login Style.css" />
+    <Content Include="Content\Manage Account styles.css" />
     <Content Include="Content\sstyle.css" />
     <Content Include="Content\Styles.css" />
     <Content Include="favicon.ico" />
@@ -278,6 +295,7 @@
     <Content Include="Views\Cust\ViewBooking.cshtml" />
     <Content Include="Views\Cust\contactus.cshtml" />
     <Content Include="Views\Cust\Bankingdetails.cshtml" />
+    <Content Include="Views\Cust\ManageAccount.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />
@@ -328,6 +346,18 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Migrations\202608302106078_AddCustomerToBooking.resx">
       <DependentUpon>202608302106078_AddCustomerToBooking.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\202608311319112_SyncCustomerModel.resx">
+      <DependentUpon>202608311319112_SyncCustomerModel.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\202608311322420_StandardizeCustomerPhoneNumber.resx">
+      <DependentUpon>202608311322420_StandardizeCustomerPhoneNumber.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\202608311326006_StandardizeCustomerPhoneNumber1.resx">
+      <DependentUpon>202608311326006_StandardizeCustomerPhoneNumber1.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\202608311332315_StandardizeCustomerPhoneNumber9Digits.resx">
+      <DependentUpon>202608311332315_StandardizeCustomerPhoneNumber9Digits.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <PropertyGroup>
