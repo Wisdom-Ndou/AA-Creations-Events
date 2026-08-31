@@ -349,12 +349,12 @@ namespace WebApplication1.Controllers
         {
             var bookings = new List<Booking>();
 
-            if (Session["CustomerEmail"] != null)
+            if (Session["CustomerId"] != null)
             {
-                string customerEmail = Session["CustomerEmail"].ToString();
+                int customerId = (int)Session["CustomerId"];
 
                 bookings = db.Bookings
-                    .Where(b => b.Email == customerEmail)
+                    .Where(b => b.CustomerId == customerId)
                     .Include("Package")
                     .Include("BookingAddOns.AddOn")
                     .OrderByDescending(b => b.EventDate)
@@ -376,6 +376,97 @@ namespace WebApplication1.Controllers
             }, JsonRequestBehavior.AllowGet);
         }
 
+        [HttpGet]
+        public ActionResult ManageAccount()
+        {
+            if (Session["CustomerId"] == null)
+            {
+                return RedirectToAction("Login", "Cust");
+            }
+
+            int customerId = (int)Session["CustomerId"];
+
+            var customer = db.Customers
+                .FirstOrDefault(c => c.Cust_ID == customerId);
+
+            if (customer == null)
+            {
+                Session.Clear();
+                Session.Abandon();
+
+                return RedirectToAction("Login", "Cust");
+            }
+
+            return View(customer);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public ActionResult ManageAccount(Customer obj)
+        {
+            if (Session["CustomerId"] == null)
+            {
+                return RedirectToAction("Login", "Cust");
+            }
+
+            int customerId = (int)Session["CustomerId"];
+
+            var customer = db.Customers
+                .FirstOrDefault(c => c.Cust_ID == customerId);
+
+            if (customer == null)
+            {
+                Session.Clear();
+                Session.Abandon();
+
+                return RedirectToAction("Login", "Cust");
+            }
+
+            // Password is not being changed on the Manage Account page.
+            // Therefore, remove password validation from this request.
+            ModelState.Remove("Cust_Passw");
+
+            // Check whether another customer already uses this email.
+            if (db.Customers.Any(c =>
+                c.Cust_Email == obj.Cust_Email &&
+                c.Cust_ID != customerId))
+            {
+                ModelState.AddModelError(
+                    "Cust_Email",
+                    "An account with this email address already exists."
+                );
+
+                return View(customer);
+            }
+
+            if (!ModelState.IsValid)
+            {
+                return View(customer);
+            }
+
+            // Update only the information that the user is allowed
+            // to change on the Manage Account page.
+            customer.Cust_FName = obj.Cust_FName;
+            customer.Cust_LName = obj.Cust_LName;
+            customer.Cust_Email = obj.Cust_Email;
+            customer.Cust_Phone = obj.Cust_Phone;
+
+            // Tell Entity Framework that this existing customer was modified.
+            db.Entry(customer).State = EntityState.Modified;
+
+            // Permanently save the changes to the database.
+            db.SaveChanges();
+
+            // Keep the session information up to date.
+            Session["CustomerEmail"] = customer.Cust_Email;
+            Session["CustomerFirstName"] = customer.Cust_FName;
+
+            TempData["AccountSuccess"] =
+                "Your account details have been updated successfully.";
+
+            return RedirectToAction("ManageAccount");
+        }
+
         [HttpPost]
         [ValidateAntiForgeryToken]
         public ActionResult Logout()
@@ -384,6 +475,27 @@ namespace WebApplication1.Controllers
             Session.Abandon();
 
             return RedirectToAction("Index", "Cust");
+        }
+
+        public JsonResult TestCustomerDatabase()
+        {
+            var customerCount = db.Customers.Count();
+
+            var databaseName = db.Database.SqlQuery<string>(
+                "SELECT DB_NAME()"
+            ).FirstOrDefault();
+
+            var serverName = db.Database.SqlQuery<string>(
+                "SELECT @@SERVERNAME"
+            ).FirstOrDefault();
+
+            return Json(new
+            {
+                success = true,
+                customerCount = customerCount,
+                database = databaseName,
+                server = serverName
+            }, JsonRequestBehavior.AllowGet);
         }
     }
 }

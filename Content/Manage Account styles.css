@@ -1,0 +1,164 @@
+﻿.manage-account-page {
+    max-width: 1000px;
+    margin: 50px auto;
+    padding: 0 25px 60px;
+}
+
+.account-header {
+    margin-bottom: 30px;
+}
+
+.account-eyebrow {
+    font-size: 13px;
+    letter-spacing: 2px;
+    margin-bottom: 8px;
+    opacity: 0.65;
+}
+
+.account-header h1 {
+    margin: 0 0 8px;
+    font-size: 36px;
+}
+
+.account-header p {
+    margin: 0;
+    opacity: 0.7;
+}
+
+.account-success {
+    padding: 14px 18px;
+    margin-bottom: 25px;
+    border-radius: 10px;
+    background: #e9f7ef;
+    border: 1px solid #b7dfc6;
+    color: #246b3c;
+}
+
+.account-card {
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: 16px;
+    padding: 30px;
+    margin-bottom: 25px;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+}
+
+    .account-card h2 {
+        margin-top: 0;
+        margin-bottom: 25px;
+    }
+
+.account-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 22px;
+}
+
+.account-field {
+    display: flex;
+    flex-direction: column;
+}
+
+    .account-field label {
+        margin-bottom: 8px;
+        font-weight: 600;
+    }
+
+.account-input {
+    width: 100%;
+    padding: 13px 15px;
+    border: 1px solid #ccc;
+    border-radius: 9px;
+    font-size: 15px;
+    box-sizing: border-box;
+}
+
+    .account-input:focus {
+        outline: none;
+        border-color: #777;
+    }
+
+.account-error {
+    margin-top: 6px;
+    color: #b42318;
+    font-size: 13px;
+}
+
+.account-actions {
+    margin-top: 30px;
+    display: flex;
+    justify-content: flex-end;
+}
+
+.save-account-btn,
+.logout-account-btn {
+    border: none;
+    border-radius: 9px;
+    padding: 12px 22px;
+    cursor: pointer;
+    font-size: 15px;
+}
+
+.save-account-btn {
+    background: #222;
+    color: white;
+}
+
+.logout-account-btn {
+    background: #8b1e1e;
+    color: white;
+}
+
+.account-security p,
+.account-signout p {
+    opacity: 0.7;
+}
+
+.account-signout {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+@media (max-width: 700px) {
+
+    .account-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .account-signout {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 20px;
+    }
+
+    .account-header h1 {
+        font-size: 30px;
+    }
+}
+
+.phone-input-wrapper {
+    display: flex;
+    align-items: stretch;
+}
+
+.phone-prefix {
+    display: flex;
+    align-items: center;
+    padding: 0 14px;
+    background: #f5f5f5;
+    border: 1px solid #ccc;
+    border-right: none;
+    border-radius: 9px 0 0 9px;
+    font-size: 15px;
+    white-space: nowrap;
+}
+
+.phone-number-input {
+    border-radius: 0 9px 9px 0;
+}
+
+.phone-help {
+    margin-top: 6px;
+    opacity: 0.65;
+    font-size: 13px;
+}

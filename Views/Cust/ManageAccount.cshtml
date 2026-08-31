@@ -1,0 +1,165 @@
+﻿@model WebApplication1.Models.Customer
+
+@{
+    ViewBag.Title = "Manage Account";
+}
+
+<link rel="stylesheet" href="~/Content/Manage Account styles.css" />
+
+<div class="manage-account-page">
+
+    <div class="account-header">
+        <div>
+            <p class="account-eyebrow">MY ACCOUNT</p>
+            <h1>Welcome @Model.Cust_FName</h1>
+            <p>Manage your personal information and account details.</p>
+        </div>
+    </div>
+
+    @if (TempData["AccountSuccess"] != null)
+    {
+        <div class="account-success">
+            @TempData["AccountSuccess"]
+        </div>
+    }
+
+    @using (Html.BeginForm("ManageAccount", "Cust", FormMethod.Post))
+    {
+        @Html.AntiForgeryToken()
+
+        <div class="account-card">
+
+            <h2>Personal Information</h2>
+
+            <div class="account-grid">
+
+                <div class="account-field">
+                    @Html.LabelFor(m => m.Cust_FName, "First Name")
+                    @Html.TextBoxFor(
+                        m => m.Cust_FName,
+                        new
+                        {
+                            @class = "account-input",
+                            placeholder = "First Name"
+                        }
+                    )
+
+                    @Html.ValidationMessageFor(
+                        m => m.Cust_FName,
+                        "",
+                        new { @class = "account-error" }
+                    )
+                </div>
+
+                <div class="account-field">
+                    @Html.LabelFor(m => m.Cust_LName, "Last Name")
+                    @Html.TextBoxFor(
+                        m => m.Cust_LName,
+                        new
+                        {
+                            @class = "account-input",
+                            placeholder = "Last Name"
+                        }
+                    )
+
+                    @Html.ValidationMessageFor(
+                        m => m.Cust_LName,
+                        "",
+                        new { @class = "account-error" }
+                    )
+                </div>
+
+                <div class="account-field">
+                    @Html.LabelFor(m => m.Cust_Email, "Email Address")
+                    @Html.TextBoxFor(
+                        m => m.Cust_Email,
+                        new
+                        {
+                            @class = "account-input",
+                            type = "email",
+                            placeholder = "Email Address"
+                        }
+                    )
+
+                    @Html.ValidationMessageFor(
+                        m => m.Cust_Email,
+                        "",
+                        new { @class = "account-error" }
+                    )
+                </div>
+
+                <div class="account-field">
+                    @Html.LabelFor(m => m.Cust_Phone, "Phone / WhatsApp")
+
+                    <div class="phone-input-wrapper">
+                        <span class="phone-prefix">+27</span>
+
+                        @Html.TextBoxFor(
+                            m => m.Cust_Phone,
+                            new
+                            {
+                                @class = "account-input phone-number-input",
+                                type = "tel",
+                                inputmode = "numeric",
+                                maxlength = "9",
+                                placeholder = "723456789"
+                            }
+                        )
+                    </div>
+
+                    @Html.ValidationMessageFor(
+                        m => m.Cust_Phone,
+                        "",
+                        new { @class = "account-error" }
+                    )
+
+                    <small class="phone-help">
+                        Enter 9 digits (do not include the leading 0).
+                    </small>
+                </div>
+
+            </div>
+
+            <div class="account-actions">
+                <button type="submit" class="save-account-btn">
+                    Save Changes
+                </button>
+            </div>
+
+        </div>
+    }
+
+    <div class="account-card account-security">
+
+        <h2>Account Security</h2>
+
+        <p>
+            Your password is securely stored and cannot be displayed here.
+        </p>
+
+        <p class="security-note">
+            Password changing can be added separately so your current password
+            is never exposed.
+        </p>
+
+    </div>
+
+    <div class="account-card account-signout">
+
+        <div>
+            <h2>Sign Out</h2>
+            <p>Finished managing your account? Sign out securely.</p>
+        </div>
+
+        @using (Html.BeginForm("Logout", "Cust", FormMethod.Post))
+        {
+            @Html.AntiForgeryToken()
+
+            <button type="submit" class="logout-account-btn">
+                Sign Out
+            </button>
+        }
+
+    </div>
+
+</div>

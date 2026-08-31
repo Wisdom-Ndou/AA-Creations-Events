@@ -22,8 +22,8 @@ namespace WebApplication1.Models
         public string Cust_UName { get; set; } //UName is Username
 
         [Required(ErrorMessage = "Phone number is required.")]
-        [StringLength(10)]
-        [Phone(ErrorMessage = "Invalid phone number")]
+        [StringLength(9, MinimumLength = 9, ErrorMessage = "Phone number must contain exactly 9 digits.")]
+        [RegularExpression(@"^[1-9][0-9]{8}$", ErrorMessage = "Phone number must contain exactly 9 digits and cannot start with 0.")]
         public string Cust_Phone { get; set; }
 
         [Required]
