@@ -1,0 +1,61 @@
+﻿@{
+    ViewBag.Title = "Verify OTP";
+}
+
+<div class="manage-account-page">
+
+    <div class="account-card">
+
+        <h2>Verify Your Identity</h2>
+
+        <p>
+            Enter the 6-digit verification code that was sent to you.
+        </p>
+
+        @if (ViewBag.TestOtp != null)
+        {
+            <div class="account-success">
+                TEST OTP: <strong>@ViewBag.TestOtp</strong>
+            </div>
+        }
+
+        @using (Html.BeginForm("VerifyOtp", "Cust", FormMethod.Post))
+        {
+            @Html.AntiForgeryToken()
+
+            <div class="account-field">
+
+                <label for="otp">
+                    Verification Code
+                </label>
+
+                <input type="text"
+                       id="otp"
+                       name="otp"
+                       class="account-input"
+                       maxlength="6"
+                       inputmode="numeric"
+                       autocomplete="one-time-code"
+                       placeholder="Enter 6-digit code" />
+
+            </div>
+
+            @Html.ValidationSummary(
+                true,
+                "",
+                new { @class = "account-error" }
+            )
+
+            <div class="account-actions">
+
+                <button type="submit"
+                        class="save-account-btn">
+                    Verify Code
+                </button>
+
+            </div>
+        }
+
+    </div>
+
+</div>

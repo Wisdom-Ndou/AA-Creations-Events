@@ -129,6 +129,58 @@
         </div>
     }
 
+    <div class="account-card">
+
+        <h2>OTP Verification Test</h2>
+
+        <p>
+            Request a verification code to test the OTP system.
+        </p>
+
+        @if (TempData["OtpError"] != null)
+        {
+            <div class="account-error">
+                @TempData["OtpError"]
+            </div>
+        }
+
+        @using (Html.BeginForm("RequestOtp", "Cust", FormMethod.Post))
+        {
+            @Html.AntiForgeryToken()
+
+            <input type="hidden"
+                   name="purpose"
+                   value="ManageAccount" />
+
+            <div class="account-field">
+
+                <label for="deliveryMethod">
+                    Send verification code via
+                </label>
+
+                <select id="deliveryMethod"
+                        name="deliveryMethod"
+                        class="account-input">
+
+                    <option value="Email">Email</option>
+                    <option value="Phone">Phone</option>
+
+                </select>
+
+            </div>
+
+            <div class="account-actions">
+
+                <button type="submit"
+                        class="save-account-btn">
+                    Send OTP
+                </button>
+
+            </div>
+        }
+
+    </div>
+
     <div class="account-card account-security">
 
         <h2>Account Security</h2>
@@ -138,9 +190,49 @@
         </p>
 
         <p class="security-note">
-            Password changing can be added separately so your current password
-            is never exposed.
+            To change your password, we will first verify your identity using
+            a one-time verification code.
         </p>
+
+        @using (Html.BeginForm("RequestOtp", "Cust", FormMethod.Post))
+        {
+            @Html.AntiForgeryToken()
+
+            <input type="hidden"
+                   name="purpose"
+                   value="ChangePassword" />
+
+            <div class="account-field">
+
+                <label for="passwordDeliveryMethod">
+                    Verify using
+                </label>
+
+                <select id="passwordDeliveryMethod"
+                        name="deliveryMethod"
+                        class="account-input">
+
+                    <option value="Email">
+                        Email
+                    </option>
+
+                    <option value="Phone">
+                        Phone
+                    </option>
+
+                </select>
+
+            </div>
+
+            <div class="account-actions">
+
+                <button type="submit"
+                        class="save-account-btn">
+                    Change Password
+                </button>
+
+            </div>
+        }
 
     </div>
 
