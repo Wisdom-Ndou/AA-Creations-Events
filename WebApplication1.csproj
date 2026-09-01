@@ -168,6 +168,7 @@
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
+    <Compile Include="Helpers\OtpHelper.cs" />
     <Compile Include="Migrations\202608251303244_InitialCreate.cs" />
     <Compile Include="Migrations\202608251303244_InitialCreate.Designer.cs">
       <DependentUpon>202608251303244_InitialCreate.cs</DependentUpon>
@@ -208,17 +209,24 @@
     <Compile Include="Migrations\202608311332315_StandardizeCustomerPhoneNumber9Digits.Designer.cs">
       <DependentUpon>202608311332315_StandardizeCustomerPhoneNumber9Digits.cs</DependentUpon>
     </Compile>
+    <Compile Include="Migrations\202608311931192_AddOtpVerification.cs" />
+    <Compile Include="Migrations\202608311931192_AddOtpVerification.Designer.cs">
+      <DependentUpon>202608311931192_AddOtpVerification.cs</DependentUpon>
+    </Compile>
     <Compile Include="Migrations\Configuration.cs" />
     <Compile Include="Models\AddOn.cs" />
     <Compile Include="Models\Admin.cs" />
     <Compile Include="Models\Bankingdetailsviewmodel.cs" />
     <Compile Include="Models\Booking.cs" />
     <Compile Include="Models\BookingAddOn.cs" />
+    <Compile Include="Models\ChangePasswordViewModel.cs" />
     <Compile Include="Models\CreateBookingRequest.cs" />
     <Compile Include="Models\Customer.cs" />
     <Compile Include="Models\DatabaseContext.cs" />
+    <Compile Include="Models\OtpVerification.cs" />
     <Compile Include="Models\Package.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Services\OtpDeliveryService.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Content\Bankingdetails.css" />
@@ -296,6 +304,10 @@
     <Content Include="Views\Cust\contactus.cshtml" />
     <Content Include="Views\Cust\Bankingdetails.cshtml" />
     <Content Include="Views\Cust\ManageAccount.cshtml" />
+    <Content Include="Views\Cust\VerifyOtp.cshtml" />
+    <Content Include="Views\Cust\ChangePassword.cshtml" />
+    <Content Include="Views\Cust\ForgotPassword.cshtml" />
+    <Content Include="Views\Cust\ForgotPasswordMethod.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />
@@ -358,6 +370,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Migrations\202608311332315_StandardizeCustomerPhoneNumber9Digits.resx">
       <DependentUpon>202608311332315_StandardizeCustomerPhoneNumber9Digits.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\202608311931192_AddOtpVerification.resx">
+      <DependentUpon>202608311931192_AddOtpVerification.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <PropertyGroup>

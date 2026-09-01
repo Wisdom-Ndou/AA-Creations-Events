@@ -7,6 +7,8 @@ using WebApplication1.Models;
 using static WebApplication1.Models.Bankingdetailsviewmodel;
 using System.Data.Entity;
 using System.Web.Helpers;
+using WebApplication1.Helpers;
+using WebApplication1.Services;
 
 namespace WebApplication1.Controllers
 {
@@ -102,13 +104,145 @@ namespace WebApplication1.Controllers
                 return View();
             }
 
-            // Store the authenticated customer
-            // information in the server-side session.
+            // Store the authenticated customer information.
             Session["CustomerId"] = customer.Cust_ID;
             Session["CustomerEmail"] = customer.Cust_Email;
             Session["CustomerFirstName"] = customer.Cust_FName;
 
             return RedirectToAction("Index", "Cust");
+        }
+
+        [HttpGet]
+        public ActionResult ForgotPassword()
+        {
+            return View();
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public ActionResult ForgotPassword(string email)
+        {
+            if (string.IsNullOrWhiteSpace(email))
+            {
+                ViewBag.ErrorMessage = "Please enter your email address.";
+                return View();
+            }
+
+            var customer = db.Customers
+                .FirstOrDefault(c => c.Cust_Email == email);
+
+            if (customer == null)
+            {
+                ViewBag.ErrorMessage =
+                    "No account was found with that email address.";
+
+                return View();
+            }
+
+            // Start a fresh Forgot Password OTP flow.
+            Session.Remove("OtpVerified");
+            Session.Remove("OtpPurpose");
+            Session.Remove("TestOtp");
+
+            Session["OtpCustomerId"] = customer.Cust_ID;
+            return RedirectToAction(
+                "ForgotPasswordMethod",
+                "Cust"
+            );
+        }
+
+        [HttpGet]
+        public ActionResult ForgotPasswordMethod()
+        {
+            if (Session["OtpCustomerId"] == null)
+            {
+                return RedirectToAction("ForgotPassword", "Cust");
+            }
+
+            return View();
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public ActionResult ForgotPasswordMethod(string deliveryMethod)
+        {
+            if (Session["OtpCustomerId"] == null)
+            {
+                return RedirectToAction("ForgotPassword", "Cust");
+            }
+
+            if (deliveryMethod != "Email" && deliveryMethod != "Phone")
+            {
+                TempData["OtpError"] = "Please select a valid verification method.";
+                return RedirectToAction("ForgotPasswordMethod", "Cust");
+            }
+
+            int customerId = (int)Session["OtpCustomerId"];
+
+            var customer = db.Customers
+                .FirstOrDefault(c => c.Cust_ID == customerId);
+
+            if (customer == null)
+            {
+                Session.Remove("OtpCustomerId");
+
+                return RedirectToAction("ForgotPassword", "Cust");
+            }
+
+            string otp = OtpHelper.GenerateOtp();
+
+            var otpVerification = new OtpVerification
+            {
+                CustomerId = customer.Cust_ID,
+                OtpHash = OtpHelper.HashOtp(otp),
+                DeliveryMethod = deliveryMethod,
+                Purpose = "ForgotPassword",
+                CreatedAt = DateTime.Now,
+                ExpiresAt = OtpHelper.GetExpiryTime(),
+                IsUsed = false,
+                FailedAttempts = 0
+            };
+
+            db.OtpVerifications.Add(otpVerification);
+            db.SaveChanges();
+
+            var deliveryService = new OtpDeliveryService();
+
+            bool sent;
+
+            if (deliveryMethod == "Email")
+            {
+                sent = deliveryService.SendOtpByEmail(
+                    customer.Cust_Email,
+                    otp
+                );
+            }
+            else
+            {
+                sent = deliveryService.SendOtpByPhone(
+                    customer.Cust_Phone,
+                    otp
+                );
+            }
+
+            if (!sent)
+            {
+                TempData["OtpError"] =
+                    "We could not send the verification code.";
+
+                return RedirectToAction(
+                    "ForgotPasswordMethod",
+                    "Cust"
+                );
+            }
+
+            // TEMPORARY TESTING ONLY
+            Session["TestOtp"] = otp;
+
+            return RedirectToAction(
+                "VerifyOtp",
+                "Cust"
+            );
         }
 
         [HttpGet]
@@ -496,6 +630,399 @@ namespace WebApplication1.Controllers
                 database = databaseName,
                 server = serverName
             }, JsonRequestBehavior.AllowGet);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public ActionResult RequestOtp(string deliveryMethod, string purpose)
+        {
+            if (Session["CustomerId"] == null)
+            {
+                return RedirectToAction("Login", "Cust");
+            }
+
+            int customerId = (int)Session["CustomerId"];
+
+            var customer = db.Customers.FirstOrDefault(c => c.Cust_ID == customerId);
+
+            if (customer == null)
+            {
+                Session.Clear();
+                Session.Abandon();
+
+                return RedirectToAction("Login", "Cust");
+            }
+
+            if (deliveryMethod != "Email" && deliveryMethod != "Phone")
+            {
+                TempData["OtpError"] = "Invalid OTP delivery method.";
+                return RedirectToAction("ManageAccount", "Cust");
+            }
+
+            if (purpose != "ManageAccount" && purpose != "ChangePassword")
+            {
+                TempData["OtpError"] = "Invalid OTP request.";
+                return RedirectToAction("ManageAccount", "Cust");
+            }
+
+            string otp = OtpHelper.GenerateOtp();
+
+            var otpVerification = new OtpVerification
+            {
+                CustomerId = customer.Cust_ID,
+                OtpHash = OtpHelper.HashOtp(otp),
+                DeliveryMethod = deliveryMethod,
+                Purpose = purpose,
+                CreatedAt = DateTime.Now,
+                ExpiresAt = OtpHelper.GetExpiryTime(),
+                IsUsed = false,
+                FailedAttempts = 0
+            };
+
+            db.OtpVerifications.Add(otpVerification);
+            db.SaveChanges();
+
+            var deliveryService = new OtpDeliveryService();
+
+            bool sent;
+
+            if (deliveryMethod == "Email")
+            {
+                sent = deliveryService.SendOtpByEmail(
+                    customer.Cust_Email,
+                    otp
+                );
+            }
+            else
+            {
+                sent = deliveryService.SendOtpByPhone(
+                    customer.Cust_Phone,
+                    otp
+                );
+            }
+
+            if (!sent)
+            {
+                TempData["OtpError"] =
+                    "We could not send the verification code.";
+
+                return RedirectToAction("ManageAccount", "Cust");
+            }
+
+            /*
+             * TEMPORARY TESTING ONLY
+             *
+             * Remove this once actual email/SMS delivery is connected.
+             */
+            // TEMPORARY TESTING ONLY
+            // Store the plaintext OTP in session so it remains visible
+            // if the user enters the wrong code.
+            Session["TestOtp"] = otp;
+
+            return RedirectToAction("VerifyOtp", "Cust");
+        }
+
+        [HttpGet]
+        public ActionResult VerifyOtp()
+        {
+            bool loggedInOtp =
+                Session["CustomerId"] != null;
+
+            bool forgotPasswordOtp =
+                Session["OtpCustomerId"] != null;
+
+            if (!loggedInOtp && !forgotPasswordOtp)
+            {
+                return RedirectToAction("Login", "Cust");
+            }
+
+            ViewBag.TestOtp = Session["TestOtp"];
+
+            return View();
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public ActionResult VerifyOtp(string otp)
+        {
+            int customerId;
+
+            // Forgot Password OTP takes priority
+            if (Session["OtpCustomerId"] != null)
+            {
+                customerId = (int)Session["OtpCustomerId"];
+            }
+            else if (Session["CustomerId"] != null)
+            {
+                customerId = (int)Session["CustomerId"];
+            }
+            else
+            {
+                return RedirectToAction("Login", "Cust");
+            }
+
+            ViewBag.TestOtp = Session["TestOtp"];
+
+            if (string.IsNullOrWhiteSpace(otp))
+            {
+                ModelState.AddModelError(
+                    "",
+                    "Please enter the verification code."
+                );
+
+                return View();
+            }
+
+            var verification = db.OtpVerifications
+                .Where(o =>
+                    o.CustomerId == customerId &&
+                    !o.IsUsed &&
+                    o.ExpiresAt > DateTime.Now)
+                .OrderByDescending(o => o.CreatedAt)
+                .FirstOrDefault();
+
+            if (verification == null)
+            {
+                ModelState.AddModelError(
+                    "",
+                    "Your verification code has expired or is invalid."
+                );
+
+                return View();
+            }
+
+            if (verification.FailedAttempts >= 5)
+            {
+                ModelState.AddModelError(
+                    "",
+                    "Too many incorrect attempts. Please request a new code."
+                );
+
+                return View();
+            }
+
+            bool valid = OtpHelper.VerifyOtp(
+                otp,
+                verification.OtpHash
+            );
+
+            if (!valid)
+            {
+                verification.FailedAttempts++;
+
+                db.SaveChanges();
+
+                ModelState.AddModelError(
+                    "",
+                    "Incorrect verification code."
+                );
+
+                return View();
+            }
+
+            verification.IsUsed = true;
+
+            db.SaveChanges();
+
+            // Remove the test OTP now that it has been successfully used.
+            Session.Remove("TestOtp");
+
+            Session["OtpVerified"] = true;
+            Session["OtpPurpose"] = verification.Purpose;
+
+            // FORGOT PASSWORD
+            if (verification.Purpose == "ForgotPassword")
+            {
+                return RedirectToAction(
+                    "ChangePassword",
+                    "Cust"
+                );
+            }
+
+            // LOGGED-IN CUSTOMER PASSWORD CHANGE
+            if (verification.Purpose == "ChangePassword")
+            {
+                return RedirectToAction(
+                    "ChangePassword",
+                    "Cust"
+                );
+            }
+
+            // Other OTP purposes
+            return RedirectToAction(
+                "ManageAccount",
+                "Cust"
+            );
+        }
+
+        [HttpGet]
+        public ActionResult ChangePassword()
+        {
+            bool loggedInCustomer =
+                Session["CustomerId"] != null;
+
+            bool forgotPasswordCustomer =
+                Session["OtpCustomerId"] != null;
+
+            if (!loggedInCustomer && !forgotPasswordCustomer)
+            {
+                return RedirectToAction("Login", "Cust");
+            }
+
+            if (Session["OtpVerified"] == null ||
+                Session["OtpVerified"].ToString() != "True" ||
+                Session["OtpPurpose"] == null)
+            {
+                return RedirectToAction(
+                    forgotPasswordCustomer
+                        ? "ForgotPassword"
+                        : "ManageAccount",
+                    "Cust"
+                );
+            }
+
+            string purpose = Session["OtpPurpose"].ToString();
+
+            if (purpose != "ChangePassword" &&
+                purpose != "ForgotPassword")
+            {
+                return RedirectToAction(
+                    "ManageAccount",
+                    "Cust"
+                );
+            }
+
+            return View(new ChangePasswordViewModel());
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public ActionResult ChangePassword(ChangePasswordViewModel model)
+        {
+            bool loggedInCustomer =
+                Session["CustomerId"] != null;
+
+            bool forgotPasswordCustomer =
+                Session["OtpCustomerId"] != null;
+
+            if (!loggedInCustomer && !forgotPasswordCustomer)
+            {
+                return RedirectToAction("Login", "Cust");
+            }
+
+            if (Session["OtpVerified"] == null ||
+                Session["OtpVerified"].ToString() != "True" ||
+                Session["OtpPurpose"] == null)
+            {
+                return RedirectToAction(
+                    forgotPasswordCustomer
+                        ? "ForgotPassword"
+                        : "ManageAccount",
+                    "Cust"
+                );
+            }
+
+            string purpose = Session["OtpPurpose"].ToString();
+
+            if (purpose != "ChangePassword" &&
+                purpose != "ForgotPassword")
+            {
+                return RedirectToAction(
+                    "ManageAccount",
+                    "Cust"
+                );
+            }
+
+            if (string.IsNullOrWhiteSpace(model.NewPassword))
+            {
+                ModelState.AddModelError(
+                    "NewPassword",
+                    "Please enter a new password."
+                );
+
+                return View(model);
+            }
+
+            if (model.NewPassword.Length < 6 ||
+                model.NewPassword.Length > 15 ||
+                !model.NewPassword.Any(char.IsLetter) ||
+                !model.NewPassword.Any(char.IsDigit))
+            {
+                ModelState.AddModelError(
+                    "NewPassword",
+                    "Password must be 6 to 15 characters long and contain at least one letter and one number."
+                );
+
+                return View(model);
+            }
+
+            if (model.NewPassword != model.ConfirmPassword)
+            {
+                ModelState.AddModelError(
+                    "ConfirmPassword",
+                    "The passwords do not match."
+                );
+
+                return View(model);
+            }
+
+            int customerId;
+
+            if (forgotPasswordCustomer)
+            {
+                customerId = (int)Session["OtpCustomerId"];
+            }
+            else
+            {
+                customerId = (int)Session["CustomerId"];
+            }
+
+            var customer = db.Customers
+                .FirstOrDefault(c => c.Cust_ID == customerId);
+
+            if (customer == null)
+            {
+                Session.Clear();
+                Session.Abandon();
+
+                return RedirectToAction(
+                    "Login",
+                    "Cust"
+                );
+            }
+
+            // Hash the new password before storing it.
+            customer.Cust_Passw =
+                Crypto.HashPassword(model.NewPassword);
+
+            db.Entry(customer).State =
+                EntityState.Modified;
+
+            db.SaveChanges();
+
+            // OTP authorization has now been consumed.
+            Session.Remove("OtpVerified");
+            Session.Remove("OtpPurpose");
+            Session.Remove("OtpCustomerId");
+            Session.Remove("TestOtp");
+
+            TempData["AccountSuccess"] =
+                "Your password has been changed successfully.";
+
+            // If they were logged in, return to Manage Account.
+            if (loggedInCustomer)
+            {
+                return RedirectToAction(
+                    "ManageAccount",
+                    "Cust"
+                );
+            }
+
+            // Forgot-password users are not logged in.
+            return RedirectToAction(
+                "Login",
+                "Cust"
+            );
         }
     }
 }

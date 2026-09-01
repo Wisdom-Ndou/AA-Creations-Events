@@ -26,6 +26,8 @@ namespace WebApplication1.Models
 
         public DbSet<BookingAddOn> BookingAddOns { get; set; }
 
+        public DbSet<OtpVerification> OtpVerifications { get; set; }
+
     }
 
 }
