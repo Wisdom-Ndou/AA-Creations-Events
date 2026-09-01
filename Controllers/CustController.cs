@@ -1024,5 +1024,11 @@ namespace WebApplication1.Controllers
                 "Cust"
             );
         }
+
+        [HttpGet]
+        public ActionResult AdminDashboard()
+        {
+            return View();
+        }
     }
 }
