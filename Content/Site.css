@@ -73,6 +73,7 @@ nav {
     justify-content: space-between;
     padding: 22px 40px;
     position: sticky;
+    color: var(--ink);
     top: 0;
     z-index: 10;
     background: var(--white);
@@ -96,6 +97,7 @@ nav {
     display: flex;
     gap: 26px;
     list-style: none;
+    color: var(--ink);
     font-size: 11px;
     letter-spacing: 2px;
 }

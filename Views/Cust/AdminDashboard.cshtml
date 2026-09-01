@@ -1,0 +1,184 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - AA Creations & Events</title>
+    <link rel="stylesheet" href="~/Content/AdminDashboard.css"/>
+</head>
+<body>
+
+
+    <!-- Page header -->
+    <section class="page-head">
+        <div class="badge">Admin Access</div>
+        <h1>Admin <em>Dashboard</em></h1>
+        <p>A quick overview of bookings, users, and activity across the platform.</p>
+    </section>
+
+    <main class="main">
+
+        <!-- Stat row -->
+        <section class="stat-row">
+            <div class="stat-card">
+                <div class="label">Total Bookings</div>
+                <div class="value">1,284</div>
+                <div class="delta up">↑ 4.2% this week</div>
+            </div>
+            <div class="stat-card">
+                <div class="label">Pending Approval</div>
+                <div class="value">37</div>
+                <div class="delta">Needs review</div>
+            </div>
+            <div class="stat-card">
+                <div class="label">Active Users</div>
+                <div class="value">602</div>
+                <div class="delta up">↑ 12 today</div>
+            </div>
+            <div class="stat-card">
+                <div class="label">Cancelled (7d)</div>
+                <div class="value">19</div>
+                <div class="delta down">↓ 1.1% vs last week</div>
+            </div>
+        </section>
+
+        <!-- Content grid -->
+        <section class="content-grid">
+
+            <!-- Bookings table -->
+            <div class="panel">
+                <div class="panel-head">
+                    <div>
+                        <h2>All Bookings</h2>
+                        <p>Every booking made across all users</p>
+                    </div>
+                    <a class="panel-link" href="#all-bookings">View all →</a>
+                </div>
+
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Booking ID</th>
+                                <th>Client</th>
+                                <th>Event</th>
+                                <th>Date</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="cell-id">#BK-10284</td>
+                                <td>Thandiwe M.</td>
+                                <td>Wedding Décor — Braamfontein</td>
+                                <td>02 Sep 2026</td>
+                                <td><span class="status confirmed"><span class="dot"></span>Confirmed</span></td>
+                            </tr>
+                            <tr>
+                                <td class="cell-id">#BK-10283</td>
+                                <td>Sipho K.</td>
+                                <td>Birthday Setup — Hermanus</td>
+                                <td>02 Sep 2026</td>
+                                <td><span class="status pending"><span class="dot"></span>Pending</span></td>
+                            </tr>
+                            <tr>
+                                <td class="cell-id">#BK-10282</td>
+                                <td>Lerato P.</td>
+                                <td>Corporate Launch — Sandton</td>
+                                <td>01 Sep 2026</td>
+                                <td><span class="status confirmed"><span class="dot"></span>Confirmed</span></td>
+                            </tr>
+                            <tr>
+                                <td class="cell-id">#BK-10281</td>
+                                <td>Johan V.</td>
+                                <td>Baby Shower — Stellenbosch</td>
+                                <td>31 Aug 2026</td>
+                                <td><span class="status cancelled"><span class="dot"></span>Cancelled</span></td>
+                            </tr>
+                            <tr>
+                                <td class="cell-id">#BK-10280</td>
+                                <td>Naledi R.</td>
+                                <td>Engagement Party — Muizenberg</td>
+                                <td>31 Aug 2026</td>
+                                <td><span class="status confirmed"><span class="dot"></span>Confirmed</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="table-foot">
+                    <span>Showing 5 of 1,284 bookings</span>
+                    <div class="page-buttons">
+                        <button type="button" disabled>Previous</button>
+                        <button type="button">Next</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Side column -->
+            <div class="stack">
+
+                <div class="panel">
+                    <div class="panel-head">
+                        <div><h2>Recent Activity</h2></div>
+                    </div>
+                    <div class="activity-list">
+                        <div class="activity-item">
+                            <div class="activity-dot"></div>
+                            <div class="activity-text">
+                                <p>Thandiwe M. booked Wedding Décor — Braamfontein</p>
+                                <span>3 minutes ago</span>
+                            </div>
+                        </div>
+                        <div class="activity-item">
+                            <div class="activity-dot"></div>
+                            <div class="activity-text">
+                                <p>Johan V. cancelled Baby Shower — Stellenbosch</p>
+                                <span>41 minutes ago</span>
+                            </div>
+                        </div>
+                        <div class="activity-item">
+                            <div class="activity-dot"></div>
+                            <div class="activity-text">
+                                <p>New user Emmanuel O. signed up</p>
+                                <span>1 hour ago</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="panel">
+                    <div class="panel-head">
+                        <div><h2>Quick Actions</h2></div>
+                    </div>
+                    <div class="quick-actions">
+                        <button type="button" class="quick-action">Review pending<span>37 waiting</span></button>
+                        <button type="button" class="quick-action">Add listing<span>New package</span></button>
+                        <button type="button" class="quick-action">Message users<span>Broadcast</span></button>
+                        <button type="button" class="quick-action">Export data<span>CSV / PDF</span></button>
+                    </div>
+                </div>
+
+                <div class="panel">
+                    <div class="panel-head">
+                        <div><h2>This Week's Load</h2></div>
+                    </div>
+                    <div class="occupancy">
+                        <div class="occupancy-row"><span>Wedding packages</span><span class="figure">82%</span></div>
+                        <div class="bar-track"><div class="bar-fill" style="width: 82%;"></div></div>
+
+                        <div class="occupancy-row"><span>Corporate events</span><span class="figure">64%</span></div>
+                        <div class="bar-track"><div class="bar-fill" style="width: 64%;"></div></div>
+
+                        <div class="occupancy-row"><span>Birthday & baby showers</span><span class="figure">47%</span></div>
+                        <div class="bar-track"><div class="bar-fill" style="width: 47%;"></div></div>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+    </main>
+
+</body>
+</html>

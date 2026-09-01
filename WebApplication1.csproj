@@ -229,6 +229,7 @@
     <Compile Include="Services\OtpDeliveryService.cs" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="Content\AdminDashboard.css" />
     <Content Include="Content\Bankingdetails.css" />
     <Content Include="Content\bootstrap-grid.css" />
     <Content Include="Content\bootstrap-grid.min.css" />
@@ -308,6 +309,7 @@
     <Content Include="Views\Cust\ChangePassword.cshtml" />
     <Content Include="Views\Cust\ForgotPassword.cshtml" />
     <Content Include="Views\Cust\ForgotPasswordMethod.cshtml" />
+    <Content Include="Views\Cust\AdminDashboard.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />
