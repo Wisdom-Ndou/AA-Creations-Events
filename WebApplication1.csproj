@@ -213,6 +213,10 @@
     <Compile Include="Migrations\202608311931192_AddOtpVerification.Designer.cs">
       <DependentUpon>202608311931192_AddOtpVerification.cs</DependentUpon>
     </Compile>
+    <Compile Include="Migrations\202609032329074_AddPendingModelChanges.cs" />
+    <Compile Include="Migrations\202609032329074_AddPendingModelChanges.Designer.cs">
+      <DependentUpon>202609032329074_AddPendingModelChanges.cs</DependentUpon>
+    </Compile>
     <Compile Include="Migrations\Configuration.cs" />
     <Compile Include="Models\AddOn.cs" />
     <Compile Include="Models\Admin.cs" />
@@ -310,6 +314,7 @@
     <Content Include="Views\Cust\ForgotPassword.cshtml" />
     <Content Include="Views\Cust\ForgotPasswordMethod.cshtml" />
     <Content Include="Views\Cust\AdminDashboard.cshtml" />
+    <Content Include="Views\Cust\AdminLogin.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />
@@ -375,6 +380,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Migrations\202608311931192_AddOtpVerification.resx">
       <DependentUpon>202608311931192_AddOtpVerification.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\202609032329074_AddPendingModelChanges.resx">
+      <DependentUpon>202609032329074_AddPendingModelChanges.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <PropertyGroup>

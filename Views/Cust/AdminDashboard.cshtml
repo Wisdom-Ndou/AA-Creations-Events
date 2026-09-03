@@ -180,5 +180,18 @@
 
     </main>
 
+
+    @using (Html.BeginForm(
+    "AdminLogout",
+    "Cust",
+    FormMethod.Post))
+    {
+        @Html.AntiForgeryToken()
+
+        <button type="submit">
+            Sign Out
+        </button>
+    }
+
 </body>
 </html>

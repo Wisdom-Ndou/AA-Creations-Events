@@ -293,10 +293,160 @@ namespace WebApplication1.Controllers
             return RedirectToAction("Customerregister", "Cust");
         }
 
-        public ActionResult Adminregister(Customer obj)
+
+
+        [HttpGet]
+        public ActionResult Adminregister()
         {
-            return View(obj);
+            return View();
         }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public ActionResult Adminregister(
+    string firstName,
+    string lastName,
+    string email,
+    string phone,
+    string password,
+    string confirm,
+    bool? termsAccepted)
+        {
+            // ===============================
+            // REQUIRED FIELDS
+            // ===============================
+
+            if (string.IsNullOrWhiteSpace(firstName))
+            {
+                ModelState.AddModelError(
+                    "",
+                    "First name is required."
+                );
+            }
+
+            if (string.IsNullOrWhiteSpace(lastName))
+            {
+                ModelState.AddModelError(
+                    "",
+                    "Last name is required."
+                );
+            }
+
+            if (string.IsNullOrWhiteSpace(email))
+            {
+                ModelState.AddModelError(
+                    "",
+                    "Email address is required."
+                );
+            }
+
+            if (string.IsNullOrWhiteSpace(password))
+            {
+                ModelState.AddModelError(
+                    "",
+                    "Password is required."
+                );
+            }
+
+            if (string.IsNullOrWhiteSpace(confirm))
+            {
+                ModelState.AddModelError(
+                    "",
+                    "Please confirm your password."
+                );
+            }
+
+            if (termsAccepted != true)
+            {
+                ModelState.AddModelError(
+                    "",
+                    "You must accept the Admin Terms of Use."
+                );
+            }
+
+            // ===============================
+            // PASSWORD VALIDATION
+            // ===============================
+
+            if (!string.IsNullOrWhiteSpace(password))
+            {
+                if (password.Length < 8 ||
+                    password.Length > 15 ||
+                    password.Count(char.IsUpper) < 2 ||
+                    !password.Any(ch => !char.IsLetterOrDigit(ch)))
+                {
+                    ModelState.AddModelError(
+                        "",
+                        "Password must be 8 to 15 characters long, contain at least 2 uppercase letters and at least 1 special character."
+                    );
+                }
+            }
+
+            if (!string.IsNullOrWhiteSpace(password) &&
+                !string.IsNullOrWhiteSpace(confirm) &&
+                password != confirm)
+            {
+                ModelState.AddModelError(
+                    "",
+                    "Passwords do not match."
+                );
+            }
+
+            // ===============================
+            // EMAIL CHECK
+            // ===============================
+
+            if (!string.IsNullOrWhiteSpace(email))
+            {
+                bool emailExists = db.Admins
+                    .Any(a => a.admin_Email == email);
+
+                if (emailExists)
+                {
+                    ModelState.AddModelError(
+                        "",
+                        "An admin account with this email address already exists."
+                    );
+                }
+            }
+
+            // ===============================
+            // RETURN IF INVALID
+            // ===============================
+
+            if (!ModelState.IsValid)
+            {
+                return View();
+            }
+
+            // ===============================
+            // CREATE ADMIN
+            // ===============================
+
+            var admin = new Admin
+            {
+                admin_FName = firstName,
+                admin_LName = lastName,
+                admin_Email = email,
+
+                // NEVER store the plain-text password
+                admin_Passw = Crypto.HashPassword(password)
+            };
+
+            db.Admins.Add(admin);
+            db.SaveChanges();
+
+            TempData["AdminRegistrationSuccess"] =
+                "Admin registration was successful. You can now sign in.";
+
+            return RedirectToAction(
+                "AdminLogin",
+                "Cust"
+            );
+        }
+
+
+
 
         public ActionResult Portfolio(Customer obj)
         {
@@ -1025,10 +1175,125 @@ namespace WebApplication1.Controllers
             );
         }
 
+
+
         [HttpGet]
         public ActionResult AdminDashboard()
         {
+            if (Session["AdminId"] == null)
+            {
+                return RedirectToAction(
+                    "AdminLogin",
+                    "Cust"
+                );
+            }
+
+            ViewBag.AdminFirstName =
+                Session["AdminFirstName"];
+
+            ViewBag.AdminEmail =
+                Session["AdminEmail"];
+
             return View();
         }
+
+
+
+
+        //New: Admin login page
+
+
+
+        // ===============================
+        // ADMIN LOGIN
+        // ===============================
+
+        [HttpGet]
+        public ActionResult AdminLogin()
+        {
+            return View();
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public ActionResult AdminLogin(string email, string password)
+        {
+            if (string.IsNullOrWhiteSpace(email) ||
+                string.IsNullOrWhiteSpace(password))
+            {
+                ModelState.AddModelError(
+                    "",
+                    "Please enter your email address and password."
+                );
+
+                return View();
+            }
+
+            var admin = db.Admins
+                .FirstOrDefault(a => a.admin_Email == email);
+
+            if (admin == null)
+            {
+                ModelState.AddModelError(
+                    "",
+                    "Invalid email address or password."
+                );
+
+                return View();
+            }
+
+            bool passwordValid = false;
+
+            try
+            {
+                passwordValid =
+                    Crypto.VerifyHashedPassword(
+                        admin.admin_Passw,
+                        password
+                    );
+            }
+            catch
+            {
+                passwordValid = false;
+            }
+
+            if (!passwordValid)
+            {
+                ModelState.AddModelError(
+                    "",
+                    "Invalid email address or password."
+                );
+
+                return View();
+            }
+
+            // Store authenticated admin information
+            Session["AdminId"] = admin.admin_ID;
+            Session["AdminEmail"] = admin.admin_Email;
+            Session["AdminFirstName"] = admin.admin_FName;
+
+            return RedirectToAction(
+                "AdminDashboard",
+                "Cust"
+            );
+        }
+
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public ActionResult AdminLogout()
+        {
+            Session.Remove("AdminId");
+            Session.Remove("AdminEmail");
+            Session.Remove("AdminFirstName");
+
+            return RedirectToAction(
+                "AdminLogin",
+                "Cust"
+            );
+        }
+
+
+
     }
 }
