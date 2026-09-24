@@ -4,7 +4,6 @@ using System.Linq;
 using System.Web;
 using System.ComponentModel.DataAnnotations;
 
-using System.ComponentModel.DataAnnotations;
 
 namespace WebApplication1.Models
 {
@@ -26,5 +25,7 @@ namespace WebApplication1.Models
         [Required(ErrorMessage = "Password is required")]
         [DataType(DataType.Password)]
         public string admin_Passw { get; set; }
+
+        public string admin_Phone { get; set; }
     }
 }

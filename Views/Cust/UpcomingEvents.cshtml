@@ -1,0 +1,108 @@
+﻿@model IEnumerable<WebApplication1.Models.Booking>
+
+@{
+    ViewBag.Title = "Upcoming Events";
+}
+
+<link rel="stylesheet"
+      href="~/Content/AdminDashboard.css" />
+
+<div class="dashboard-container">
+
+    <div class="page-header">
+        <div>
+            <h1>Upcoming Events</h1>
+            <p>Approved events scheduled for today and upcoming dates.</p>
+        </div>
+
+        <a href="@Url.Action("AdminDashboard", "Cust")"
+           class="dashboard-link">
+            ← Back to Dashboard
+        </a>
+    </div>
+
+    <div class="dashboard-panel">
+
+        @if (Model != null && Model.Any())
+        {
+            <div class="table-wrapper">
+
+                <table class="booking-table">
+
+                    <thead>
+                        <tr>
+                            <th>Booking ID</th>
+                            <th>Client</th>
+                            <th>Occasion</th>
+                            <th>Date</th>
+                            <th>Time</th>
+                            <th>Venue Address</th>
+                            <th>City</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+
+                        @foreach (var booking in Model)
+                        {
+                            <tr>
+
+                                <td>
+                                    #@booking.BookingId
+                                </td>
+
+                                <td>
+                                    @booking.FirstName
+                                    @booking.LastName
+                                </td>
+
+                                <td>
+                                    @booking.Occasion
+                                </td>
+
+                                <td>
+                                    @booking.EventDate.ToString("dd MMM yyyy")
+                                </td>
+
+                                <td>
+                                    @booking.EventTime
+                                </td>
+
+                                <td>
+                                    @booking.Address
+                                </td>
+
+                                <td>
+                                    @booking.City
+                                </td>
+
+                                <td>
+                                    <span class="status approved">
+                                        <span class="dot"></span>
+                                        Approved
+                                    </span>
+                                </td>
+
+                            </tr>
+                        }
+
+                    </tbody>
+
+                </table>
+
+            </div>
+        }
+        else
+        {
+            <div class="empty-state">
+                <h3>No upcoming events</h3>
+                <p>
+                    There are currently no approved upcoming events.
+                </p>
+            </div>
+        }
+
+    </div>
+
+</div>

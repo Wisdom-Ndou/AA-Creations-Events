@@ -148,7 +148,7 @@ button {
 
 .stat-row {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    grid-template-columns: repeat(5, 1fr);
     gap: 1.2rem;
     margin-bottom: 2rem;
 }
@@ -489,60 +489,171 @@ tbody tr:hover {
     border-radius: 999px;
 }
 
-footer {
-    background: #000000;
-    color: var(--text-muted);
-    text-align: center;
-    padding: 2rem;
-    margin-top: auto;
-    border-top: 1px solid var(--accent-pink);
+
+
+@media (max-width: 1100px) {
+
+    .stat-row {
+        grid-template-columns: repeat(3, 1fr);
+    }
 }
 
-    footer .quote {
-        font-style: italic;
-        font-size: 1.1rem;
-        color: var(--accent-pink);
-        margin-bottom: 0.6rem;
-        text-shadow: 0 0 8px var(--accent-pink-glow);
-    }
-
-    footer p {
-        font-size: 0.85rem;
-        margin: 0.2rem 0;
-    }
-
 @media (max-width: 768px) {
-    .topnav {
-        flex-direction: column;
-        gap: 0.8rem;
-        align-items: flex-start;
-    }
-
-        .topnav nav {
-            flex-wrap: wrap;
-            gap: 0.5rem;
-        }
-
-    .page-head h1 {
-        font-size: 1.8rem;
-    }
 
     .stat-row {
         grid-template-columns: repeat(2, 1fr);
     }
-
-    .main {
-        padding: 1.2rem;
-    }
-
-    .panel-head {
-        flex-direction: column;
-        align-items: flex-start;
-    }
 }
 
 @media (max-width: 480px) {
+
     .stat-row {
         grid-template-columns: 1fr;
     }
 }
+.dashboard-widget {
+    display: block;
+    text-decoration: none;
+    color: inherit;
+    cursor: pointer;
+}
+
+.dashboard-widget:hover {
+    transform: translateY(-5px);
+    box-shadow:
+        0 8px 25px rgba(0,0,0,0.6),
+        var(--neon-shadow);
+}
+
+.dashboard-widget .delta {
+    color: var(--accent-pink);
+}
+/* ==========================================
+   CLICKABLE DASHBOARD WIDGETS
+========================================== */
+
+.dashboard-link {
+    text-decoration: none;
+    color: inherit;
+    display: block;
+    cursor: pointer;
+    transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+    .dashboard-link:hover {
+        transform: translateY(-4px);
+    }
+
+    .dashboard-link:active {
+        transform: translateY(-1px);
+    }
+
+/* ==========================================
+   BOOKING STATUS ACTIONS
+========================================== */
+
+.booking-actions {
+    display: flex;
+    gap: 0.4rem;
+    margin-top: 0.5rem;
+    flex-wrap: wrap;
+}
+
+    .booking-actions button {
+        padding: 0.35rem 0.65rem;
+        border-radius: 6px;
+        font-size: 0.72rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+
+/* APPROVE */
+
+.approve-btn {
+    background: rgba(74, 222, 128, 0.1);
+    color: #4ade80;
+    border: 1px solid #4ade80;
+}
+
+    .approve-btn:hover {
+        background: #4ade80;
+        color: #000;
+    }
+
+
+/* DECLINE */
+
+.decline-btn {
+    background: rgba(248, 113, 113, 0.1);
+    color: #f87171;
+    border: 1px solid #f87171;
+}
+
+    .decline-btn:hover {
+        background: #f87171;
+        color: #000;
+    }
+
+
+/* APPROVED STATUS */
+
+.status.approved {
+    background: rgba(74, 222, 128, 0.1);
+    color: #4ade80;
+    border-color: #4ade80;
+}
+
+    .status.approved .dot {
+        background: #4ade80;
+    }
+
+
+/* DECLINED STATUS */
+
+.status.declined {
+    background: rgba(248, 113, 113, 0.1);
+    color: #f87171;
+    border-color: #f87171;
+}
+
+    .status.declined .dot {
+        background: #f87171;
+    }
+.venue-address {
+    display: inline-block;
+    margin-top: 4px;
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    line-height: 1.4;
+}
+.status.approved {
+    background: rgba(74, 222, 128, .1);
+    color: #4ade80;
+    border-color: #4ade80;
+}
+
+    .status.approved .dot {
+        background: #4ade80;
+    }
+
+.status.pending {
+    background: rgba(250, 204, 21, .1);
+    color: #facc15;
+    border-color: #facc15;
+}
+
+    .status.pending .dot {
+        background: #facc15;
+    }
+
+.status.declined {
+    background: rgba(248, 113, 113, .1);
+    color: #f87171;
+    border-color: #f87171;
+}
+
+    .status.declined .dot {
+        background: #f87171;
+    }

@@ -173,95 +173,61 @@
             {
                 @Html.AntiForgeryToken()
 
-                if (!ViewData.ModelState.IsValid)
-                {
-                    @Html.ValidationSummary(
-                        true,
-                        "",
-                        new { @class = "admin-error" }
-                    )
-                }
+                @Html.ValidationSummary(true, "", new { @class = "admin-error" })
 
                 <div class="admin-field">
-                    <label for="email">Work Email</label>
+
+                    <label for="email">
+                        Work Email
+                    </label>
 
                     <input type="email"
                            id="email"
                            name="email"
                            placeholder="admin@aacreations.co.za"
                            required />
+
                 </div>
 
                 <div class="admin-field">
-                    <label for="password">Password</label>
 
-                    <div class="admin-password-row">
+                    <label for="password">
+                        Password
+                    </label>
 
-                        <input type="password"
-                               id="password"
-                               name="password"
-                               placeholder="••••••••"
-                               required />
+                    <input type="password"
+                           id="password"
+                           name="password"
+                           placeholder="••••••••"
+                           required />
 
-                        <button type="button"
-                                class="admin-show-password"
-                                id="showPassword">
-                            Show
-                        </button>
-
-                    </div>
                 </div>
 
-                <button type="submit" class="admin-login-button">
+                <div class="admin-field">
+
+                    <label for="adminAccessCode">
+                        Admin Authorization Code
+                    </label>
+
+                    <input type="password"
+                           id="adminAccessCode"
+                           name="adminAccessCode"
+                           placeholder="Enter admin access code"
+                           required />
+
+                </div>
+
+                <button type="submit"
+                        class="admin-login-button">
                     Sign In
                 </button>
             }
-
-            <div class="admin-links">
-
-                <div>
-                    Don't have an admin account?
-                    @Html.ActionLink(
-                        "Register here",
-                        "Adminregister",
-                        "Cust"
-                    )
-                </div>
-
-                <div>
-                    @Html.ActionLink(
-                        "Back to Customer Sign In",
-                        "Login",
-                        "Cust"
-                    )
-                </div>
-
+            <!-- ============
+            <div>
+                Don't have an admin account?
+                @Html.ActionLink("Register here", "Adminregister", "Cust")
             </div>
-
-        </div>
-
-    </div>
-
-    <script>
-        const showPassword =
-            document.getElementById("showPassword");
-
-        const password =
-            document.getElementById("password");
-
-        showPassword.addEventListener("click", function () {
-
-            if (password.type === "password") {
-                password.type = "text";
-                showPassword.textContent = "Hide";
-            }
-            else {
-                password.type = "password";
-                showPassword.textContent = "Show";
-            }
-
-        });
-    </script>
+            ============ -->
 
 </body>
 </html>

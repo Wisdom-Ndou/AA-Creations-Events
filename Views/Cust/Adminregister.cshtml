@@ -1,4 +1,5 @@
-﻿@{
+﻿@inherits System.Web.Mvc.WebViewPage<dynamic>
+@{
     ViewBag.Title = "Adminregister";
 }
 
@@ -62,9 +63,11 @@
                 <h2 class="form-title">Create Admin Account</h2>
                 <p class="form-subtitle">All fields are required — your request will be reviewed before activation</p>
 
-                @using (Html.BeginForm("Adminregister", "Cust", FormMethod.Post, new { id = "adminForm", novalidate = "novalidate" }))
+                @using (Html.BeginForm("Adminregister", "Cust", FormMethod.Post, new { id = "adminForm" }))
                 {
                     @Html.AntiForgeryToken()
+
+                    @Html.ValidationSummary(true, "", new { @class = "validation-summary" })
 
                     <section class="form-section">
                         <p class="section-label">Identity</p>
@@ -124,12 +127,35 @@
                         </div>
                     </section>
 
+
                     <section class="form-section">
                         <p class="section-label">Security</p>
+
+
+
+                        <!-- ADMIN AUTHORIZATION CODE -->
+                        <div class="field">
+                            <label for="adminAccessCode">
+                                Admin Authorization Code
+                            </label>
+
+
+                            <input type="password"
+                                   id="adminAccessCode"
+                                   name="adminAccessCode"
+                                   placeholder="Enter your admin access code"
+                                   autocomplete="off"
+                                   required />
+
+                        </div>
+
                         <div class="grid-2">
+
                             <div class="field">
                                 <label for="password">Password</label>
+
                                 <div class="password-row">
+
                                     <input type="password"
                                            id="password"
                                            name="password"
@@ -137,20 +163,52 @@
                                            required
                                            aria-describedby="passwordError"
                                            aria-invalid="false" />
-                                    <button type="button" class="toggle-pass" id="togglePass" aria-pressed="false">Show</button>
+
+                                    <button type="button"
+                                            class="toggle-pass"
+                                            id="togglePass"
+                                            aria-pressed="false">
+                                        Show
+                                    </button>
+
                                 </div>
-                                <p class="error-text" id="passwordError" aria-live="polite" hidden>
-                                    Password must be at least 8 characters, include at least 2 uppercase letters and 1 special character.
+
+                                <p class="error-text"
+                                   id="passwordError"
+                                   aria-live="polite"
+                                   hidden>
+                                    Password must be at least 8 characters,
+                                    include at least 2 uppercase letters
+                                    and 1 special character.
                                 </p>
                             </div>
 
                             <div class="field">
-                                <label for="confirm">Confirm</label>
-                                <input type="password" id="confirm" name="confirm" placeholder="••••••••" required aria-describedby="mismatchText" aria-invalid="false" />
-                                <p class="error-text" id="mismatchText" aria-live="polite" hidden>Passwords do not match</p>
+
+                                <label for="confirm">
+                                    Confirm
+                                </label>
+
+                                <input type="password"
+                                       id="confirm"
+                                       name="confirm"
+                                       placeholder="••••••••"
+                                       required
+                                       aria-describedby="mismatchText"
+                                       aria-invalid="false" />
+
+                                <p class="error-text"
+                                   id="mismatchText"
+                                   aria-live="polite"
+                                   hidden>
+                                    Passwords do not match
+                                </p>
+
                             </div>
+
                         </div>
                     </section>
+
 
                     <div class="terms-box">
                         <label class="terms-label">
@@ -162,36 +220,39 @@
                     <div style="margin-top:18px;">
                         <button type="submit" class="submit-btn" id="submitBtn">Submit Admin Request</button>
                     </div>
+
+                    <!-- ============ SUCCESS STATE ============ -->
+                    <div class="success-page"
+                         id="successPage"
+                         @(TempData["RegistrationSuccess"] != null ? "" : "hidden")>
+                        <div class="success-content" role="status" aria-live="polite">
+                            <div class="success-icon">✓</div>
+                            <h2 id="successTitle">Registration successful</h2>
+                            <p id="successMessage">
+                                @(TempData["RegistrationSuccess"] ?? "Your registration was successful. You can now sign in and start booking.")
+                            </p>
+                            @Html.ActionLink(
+                                "Go to Sign In",
+                                "Login",
+                                "Cust",
+                                new { area = "" },
+                                new { @class = "sale-btn" }
+                            )
+                        </div>
+                    </div>
                 }
 
-            <p class="footer-text">
-                Back to admin sign in page
-                @Html.ActionLink( "Back to Admin Login","AdminLogin", "Cust", new { area = "" },new { @class = "footer-link" })
-            </p>
-
                 <p class="footer-text">
-                    Proceed to admin dashboard
-                    @Html.ActionLink("Proceed to Admin Dashboard", "AdminDashboard", "Cust", new { area = "" }, new { @class = "footer-link" })
+                    Back to admin sign in page
+                    @Html.ActionLink("Back to Admin Login", "Login", "Cust", new { area = "" }, new { @class = "footer-link" })
                 </p>
 
-                <!-- ============ SUCCESS STATE (hidden until form submit) ============ -->
-                <div class="success-page" id="successPage" hidden>
-                    <div class="success-content">
-                        <div class="success-icon">
-                            <svg width="80" height="80" viewBox="0 0 80 80">
-                                <circle cx="40" cy="40" r="36" fill="#f9e6f0" stroke="#d4006a" stroke-width="2" />
-                                <polyline points="28,42 38,52 54,32" fill="none" stroke="#d4006a" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />
-                            </svg>
-                        </div>
-                        <h2 class="success-title">Registration successful</h2>
-                        <p class="success-message">
-                            Welcome, <b id="successName"></b>. Registration successful.
-                        </p>
-                        <button class="success-btn" onclick="window.location.href='@Url.Action("Login", "Cust")'">Go to Sign</button>
-                    </div>
-                </div>
+
+
 
             </div>
+
+
         </main>
 
     </div>

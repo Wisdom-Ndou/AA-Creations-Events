@@ -217,9 +217,23 @@
     <Compile Include="Migrations\202609032329074_AddPendingModelChanges.Designer.cs">
       <DependentUpon>202609032329074_AddPendingModelChanges.cs</DependentUpon>
     </Compile>
+    <Compile Include="Migrations\202609041506460_AddPendingModelChanges1.cs" />
+    <Compile Include="Migrations\202609041506460_AddPendingModelChanges1.Designer.cs">
+      <DependentUpon>202609041506460_AddPendingModelChanges1.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\202609231422574_UpdateDatabaseForCurrentModels.cs" />
+    <Compile Include="Migrations\202609231422574_UpdateDatabaseForCurrentModels.Designer.cs">
+      <DependentUpon>202609231422574_UpdateDatabaseForCurrentModels.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\202609231430406_InitialCreate1.cs" />
+    <Compile Include="Migrations\202609231430406_InitialCreate1.Designer.cs">
+      <DependentUpon>202609231430406_InitialCreate1.cs</DependentUpon>
+    </Compile>
     <Compile Include="Migrations\Configuration.cs" />
     <Compile Include="Models\AddOn.cs" />
     <Compile Include="Models\Admin.cs" />
+    <Compile Include="Models\AdminDashboard.cs" />
+    <Compile Include="Models\AllBookings.cs" />
     <Compile Include="Models\Bankingdetailsviewmodel.cs" />
     <Compile Include="Models\Booking.cs" />
     <Compile Include="Models\BookingAddOn.cs" />
@@ -257,6 +271,7 @@
     <Content Include="Content\Manage Account styles.css" />
     <Content Include="Content\sstyle.css" />
     <Content Include="Content\Styles.css" />
+    <Content Include="Content\UpcomingEvents.css" />
     <Content Include="favicon.ico" />
     <Content Include="Global.asax" />
     <Content Include="Content\Site.css" />
@@ -300,7 +315,9 @@
     <Content Include="Views\Home\Contact.cshtml" />
     <Content Include="Views\Home\Index.cshtml" />
     <Content Include="Views\Cust\Index.cshtml" />
-    <Content Include="Views\Cust\Login.cshtml" />
+    <Content Include="F:\Login.cshtml">
+      <Link>Views\Cust\Login.cshtml</Link>
+    </Content>
     <Content Include="Views\Cust\Customerregister.cshtml" />
     <Content Include="Views\Cust\Adminregister.cshtml" />
     <Content Include="Views\Cust\Portfolio.cshtml" />
@@ -315,6 +332,9 @@
     <Content Include="Views\Cust\ForgotPasswordMethod.cshtml" />
     <Content Include="Views\Cust\AdminDashboard.cshtml" />
     <Content Include="Views\Cust\AdminLogin.cshtml" />
+    <Content Include="Views\Cust\AllBookings.cshtml" />
+    <Content Include="Views\Cust\UpcomingEvents.cshtml" />
+    <Content Include="Views\Cust\PendingApprovals.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />
@@ -383,6 +403,15 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Migrations\202609032329074_AddPendingModelChanges.resx">
       <DependentUpon>202609032329074_AddPendingModelChanges.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\202609041506460_AddPendingModelChanges1.resx">
+      <DependentUpon>202609041506460_AddPendingModelChanges1.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\202609231422574_UpdateDatabaseForCurrentModels.resx">
+      <DependentUpon>202609231422574_UpdateDatabaseForCurrentModels.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\202609231430406_InitialCreate1.resx">
+      <DependentUpon>202609231430406_InitialCreate1.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <PropertyGroup>
