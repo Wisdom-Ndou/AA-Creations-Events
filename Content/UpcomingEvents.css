@@ -1,0 +1,150 @@
+﻿<style >
+
+.page-container {
+    max-width: 1300px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+.back-button {
+    display: inline-block;
+    margin-bottom: 1.5rem;
+    color: #ff2a6d;
+    font-weight: 600;
+}
+
+.page-title {
+    margin-bottom: 2rem;
+}
+
+    .page-title h1 {
+        font-size: 2rem;
+        margin-bottom: 0.4rem;
+    }
+
+    .page-title p {
+        color: #a0a0b0;
+    }
+
+.summary-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.2rem;
+    margin-bottom: 2rem;
+}
+
+.summary-card {
+    background: #111111;
+    border: 1px solid #333;
+    border-left: 4px solid #ff2a6d;
+    border-radius: 12px;
+    padding: 1.4rem;
+}
+
+    .summary-card .label {
+        color: #ff2a6d;
+        font-size: 0.8rem;
+        font-weight: 600;
+        text-transform: uppercase;
+    }
+
+    .summary-card .value {
+        font-size: 2rem;
+        font-weight: 800;
+        margin-top: 0.3rem;
+    }
+
+.booking-table {
+    background: #111111;
+    border: 1px solid #333;
+    border-radius: 12px;
+    padding: 1.5rem;
+}
+
+    .booking-table h2 {
+        margin-bottom: 0.3rem;
+    }
+
+    .booking-table > p {
+        color: #a0a0b0;
+        margin-bottom: 1.2rem;
+    }
+
+.table-wrap {
+    overflow-x: auto;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+th {
+    text-align: left;
+    padding: 0.8rem 0.6rem;
+    border-bottom: 2px solid #ff2a6d;
+    color: #ff2a6d;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+}
+
+td {
+    padding: 0.85rem 0.6rem;
+    border-bottom: 1px solid #2a2a3a;
+}
+
+tbody tr:hover {
+    background: rgba(255, 42, 109, 0.05);
+}
+
+.cell-id {
+    font-family: monospace;
+    font-weight: 600;
+    color: #ff2a6d;
+}
+
+.status {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.25rem 0.6rem;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #4ade80;
+    border: 1px solid #4ade80;
+    background: rgba(74, 222, 128, 0.1);
+}
+
+    .status .dot {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: #4ade80;
+    }
+
+.no-events {
+    text-align: center;
+    padding: 3rem 1rem;
+    color: #a0a0b0;
+}
+
+.footer-area {
+    text-align: center;
+    margin-top: 2rem;
+    padding-bottom: 2rem;
+}
+
+    .footer-area a {
+        color: #ff2a6d;
+        font-weight: 600;
+    }
+
+@media (max-width: 900px) {
+
+    .summary-row {
+        grid-template-columns: 1fr;
+    }
+}
+
+</style >

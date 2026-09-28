@@ -1,0 +1,150 @@
+﻿@model IEnumerable<WebApplication1.Models.Booking>
+
+@{
+    ViewBag.Title = "Pending Approvals";
+}
+
+<link rel="stylesheet"
+      href="~/Content/AdminDashboard.css" />
+
+<div class="dashboard-container">
+
+    <div class="page-header">
+        <div>
+            <h1>Pending Approvals</h1>
+            <p>Bookings waiting for admin review.</p>
+        </div>
+
+        <a href="@Url.Action("AdminDashboard", "Cust")"
+           class="dashboard-link">
+            ← Back to Dashboard
+        </a>
+    </div>
+
+    <div class="dashboard-panel">
+
+        @if (Model != null && Model.Any())
+        {
+            <div class="table-wrapper">
+
+                <table class="booking-table">
+
+                    <thead>
+                        <tr>
+                            <th>Booking ID</th>
+                            <th>Client</th>
+                            <th>Occasion</th>
+                            <th>Date</th>
+                            <th>Time</th>
+                            <th>Venue Address</th>
+                            <th>City</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+
+                        @foreach (var booking in Model)
+                        {
+                            <tr>
+
+                                <td>
+                                    #@booking.BookingId
+                                </td>
+
+                                <td>
+                                    @booking.FirstName
+                                    @booking.LastName
+                                </td>
+
+                                <td>
+                                    @booking.Occasion
+                                </td>
+
+                                <td>
+                                    @booking.EventDate.ToString("dd MMM yyyy")
+                                </td>
+
+                                <td>
+                                    @booking.EventTime
+                                </td>
+
+                                <td>
+                                    @booking.Address
+                                </td>
+
+                                <td>
+                                    @booking.City
+                                </td>
+
+                                <td class="booking-actions">
+
+                                    <form action="@Url.Action("UpdateBookingStatus", "Cust")"
+                                          method="post"
+                                          style="display:inline;">
+
+                                        @Html.AntiForgeryToken()
+
+                                        <input type="hidden"
+                                               name="bookingId"
+                                               value="@booking.BookingId" />
+
+                                        <input type="hidden"
+                                               name="status"
+                                               value="Approved" />
+
+                                        <button type="submit"
+                                                class="approve-btn">
+                                            Approve
+                                        </button>
+
+                                    </form>
+
+                                    <form action="@Url.Action("UpdateBookingStatus", "Cust")"
+                                          method="post"
+                                          style="display:inline;">
+
+                                        @Html.AntiForgeryToken()
+
+                                        <input type="hidden"
+                                               name="bookingId"
+                                               value="@booking.BookingId" />
+
+                                        <input type="hidden"
+                                               name="status"
+                                               value="Declined" />
+
+                                        <button type="submit"
+                                                class="decline-btn">
+                                            Decline
+                                        </button>
+
+                                    </form>
+
+                                </td>
+
+                            </tr>
+                        }
+
+                    </tbody>
+
+                </table>
+
+            </div>
+        }
+        else
+        {
+            <div class="empty-state">
+
+                <h3>No pending approvals</h3>
+
+                <p>
+                    There are currently no bookings waiting for review.
+                </p>
+
+            </div>
+        }
+
+    </div>
+
+</div>

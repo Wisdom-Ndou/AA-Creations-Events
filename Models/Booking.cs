@@ -62,5 +62,7 @@ namespace WebApplication1.Models
         public DateTime CreatedAt { get; set; }
 
         public string Status { get; set; }
+
+
     }
 }

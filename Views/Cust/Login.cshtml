@@ -1,4 +1,8 @@
-﻿<html lang="en">
+﻿@{
+    ViewBag.Title = "Sign In";
+}
+
+<html lang="en">
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -16,41 +20,15 @@
     <div class="page">
 
         <!-- ============ LEFT: BRAND PANEL (hidden on small screens) ============ -->
-        <aside class="brand-panel">
-            <div class="circle circle-top" aria-hidden="true"></div>
-            <div class="circle circle-bottom" aria-hidden="true"></div>
-
-            <div class="brand-top">
-                <p class="eyebrow">Welcome to</p>
-                <h1 class="brand-title">AA Creations<br />&amp; Events</h1>
-                <div class="divider"></div>
-                <p class="tagline">Crafting Moments</p>
-            </div>
-
-            <div class="brand-quote">
-                <p class="quote-text">"Every celebration deserves<br />to be unforgettable."</p>
-                <p class="quote-attr">— AA Creations &amp; Events</p>
-            </div>
-
-
-        </aside>
+        <aside class="brand-panel"> ... </aside>
 
         <!-- ============ RIGHT: FORM PANEL ============ -->
         <main class="form-panel">
             <div class="form-wrap">
 
-                <!-- Mobile logo -->
-                <div class="mobile-logo">
-                    <h1>AA Creations <em>&amp; Events</em></h1>
-                    <p class="mobile-tagline">Crafting Moments</p>
-                </div>
-
-
-
                 <h2 class="form-title">Sign In</h2>
                 <p class="form-subtitle">Welcome back — choose your role to continue</p>
 
-                <!-- Role segmented control -->
                 <div class="role-switch" role="tablist" aria-label="Select role">
                     <button type="button" class="role-btn active" id="roleCustomerBtn" data-role="customer" role="tab" aria-selected="true">
                         Customer
@@ -67,9 +45,9 @@
                     </div>
                 }
 
-                @using (Html.BeginForm("Login", "Cust", FormMethod.Post, new { id = "loginForm" }))
+                @* Form: default posts to Login; JS will switch to AdminLogin when role=admin *@
+                @using (Html.BeginForm("Login", "Cust", FormMethod.Post, new { id = "loginForm", @data_customer_action = Url.Action("Login", "Cust"), @data_admin_action = Url.Action("AdminLogin", "Cust") }))
                 {
-
                     @Html.AntiForgeryToken()
 
                     <input type="hidden" id="role" name="role" value="customer" />
@@ -88,50 +66,27 @@
                     </div>
 
                     <div class="forgot-password-row">
-                        <a href="@Url.Action("ForgotPassword", "Cust")">
-                            Forgot Password?
-                        </a>
+                        <a href="@Url.Action("ForgotPassword", "Cust")">Forgot Password?</a>
                     </div>
 
-                    <!-- Admin-only field, shown/hidden via JS -->
+                    @* Admin-only field (name matches CustController.AdminLogin parameter) *@
                     <div class="field" id="accessCodeField" hidden>
-                        <label for="accessCode">Admin Access Code</label>
-                        <input type="password" id="accessCode" name="accessCode" placeholder="Enter access code" />
+                        <label for="adminAccessCode">Admin Access Code</label>
+                        <input type="password" id="adminAccessCode" name="adminAccessCode" placeholder="Enter admin access code" />
                     </div>
 
                     <div class="options-row">
-
-
-                        <div>
-                            <button type="submit" class="submit-btn" id="submitBtn">Sign In as Addy</button>
-                        </div>
-
-                        <div class="register-row" hidden>
-
-
-
-                        </div>
+                        <button type="submit" class="submit-btn" id="submitBtn">Sign In</button>
                     </div>
-                    <!-- From here the code shows evrything from all types of users -->
-
                 }
 
-                <!-- Customer registration link (shown only for Customer role) -->
                 <div class="register-row" id="customerRegisterRow">
-                    <p>
-                        Don't have an account?
-                        <a class="register-link" href="@Url.Action("Customerregister", "Cust")">Create Account</a>
-                    </p>
+                    <p>Don't have an account? <a class="register-link" href="@Url.Action("Customerregister", "Cust")">Create Account</a></p>
                 </div>
 
-                <!-- Admin registration link (shown only for Admin role) -->
-                <div class="register-row" id="adminRegisterRow">
-                    <p>
-                        Don't have an admin account?
-                        <a class="register-link" href="@Url.Action("Adminregister", "Cust")">Create Admin Account</a>
-                    </p>
+                <div class="register-row" id="adminRegisterRow" style="display:none">
+                    <p>Don't have an admin account? <a class="register-link" href="@Url.Action("Adminregister", "Cust")">Create Admin Account</a></p>
                 </div>
-
 
                 <div class="role-indicator">
                     <span class="indicator-dot" id="indicatorDot"></span>
@@ -139,9 +94,52 @@
                 </div>
             </div>
         </main>
-
     </div>
 
-    <script src="~/Scripts/Login script.js"></script>
+    <script>
+        (function () {
+            const customerBtn = document.getElementById('roleCustomerBtn');
+            const adminBtn = document.getElementById('roleAdminBtn');
+            const roleInput = document.getElementById('role');
+            const form = document.getElementById('loginForm');
+            const accessField = document.getElementById('accessCodeField');
+            const adminRegister = document.getElementById('adminRegisterRow');
+            const customerRegister = document.getElementById('customerRegisterRow');
+            const indicatorText = document.getElementById('indicatorText');
+
+            // data attributes set by BeginForm
+            const customerAction = form.getAttribute('data-customer-action') || '@Url.Action("Login","Cust")';
+            const adminAction = form.getAttribute('data-admin-action') || '@Url.Action("AdminLogin","Cust")';
+
+            function setRole(role) {
+                if (role === 'admin') {
+                    adminBtn.classList.add('active'); customerBtn.classList.remove('active');
+                    roleInput.value = 'admin';
+                    accessField.hidden = false;
+                    accessField.querySelector('input').required = true;
+                    adminRegister.style.display = 'block';
+                    customerRegister.style.display = 'none';
+                    form.action = adminAction;
+                    indicatorText.textContent = 'Signing in as admin';
+                } else {
+                    customerBtn.classList.add('active'); adminBtn.classList.remove('active');
+                    roleInput.value = 'customer';
+                    accessField.hidden = true;
+                    accessField.querySelector('input').required = false;
+                    adminRegister.style.display = 'none';
+                    customerRegister.style.display = 'block';
+                    form.action = customerAction;
+                    indicatorText.textContent = 'Signing in as customer';
+                }
+            }
+
+            customerBtn.addEventListener('click', function () { setRole('customer'); });
+            adminBtn.addEventListener('click', function () { setRole('admin'); });
+
+            // initialize
+            setRole('customer');
+        })();
+    </script>
+        
 </body>
 </html>

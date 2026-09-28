@@ -34,6 +34,10 @@ namespace WebApplication1.Models
         [StringLength(255)]
         [DataType(DataType.Password)]
         public string Cust_Passw { get; set; }
+
+        public DateTime CreatedAt { get; set; }
+        
+
     }
 }
 
