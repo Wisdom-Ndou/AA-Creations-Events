@@ -7,12 +7,10 @@
     {
         public override void Up()
         {
-            AddColumn("dbo.Admins", "admin_Phone", c => c.String());
         }
         
         public override void Down()
         {
-            DropColumn("dbo.Admins", "admin_Phone");
         }
     }
 }

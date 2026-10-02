@@ -588,6 +588,9 @@ namespace WebApplication1.Controllers
                     EventTime = request.EventTime,
                     Address = request.Address,
                     City = request.City,
+                    Latitude = request.Latitude,
+                    Longitude = request.Longitude,
+
                     Notes = request.Notes,
 
                     // Use the validated package ID

@@ -229,6 +229,10 @@
     <Compile Include="Migrations\202609231430406_InitialCreate1.Designer.cs">
       <DependentUpon>202609231430406_InitialCreate1.cs</DependentUpon>
     </Compile>
+    <Compile Include="Migrations\202610022142026_SyncModelChanges.cs" />
+    <Compile Include="Migrations\202610022142026_SyncModelChanges.Designer.cs">
+      <DependentUpon>202610022142026_SyncModelChanges.cs</DependentUpon>
+    </Compile>
     <Compile Include="Migrations\Configuration.cs" />
     <Compile Include="Models\AddOn.cs" />
     <Compile Include="Models\Admin.cs" />
@@ -412,6 +416,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Migrations\202609231430406_InitialCreate1.resx">
       <DependentUpon>202609231430406_InitialCreate1.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\202610022142026_SyncModelChanges.resx">
+      <DependentUpon>202610022142026_SyncModelChanges.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <PropertyGroup>

@@ -5,6 +5,7 @@
    booking payload goes to /Cust/CreateBooking.
    Enforces phone: exactly 9 digits and must not start with 0.
    Enforces FirstName/LastName: letters only (A–Z / a–z).
+   Map: Leaflet + OpenStreetMap (no API key required).
 */
 
 const packages = [
@@ -22,6 +23,9 @@ const addOns = [
     { id: "candles", name: "Scented Candle Set", price: 90, icon: "🕯️" }
 ];
 
+let bookingMap = null;
+let bookingMarker = null;
+
 const state = {
     step: 1,
     submitted: false,
@@ -38,13 +42,15 @@ const state = {
         city: "",
         notes: "",
         packageId: "",
-        addOns: []
+        addOns: [],
+        latitude: null,
+        longitude: null,
+        locationConfirmed: false
     },
-    // Step 4 — UI-only. Never sent to the server, never touches the booking payload.
     banking: {
         cardholderName: "",
-        cardNumber: "",     // digits only, formatted for display at render time
-        expiryDate: "",     // "MM/YY"
+        cardNumber: "",
+        expiryDate: "",
         cvv: "",
         streetAddress: "",
         billingCity: "",
@@ -86,7 +92,6 @@ function loadQueryPackage() {
 }
 
 function isPhoneValid(value) {
-    // Exactly 9 digits, first digit 1-9 (no leading 0)
     return /^[1-9][0-9]{8}$/.test(String(value || "").trim());
 }
 
@@ -110,8 +115,132 @@ function isStep2Valid() {
         state.form.packageId &&
         state.form.date &&
         state.form.time &&
-        state.form.address.trim()
+        state.form.address.trim() &&
+        state.form.locationConfirmed &&
+        state.form.latitude !== null &&
+        state.form.longitude !== null
     );
+}
+
+function showLocationMessage(message, type = "") {
+    const element = document.getElementById("locationMessage");
+    if (!element) return;
+    element.textContent = message;
+    element.className = `location-message ${type}`;
+}
+
+function openLocationMap() {
+    const mapContainer = document.getElementById("mapContainer");
+    if (!mapContainer) return;
+
+    if (typeof L === "undefined") {
+        showLocationMessage("The map service is unavailable right now.", "error");
+        return;
+    }
+
+    mapContainer.style.display = "block";
+
+    const start = {
+        lat: state.form.latitude !== null ? Number(state.form.latitude) : -29.8587,
+        lng: state.form.longitude !== null ? Number(state.form.longitude) : 31.0218
+    };
+
+    if (bookingMap) {
+        bookingMap.remove();
+        bookingMap = null;
+        bookingMarker = null;
+    }
+
+    bookingMap = L.map("bookingMap").setView([start.lat, start.lng], 14);
+
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        attribution: "&copy; OpenStreetMap contributors"
+    }).addTo(bookingMap);
+
+    bookingMarker = L.marker([start.lat, start.lng], { draggable: true }).addTo(bookingMap);
+
+    function setLocation(latlng) {
+        state.form.latitude = latlng.lat;
+        state.form.longitude = latlng.lng;
+        state.form.locationConfirmed = false;
+        showLocationMessage("Location selected. Click Confirm Location when you are happy.", "info");
+    }
+
+    bookingMap.on("click", function (e) {
+        bookingMarker.setLatLng(e.latlng);
+        setLocation(e.latlng);
+    });
+
+    bookingMarker.on("dragend", function () {
+        setLocation(bookingMarker.getLatLng());
+    });
+}
+
+function confirmEventLocation() {
+    if (state.form.latitude === null || state.form.longitude === null) {
+        showLocationMessage("Please select a location on the map first.", "error");
+        return;
+    }
+
+    state.form.locationConfirmed = true;
+
+    const latitude = document.getElementById("latitude");
+    const longitude = document.getElementById("longitude");
+    if (latitude) latitude.value = state.form.latitude;
+    if (longitude) longitude.value = state.form.longitude;
+
+    showLocationMessage("✓ Event location confirmed successfully.", "success");
+
+    const nextButton = document.getElementById("nextStep2");
+    if (nextButton) nextButton.disabled = !isStep2Valid();
+}
+
+async function findEventAddress() {
+    const addressInput = document.getElementById("address");
+    const cityInput = document.getElementById("eventCity");
+    if (!addressInput || !cityInput) return;
+
+    const address = addressInput.value.trim();
+    const city = cityInput.value.trim();
+
+    if (!address) {
+        showLocationMessage("Please enter an event address first.", "error");
+        return;
+    }
+
+    const fullAddress = `${address}, ${city}, South Africa`;
+    showLocationMessage("Searching for the address...", "info");
+
+    const url = "https://nominatim.openstreetmap.org/search?format=json&limit=1&q=" +
+        encodeURIComponent(fullAddress);
+
+    try {
+        const response = await fetch(url, { headers: { "Accept-Language": "en" } });
+        const results = await response.json();
+
+        if (!results || results.length === 0) {
+            state.form.locationConfirmed = false;
+            state.form.latitude = null;
+            state.form.longitude = null;
+            showLocationMessage("We couldn't find this address. Please pin your exact location on the map.", "warning");
+            openLocationMap();
+            return;
+        }
+
+        state.form.latitude = Number(results[0].lat);
+        state.form.longitude = Number(results[0].lon);
+        state.form.locationConfirmed = true;
+
+        document.getElementById("latitude").value = state.form.latitude;
+        document.getElementById("longitude").value = state.form.longitude;
+
+        showLocationMessage("✓ Address found and location confirmed.", "success");
+
+        const nextButton = document.getElementById("nextStep2");
+        if (nextButton) nextButton.disabled = !isStep2Valid();
+    } catch {
+        showLocationMessage("Address lookup failed. Please pin your location on the map.", "error");
+    }
 }
 
 // ---- Step 4 (banking) helpers ----
@@ -188,15 +317,14 @@ function renderBookingStep() {
       <div class="form-grid two">
         <div class="form-group">
           <label class="form-label" for="firstName">First Name</label>
-          <input class="form-control" id="firstName" name="firstName" inputmode="text" pattern="^[A-Za-z]+$" maxlength="50" value="${escapeHtml(state.form.firstName)}" placeholder="Nomsa" required>
-          <small class="muted">Letters only .</small>
+          <input class="form-control" id="firstName" name="firstName" inputmode="text" maxlength="50" value="${escapeHtml(state.form.firstName)}" placeholder="Nomsa" required>
+          <small class="muted">Letters only (A–Z).</small>
         </div>
         <div class="form-group">
           <label class="form-label" for="lastName">Last Name</label>
-          <input class="form-control" id="lastName" name="lastName" inputmode="text" pattern="^[A-Za-z]+$" maxlength="50" value="${escapeHtml(state.form.lastName)}" placeholder="Mabaso" required>
+          <input class="form-control" id="lastName" name="lastName" inputmode="text" maxlength="50" value="${escapeHtml(state.form.lastName)}" placeholder="Mabaso" required>
           <small class="muted">Letters only (A–Z).</small>
         </div>
-
         <div class="form-group">
           <label class="form-label" for="email">Email Address</label>
           <input class="form-control" id="email" name="email" type="email" value="${escapeHtml(state.form.email)}" placeholder="nomsa@example.com" required>
@@ -205,11 +333,10 @@ function renderBookingStep() {
           <label class="form-label" for="phone">Phone / WhatsApp</label>
           <div class="phone-row">
             <div class="phone-prefix">+27</div>
-            <input class="form-control" id="phone" name="phone" inputmode="numeric" pattern="^[1-9][0-9]{8}$" maxlength="9" value="${escapeHtml(state.form.phone)}" placeholder="723456789" required>
+            <input class="form-control" id="phone" name="phone" inputmode="numeric" maxlength="9" value="${escapeHtml(state.form.phone)}" placeholder="723456789" required>
           </div>
           <small class="muted">Enter 9 digits (do not include leading 0).</small>
         </div>
-
         <div class="form-group full">
           <label class="form-label" for="occasion">Occasion Type</label>
           <select class="form-control" id="occasion" name="occasion" required>
@@ -218,7 +345,6 @@ function renderBookingStep() {
                 .map(o => `<option value="${escapeHtml(o)}" ${state.form.occasion === o ? "selected" : ""}>${escapeHtml(o)}</option>`).join("")}
           </select>
         </div>
-
         <div class="form-group full">
           <label class="form-label" for="city">City / Town</label>
           <select class="form-control" id="city" name="city" required>
@@ -227,7 +353,6 @@ function renderBookingStep() {
             <option value="Durban" ${state.form.city === "Durban" ? "selected" : ""}>Durban</option>
             <option value="Mandeni" ${state.form.city === "Mandeni" ? "selected" : ""}>Mandeni</option>
           </select>
-         
         </div>
       </div>
       <div class="form-actions" style="justify-content:flex-end;">
@@ -241,7 +366,6 @@ function renderBookingStep() {
 
         root.innerHTML = `
       <h2>Event Details</h2>
-
       <p class="form-label">Select Your Package</p>
       <div class="package-select-grid">
         ${packages.map(pkg => `
@@ -252,7 +376,6 @@ function renderBookingStep() {
           </button>
         `).join("")}
       </div>
-
       <div class="form-grid two">
         <div class="form-group">
           <label class="form-label" for="date">Event Date</label>
@@ -262,16 +385,28 @@ function renderBookingStep() {
           <label class="form-label" for="time">Setup Time</label>
           <input class="form-control" id="time" name="time" type="time" value="${escapeHtml(state.form.time)}" required>
         </div>
-        <div class="form-group full">
+        <div class="form-group full location-section">
           <label class="form-label" for="address">Event Address</label>
-          <input class="form-control" id="address" name="address" value="${escapeHtml(state.form.address)}" placeholder="12 Celebration Street, Sandton" required>
+          <input class="form-control" id="address" name="address" value="${escapeHtml(state.form.address)}" placeholder="12 Celebration Street" autocomplete="street-address" required>
+          <small class="muted">Enter the event address. If the address cannot be found, you can pin the exact location on the map.</small>
+          <div class="location-actions">
+            <button type="button" class="btn btn-outline" id="findLocationButton">🔎 Find Address</button>
+            <button type="button" class="btn btn-primary" id="pinLocationButton">📍 Pin Location on Map</button>
+          </div>
+          <div id="locationMessage" class="location-message"></div>
+          <div id="mapContainer" class="booking-map-container" style="display:none;">
+            <div id="bookingMap" style="height:320px;"></div>
+            <p class="map-instruction">📍 Click on the map to select the event location. You can also drag the marker to adjust it.</p>
+            <button type="button" class="btn btn-primary" id="confirmLocationButton">Confirm Location</button>
+          </div>
+          <input type="hidden" id="latitude" name="latitude" value="${state.form.latitude ?? ""}">
+          <input type="hidden" id="longitude" name="longitude" value="${state.form.longitude ?? ""}">
         </div>
         <div class="form-group full">
-          <label class="form-label" for="city">City / Town</label>
-          <input class="form-control" id="city" name="city" value="${escapeHtml(state.form.city)}" placeholder="Johannesburg" required>
+          <label class="form-label" for="eventCity">City / Town</label>
+          <input class="form-control" id="eventCity" name="city" value="${escapeHtml(state.form.city)}" placeholder="Durban" required>
         </div>
       </div>
-
       <p class="form-label" style="margin-top:24px;">Optional Add-Ons</p>
       <div class="addon-select-grid">
         ${addOns.map(addon => {
@@ -287,12 +422,10 @@ function renderBookingStep() {
           `;
         }).join("")}
       </div>
-
       <div class="form-group">
         <label class="form-label" for="notes">Special Instructions (optional)</label>
         <textarea class="form-control" id="notes" name="notes" rows="3" placeholder="Any colour preferences, theme, or special requests…">${escapeHtml(state.form.notes)}</textarea>
       </div>
-
       <div class="form-actions">
         <button type="button" class="btn btn-outline" id="backStep2">← Back</button>
         <button type="button" class="btn btn-primary" id="nextStep2" ${isStep2Valid() ? "" : "disabled"}>Review Booking →</button>
@@ -307,7 +440,6 @@ function renderBookingStep() {
 
         root.innerHTML = `
       <h2>Review Your Booking</h2>
-
       <div class="review-stack">
         <div class="review-box">
           <div class="review-title">Your Details</div>
@@ -318,7 +450,6 @@ function renderBookingStep() {
             <span class="label">Occasion</span><span>${escapeHtml(state.form.occasion)}</span>
           </div>
         </div>
-
         <div class="review-box">
           <div class="review-title">Event Details</div>
           <div class="review-grid">
@@ -327,9 +458,8 @@ function renderBookingStep() {
             <span class="label">Address</span><span>${escapeHtml(state.form.address)}, ${escapeHtml(state.form.city)}</span>
           </div>
         </div>
-
         <div class="review-box">
-          <div class="review-title">Package & Pricing</div>
+          <div class="review-title">Package &amp; Pricing</div>
           <div class="review-row">
             <span class="muted">${selectedPackage?.name || "No package selected"}</span>
             <span>R${formatMoney(selectedPackage?.price)}</span>
@@ -346,7 +476,6 @@ function renderBookingStep() {
           </div>
           <p class="transport-note">* Transport fee quoted separately upon confirmation</p>
         </div>
-
         ${state.form.notes ? `
           <div class="review-box">
             <div class="review-title">Special Instructions</div>
@@ -354,7 +483,6 @@ function renderBookingStep() {
           </div>
         ` : ""}
       </div>
-
       <div class="form-actions">
         <button type="button" class="btn btn-outline" id="backStep3">← Edit</button>
         <button type="button" class="btn btn-gradient" id="nextStep3">Continue to Banking Details →</button>
@@ -369,23 +497,19 @@ function renderBookingStep() {
         root.innerHTML = `
       <div class="payment-heading">Banking Details</div>
       <p class="payment-subtext">This is a simulated payment step for demonstration purposes — no real charge will be made.</p>
-
       <div class="order-summary-strip">
         <span class="summary-label">Estimated Total</span>
         <span class="summary-total">R${formatMoney(total)}</span>
       </div>
-
       <div class="field-group">
         <label class="field-label" for="cardholderName">Cardholder Name</label>
         <input class="field-input" id="cardholderName" name="cardholderName" value="${escapeHtml(state.banking.cardholderName)}" placeholder="Name as it appears on card" required>
       </div>
-
       <div class="field-group card-number-wrap">
         <label class="field-label" for="cardNumber">Card Number</label>
         <input class="field-input" id="cardNumber" name="cardNumber" inputmode="numeric" maxlength="19" value="${escapeHtml(formatCardNumberDisplay(cardDigits))}" placeholder="0000 0000 0000 0000" required>
         <span class="card-brand" id="cardBrandLabel">${detectCardBrand(cardDigits)}</span>
       </div>
-
       <div class="field-row">
         <div class="field-group">
           <label class="field-label" for="expiryDate">Expiry Date</label>
@@ -396,9 +520,7 @@ function renderBookingStep() {
           <input class="field-input" id="cvv" name="cvv" inputmode="numeric" maxlength="4" value="${escapeHtml(state.banking.cvv)}" placeholder="123" required>
         </div>
       </div>
-
       <div class="section-divider" style="height:1px;background:var(--border-pink,#f9d0e3);margin:6px 0 20px;"></div>
-
       <div class="billing-section">
         <div class="field-group">
           <label class="field-label" for="streetAddress">Street Address</label>
@@ -415,11 +537,9 @@ function renderBookingStep() {
           </div>
         </div>
       </div>
-
       <div class="security-badges">
         <span>🔒 Simulated step — card details are never stored or sent anywhere.</span>
       </div>
-
       <div class="payment-actions">
         <button type="button" class="ghost-btn" id="backStep4">← Back to Review</button>
         <div class="confirm-wrap">
@@ -489,10 +609,13 @@ function attachStepHandlers() {
             state.form.addOns = state.form.addOns.includes(id)
                 ? state.form.addOns.filter(item => item !== id)
                 : [...state.form.addOns, id];
-
             renderBookingStep();
         });
     });
+
+    document.getElementById("findLocationButton")?.addEventListener("click", findEventAddress);
+    document.getElementById("pinLocationButton")?.addEventListener("click", openLocationMap);
+    document.getElementById("confirmLocationButton")?.addEventListener("click", confirmEventLocation);
 }
 
 function handleFormInput(event) {
@@ -576,38 +699,33 @@ function handleFormInput(event) {
 
 async function submitBooking() {
     const bookingUrl = document.getElementById("bookingApp").dataset.bookingUrl;
-
     const confirmBtn = document.getElementById("confirmBookingFinal");
     if (confirmBtn) {
         confirmBtn.disabled = true;
         confirmBtn.textContent = "Confirming…";
     }
 
-    // Only real booking data is sent — never card/banking fields.
     const booking = {
         firstName: state.form.firstName,
         lastName: state.form.lastName,
         email: state.form.email,
         phone: state.form.phone,
         occasion: state.form.occasion,
-
         eventDate: state.form.date,
         eventTime: state.form.time,
-
         address: state.form.address,
         city: state.form.city,
+        latitude: state.form.latitude,
+        longitude: state.form.longitude,
         notes: state.form.notes,
-
         packageId: state.form.packageId,
-        addOns: state.form.addOns,
+        addOns: state.form.addOns
     };
 
     try {
         const response = await fetch(bookingUrl, {
             method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
+            headers: { "Content-Type": "application/json" },
             body: JSON.stringify(booking)
         });
 
@@ -625,17 +743,10 @@ async function submitBooking() {
         }
 
         state.serverTotalPrice = Number(result.totalPrice);
-
         renderConfirmation();
-
     } catch (error) {
         console.error("Booking submission failed:", error);
-
-        alert(
-            error.message ||
-            "Something went wrong while submitting your booking. Please try again."
-        );
-
+        alert(error.message || "Something went wrong while submitting your booking. Please try again.");
         if (confirmBtn) {
             confirmBtn.disabled = !isStep4Valid();
             confirmBtn.textContent = "Confirm Booking ✓";
@@ -656,23 +767,20 @@ function renderConfirmation() {
         <p style="margin-bottom:8px;font-size:14px;color:var(--muted-foreground);">
           Thank you, <strong>${escapeHtml(state.form.firstName)}</strong>! Your celebration setup is booked.
         </p>
-
         <div class="summary-mini">
           <div class="summary-mini-row"><span class="summary-mini-label">Package</span><strong>${pkg?.name || ""}</strong></div>
           <div class="summary-mini-row"><span class="summary-mini-label">Date</span><strong>${escapeHtml(state.form.date)}</strong></div>
           <div class="summary-mini-row"><span class="summary-mini-label">Time</span><strong>${escapeHtml(state.form.time)}</strong></div>
           <div class="summary-mini-row"><span class="summary-mini-label">Total</span><strong style="color:var(--primary);">R${formatMoney(total)}</strong></div>
         </div>
-
         <p class="confirmation-note">We'll be in touch via WhatsApp to confirm. Transport fee quoted separately.</p>
-
         <div class="confirmation-actions">
           <a href="/Cust/ViewBooking" class="btn btn-outline">View Bookings</a>
           <a href="/Cust/Index" class="btn btn-primary">Back Home</a>
         </div>
       </div>
     </div>
-  `;    
+  `;
 }
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -683,15 +791,10 @@ document.addEventListener("DOMContentLoaded", () => {
     const loginOverlay = document.getElementById("bookingLoginOverlay");
 
     if (!isLoggedIn) {
-        if (loginOverlay) {
-            loginOverlay.classList.add("visible");
-        }
-
+        if (loginOverlay) loginOverlay.classList.add("visible");
         return;
     }
 
-    // Load the signed-in customer's details from the server-rendered page.
-    // These values came from the Customers table using Session["CustomerId"].
     state.form.firstName = app.dataset.customerFirstName || "";
     state.form.lastName = app.dataset.customerLastName || "";
     state.form.email = app.dataset.customerEmail || "";
