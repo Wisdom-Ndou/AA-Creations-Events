@@ -472,3 +472,30 @@ input:focus {
         padding: 48px;
     }
 }
+
+/* =========================================
+   STAFF LOGIN LINK
+========================================= */
+/* Add these rules near the end of the file (or in your site CSS) */
+
+.staff-login-row {
+    margin-top: 12px;
+    text-align: center;
+    font-size: 14px;
+    color: #7a3a5c;
+}
+
+    .staff-login-row p {
+        margin: 0;
+    }
+
+    .staff-login-row a {
+        color: #c51562;
+        text-decoration: none;
+        font-weight: 600;
+        margin-left: 6px;
+    }
+
+        .staff-login-row a:hover {
+            text-decoration: underline;
+        }

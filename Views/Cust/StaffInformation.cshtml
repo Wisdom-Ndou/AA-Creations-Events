@@ -1,0 +1,158 @@
+﻿@model IEnumerable<WebApplication1.Models.Staff>
+
+@{
+    ViewBag.Title = "Staff Information";
+}
+
+<link rel="stylesheet"
+      href="~/Content/AdminDashboard.css" />
+
+<div class="dashboard-container">
+
+    <div class="page-header">
+
+        <div>
+
+            <h1>Staff Information</h1>
+
+            <p>
+                View all registered staff members and their assigned teams.
+            </p>
+
+        </div>
+
+        <a href="@Url.Action("AdminDashboard", "Cust")"
+           class="dashboard-link">
+
+            ← Back to Dashboard
+
+        </a>
+
+    </div>
+
+
+    <div class="dashboard-panel">
+
+        <div class="panel-head">
+
+            <div>
+
+                <h2>Registered Staff</h2>
+
+                <p>
+                    @Model.Count() staff member(s) registered.
+                </p>
+
+            </div>
+
+            <a href="@Url.Action("StaffRegister", "Cust")"
+               class="panel-link">
+
+                + Register Staff
+
+            </a>
+
+        </div>
+
+
+        @if (Model != null && Model.Any())
+        {
+            <div class="table-wrap">
+
+                <table>
+
+                    <thead>
+
+                        <tr>
+
+                            <th>
+                                Staff ID
+                            </th>
+
+                            <th>
+                                Name
+                            </th>
+
+                            <th>
+                                Email
+                            </th>
+
+                            <th>
+                                Phone
+                            </th>
+
+                            <th>
+                                Team
+                            </th>
+
+                        </tr>
+
+                    </thead>
+
+                    <tbody>
+
+                        @foreach (var staff in Model)
+                        {
+                            <tr>
+
+                                <td class="cell-id">
+                                    #ST-@staff.staff_ID
+                                </td>
+
+                                <td>
+                                    @staff.staff_FName
+                                    @staff.staff_LName
+                                </td>
+
+                                <td>
+                                    @staff.staff_Email
+                                </td>
+
+                                <td>
+                                    @staff.staff_Phone
+                                </td>
+
+                                <td>
+
+                                    <span class="status confirmed">
+
+                                        <span class="dot"></span>
+
+                                        @staff.staff_Type
+
+                                    </span>
+
+                                </td>
+
+                            </tr>
+                        }
+
+                    </tbody>
+
+                </table>
+
+            </div>
+        }
+        else
+        {
+            <div class="empty-state">
+
+                <h3>No staff members registered</h3>
+
+                <p>
+                    Register your first staff member to get started.
+                </p>
+
+                <a href="@Url.Action("StaffRegister", "Cust")"
+                   class="panel-link">
+
+                    + Register Staff
+
+                </a>
+
+            </div>
+        }
+
+    </div>
+
+</div>

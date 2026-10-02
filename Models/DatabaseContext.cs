@@ -23,10 +23,12 @@ namespace WebApplication1.Models
         public DbSet<Package> Packages { get; set; }
 
         public DbSet<AddOn> AddOns { get; set; }
+        public DbSet<Staff> Staffs { get; set; }
 
         public DbSet<BookingAddOn> BookingAddOns { get; set; }
 
         public DbSet<OtpVerification> OtpVerifications { get; set; }
+        public DbSet<Expense> Expenses { get; set; }
 
     }
 

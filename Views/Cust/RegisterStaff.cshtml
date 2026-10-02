@@ -1,0 +1,398 @@
+﻿@model WebApplication1.Models.Staff
+
+@{
+    ViewBag.Title = "Register Staff";
+}
+
+<link rel="stylesheet"
+      href="~/Content/AdminDashboard.css" />
+
+<style>
+
+    .staff-form-page {
+        max-width: 850px;
+        margin: 0 auto;
+        padding: 40px 20px;
+    }
+
+    .staff-form-header {
+        margin-bottom: 30px;
+    }
+
+    .staff-form-header h1 {
+        color: #ffffff;
+        font-size: 2.2rem;
+    }
+
+    .staff-form-header h1 span {
+        color: #ff2a6d;
+    }
+
+    .staff-form-header p {
+        color: #a0a0b0;
+        margin-top: 5px;
+    }
+
+    .staff-form-panel {
+        background: #111111;
+        border: 1px solid #333;
+        border-radius: 12px;
+        padding: 30px;
+        border-top: 3px solid #ff2a6d;
+    }
+
+    .form-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 20px;
+    }
+
+    .form-group {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .form-group.full {
+        grid-column: 1 / -1;
+    }
+
+    .form-group label {
+        color: #ffffff;
+        font-weight: 600;
+        margin-bottom: 7px;
+    }
+
+    .form-control {
+        width: 100%;
+        padding: 12px 14px;
+
+        background: #1e1e2e;
+
+        border: 1px solid #333;
+        border-radius: 7px;
+
+        color: #ffffff;
+
+        font-size: 0.95rem;
+
+        outline: none;
+
+        transition: all 0.2s ease;
+    }
+
+    .form-control:focus {
+        border-color: #ff2a6d;
+
+        box-shadow:
+            0 0 10px rgba(255, 42, 109, 0.2);
+    }
+
+    .field-validation-error {
+        color: #f87171;
+        font-size: 0.8rem;
+        margin-top: 5px;
+    }
+
+    .team-description {
+        color: #a0a0b0;
+        font-size: 0.8rem;
+        margin-top: 6px;
+    }
+
+    .form-buttons {
+        display: flex;
+        gap: 12px;
+        margin-top: 25px;
+    }
+
+    .register-btn {
+        padding: 12px 24px;
+
+        background: #ff2a6d;
+
+        color: #ffffff;
+
+        border-radius: 7px;
+
+        font-weight: 700;
+
+        border: none;
+
+        cursor: pointer;
+
+        transition: all 0.2s ease;
+    }
+
+    .register-btn:hover {
+        box-shadow:
+            0 0 18px rgba(255, 42, 109, 0.5);
+
+        transform: translateY(-2px);
+    }
+
+    .cancel-btn {
+        padding: 12px 24px;
+
+        border: 1px solid #444;
+
+        color: #a0a0b0;
+
+        border-radius: 7px;
+
+        text-decoration: none;
+    }
+
+    .cancel-btn:hover {
+        border-color: #ff2a6d;
+        color: #ff2a6d;
+    }
+
+    .required-note {
+        color: #a0a0b0;
+        font-size: 0.8rem;
+        margin-bottom: 20px;
+    }
+
+    @@media (max-width: 700px) {
+
+        .form-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .form-group.full {
+            grid-column: auto;
+        }
+
+    }
+
+</style>
+
+
+<div class="staff-form-page">
+
+    <div class="staff-form-header">
+
+        <h1>
+            Register <span>Staff</span>
+        </h1>
+
+        <p>
+            Create a new staff member and assign them to a team.
+        </p>
+
+    </div>
+
+
+    <div class="staff-form-panel">
+
+        <p class="required-note">
+            Fields marked as required must be completed.
+        </p>
+
+
+        @using (Html.BeginForm("RegisterStaff", "Cust", FormMethod.Post))
+        {
+            @Html.AntiForgeryToken()
+
+            <div class="form-grid">
+
+
+                <!-- FIRST NAME -->
+
+                <div class="form-group">
+
+                    @Html.LabelFor(
+                        model => model.staff_FName,
+                        "First Name"
+                    )
+
+                    @Html.TextBoxFor(
+                        model => model.staff_FName,
+                        new
+                        {
+                            @class = "form-control",
+                            placeholder = "Enter first name"
+                        }
+                    )
+
+                    @Html.ValidationMessageFor(
+                        model => model.staff_FName
+                    )
+
+                </div>
+
+
+                <!-- LAST NAME -->
+
+                <div class="form-group">
+
+                    @Html.LabelFor(
+                        model => model.staff_LName,
+                        "Last Name"
+                    )
+
+                    @Html.TextBoxFor(
+                        model => model.staff_LName,
+                        new
+                        {
+                            @class = "form-control",
+                            placeholder = "Enter last name"
+                        }
+                    )
+
+                    @Html.ValidationMessageFor(
+                        model => model.staff_LName
+                    )
+
+                </div>
+
+
+                <!-- EMAIL -->
+
+                <div class="form-group full">
+
+                    @Html.LabelFor(
+                        model => model.staff_Email,
+                        "Email Address"
+                    )
+
+                    @Html.TextBoxFor(
+                        model => model.staff_Email,
+                        new
+                        {
+                            @class = "form-control",
+                            type = "email",
+                            placeholder = "Enter email address"
+                        }
+                    )
+
+                    @Html.ValidationMessageFor(
+                        model => model.staff_Email
+                    )
+
+                </div>
+
+
+                <!-- PHONE -->
+
+                <div class="form-group">
+
+                    @Html.LabelFor(
+                        model => model.staff_Phone,
+                        "Phone Number"
+                    )
+
+                    @Html.TextBoxFor(
+                        model => model.staff_Phone,
+                        new
+                        {
+                            @class = "form-control",
+                            placeholder = "e.g. 0731234567",
+                            maxlength = "10"
+                        }
+                    )
+
+                    @Html.ValidationMessageFor(
+                        model => model.staff_Phone
+                    )
+
+                </div>
+
+
+                <!-- PASSWORD -->
+
+                <div class="form-group">
+
+                    @Html.LabelFor(
+                        model => model.staff_Passw,
+                        "Password"
+                    )
+
+                    @Html.PasswordFor(
+                        model => model.staff_Passw,
+                        new
+                        {
+                            @class = "form-control",
+                            placeholder = "Enter password"
+                        }
+                    )
+
+                    @Html.ValidationMessageFor(
+                        model => model.staff_Passw
+                    )
+
+                </div>
+
+
+                <!-- STAFF TYPE -->
+
+                <div class="form-group full">
+
+                    @Html.LabelFor(
+                        model => model.staff_Type,
+                        "Staff Team"
+                    )
+
+                    <select name="staff_Type"
+                            class="form-control"
+                            required>
+
+                        <option value="">
+                            -- Select Staff Team --
+                        </option>
+
+                        <option value="Team Dbn">
+                            Team Dbn
+                        </option>
+
+                        <option value="Team Peter">
+                            Team Peter
+                        </option>
+
+                        <option value="Team Mdn">
+                            Team Mdn
+                        </option>
+
+                    </select>
+
+                    <span class="team-description">
+                        Team Dbn = Durban |
+                        Team Peter = Pietermaritzburg |
+                        Team Mdn = Mandeni
+                    </span>
+
+                    @Html.ValidationMessageFor(
+                        model => model.staff_Type
+                    )
+
+                </div>
+
+            </div>
+
+
+            <!-- BUTTONS -->
+
+            <div class="form-buttons">
+
+                <button type="submit"
+                        class="register-btn">
+
+                    Register Staff
+
+                </button>
+
+
+                <a href="@Url.Action("StaffInformation", "Cust")"
+                   class="cancel-btn">
+
+                    Cancel
+
+                </a>
+
+            </div>
+
+        }
+
+    </div>
+
+</div>
