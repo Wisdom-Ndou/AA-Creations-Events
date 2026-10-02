@@ -1,0 +1,339 @@
+﻿@{
+    ViewBag.Title = "My Profile";
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>@ViewBag.Title</title>
+
+    <style>
+        body {
+            background: linear-gradient(135deg, #ff2a6d 0%, #d9005c 100%);
+            min-height: 100vh;
+            margin: 0;
+            font-family: 'Segoe UI', Roboto, Arial, sans-serif;
+        }
+
+        .profile-page {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 3rem 2rem;
+        }
+
+        .page-header {
+            text-align: center;
+            margin-bottom: 2.5rem;
+        }
+
+        .badge {
+            display: inline-block;
+            background: #111;
+            color: #ff2a6d;
+            padding: 0.35rem 1rem;
+            border-radius: 999px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            text-transform: uppercase;
+            margin-bottom: 1rem;
+        }
+
+        .page-header h1 {
+            margin: 0;
+            color: #111;
+            font-size: 2.5rem;
+            font-weight: 800;
+        }
+
+            .page-header h1 span {
+                color: #fff;
+                font-style: italic;
+                text-shadow: 2px 2px 0 #111;
+            }
+
+        .page-header p {
+            color: #111;
+            margin-top: 0.7rem;
+        }
+
+        .profile-card {
+            background: #111;
+            border: 1px solid #333;
+            border-radius: 18px;
+            padding: 2rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+        }
+
+        .profile-top {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+            padding-bottom: 1.5rem;
+            border-bottom: 1px solid #333;
+            margin-bottom: 1.5rem;
+        }
+
+        .profile-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: #ff2a6d;
+            color: #111;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            font-weight: 800;
+            flex-shrink: 0;
+        }
+
+        .profile-top h2 {
+            color: #fff;
+            margin: 0 0 0.3rem 0;
+            font-size: 1.5rem;
+        }
+
+        .profile-top p {
+            color: #a0a0b0;
+            margin: 0;
+        }
+
+        .profile-status {
+            display: inline-block;
+            margin-top: 0.6rem;
+            padding: 0.3rem 0.7rem;
+            border-radius: 999px;
+            color: #4ade80;
+            border: 1px solid #4ade80;
+            background: rgba(74, 222, 128, 0.12);
+            font-size: 0.7rem;
+            font-weight: bold;
+        }
+
+        .profile-details {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        .detail-box {
+            background: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 10px;
+            padding: 1rem;
+        }
+
+        .detail-label {
+            color: #ff2a6d;
+            font-size: 0.7rem;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 0.4rem;
+        }
+
+        .detail-value {
+            color: #fff;
+            font-size: 0.95rem;
+        }
+
+        .info-message {
+            margin-top: 1.5rem;
+            padding: 1rem;
+            border-left: 3px solid #ff2a6d;
+            background: #1a1a1a;
+            border-radius: 8px;
+        }
+
+            .info-message p {
+                color: #a0a0b0;
+                margin: 0;
+                font-size: 0.85rem;
+                line-height: 1.5;
+            }
+
+        .back-link {
+            display: inline-block;
+            margin-top: 2rem;
+            color: #111;
+            font-weight: bold;
+            text-decoration: none;
+        }
+
+            .back-link:hover {
+                color: #fff;
+            }
+
+        @@media (max-width: 700px) {
+
+            .profile-page {
+                padding: 2rem 1rem;
+            }
+
+            .profile-top {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .profile-details {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <main class="profile-page">
+
+        <header class="page-header">
+
+            <div class="badge">
+                Staff Access
+            </div>
+
+            <h1>
+                My <span>Profile</span>
+            </h1>
+
+            <p>
+                View your staff account information.
+            </p>
+
+        </header>
+
+
+        <section class="profile-card">
+
+            <div class="profile-top">
+
+                <div class="profile-avatar">
+                    ST
+                </div>
+
+                <div>
+
+                    <h2>
+                        Staff Member
+                    </h2>
+
+                    <p>
+                        Staff Account
+                    </p>
+
+                    <span class="profile-status">
+                        Active
+                    </span>
+
+                </div>
+
+            </div>
+
+
+            <div class="profile-details">
+
+                <div class="detail-box">
+
+                    <div class="detail-label">
+                        First Name
+                    </div>
+
+                    <div class="detail-value">
+                        Staff
+                    </div>
+
+                </div>
+
+
+                <div class="detail-box">
+
+                    <div class="detail-label">
+                        Last Name
+                    </div>
+
+                    <div class="detail-value">
+                        Member
+                    </div>
+
+                </div>
+
+
+                <div class="detail-box">
+
+                    <div class="detail-label">
+                        Email Address
+                    </div>
+
+                    <div class="detail-value">
+                        staff@example.com
+                    </div>
+
+                </div>
+
+
+                <div class="detail-box">
+
+                    <div class="detail-label">
+                        Phone Number
+                    </div>
+
+                    <div class="detail-value">
+                        Not available
+                    </div>
+
+                </div>
+
+
+                <div class="detail-box">
+
+                    <div class="detail-label">
+                        Staff Type
+                    </div>
+
+                    <div class="detail-value">
+                        Event Staff
+                    </div>
+
+                </div>
+
+
+                <div class="detail-box">
+
+                    <div class="detail-label">
+                        Account Status
+                    </div>
+
+                    <div class="detail-value">
+                        Active
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <div class="info-message">
+
+                <p>
+                    Your profile information is currently displayed as read-only.
+                    Staff account details will be connected to your authenticated
+                    account when the staff login system is integrated.
+                </p>
+
+            </div>
+
+        </section>
+
+
+        <a href="@Url.Action("StaffDashboard", "Cust")"
+           class="back-link">
+            ← Back to Dashboard
+        </a>
+
+    </main>
+
+</body>
+</html>

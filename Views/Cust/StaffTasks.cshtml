@@ -1,0 +1,521 @@
+﻿@{
+    ViewBag.Title = "My To-Do List";
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>@ViewBag.Title</title>
+
+    <style>
+        body {
+            background: linear-gradient(135deg, #ff2a6d 0%, #d9005c 100%);
+            min-height: 100vh;
+            margin: 0;
+            font-family: 'Segoe UI', Roboto, Arial, sans-serif;
+        }
+
+        .tasks-page {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 3rem 2rem;
+        }
+
+        .page-header {
+            text-align: center;
+            margin-bottom: 2.5rem;
+        }
+
+        .badge {
+            display: inline-block;
+            background: #111;
+            color: #ff2a6d;
+            padding: 0.35rem 1rem;
+            border-radius: 999px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            text-transform: uppercase;
+            margin-bottom: 1rem;
+        }
+
+        .page-header h1 {
+            margin: 0;
+            color: #111;
+            font-size: 2.5rem;
+            font-weight: 800;
+        }
+
+        .page-header h1 span {
+            color: #fff;
+            font-style: italic;
+            text-shadow: 2px 2px 0 #111;
+        }
+
+        .page-header p {
+            color: #111;
+            margin-top: 0.7rem;
+        }
+
+        .toolbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .filters {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .filter-btn {
+            border: 1px solid #333;
+            background: #111;
+            color: #fff;
+            padding: 0.65rem 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .filter-btn:hover,
+        .filter-btn.active {
+            background: #ff2a6d;
+            border-color: #ff2a6d;
+        }
+
+        .add-task-btn {
+            border: none;
+            background: #111;
+            color: #ff2a6d;
+            padding: 0.75rem 1.2rem;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .add-task-btn:hover {
+            background: #fff;
+            color: #d9005c;
+        }
+
+        .task-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .task-card {
+            background: #111;
+            border: 1px solid #333;
+            border-radius: 14px;
+            padding: 1.3rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 1rem;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+        }
+
+        .task-card:hover {
+            border-color: #ff2a6d;
+        }
+
+        .task-left {
+            display: flex;
+            align-items: flex-start;
+            gap: 1rem;
+        }
+
+        .task-check {
+            width: 20px;
+            height: 20px;
+            margin-top: 3px;
+            accent-color: #ff2a6d;
+            cursor: pointer;
+        }
+
+        .task-info h3 {
+            color: #fff;
+            margin: 0 0 0.4rem 0;
+            font-size: 1.05rem;
+        }
+
+        .task-info p {
+            color: #a0a0b0;
+            margin: 0.2rem 0;
+            font-size: 0.85rem;
+        }
+
+        .task-meta {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+        }
+
+        .priority {
+            padding: 0.3rem 0.75rem;
+            border-radius: 999px;
+            font-size: 0.75rem;
+            font-weight: bold;
+        }
+
+        .priority.high {
+            color: #f87171;
+            border: 1px solid #f87171;
+            background: rgba(248, 113, 113, 0.12);
+        }
+
+        .priority.medium {
+            color: #facc15;
+            border: 1px solid #facc15;
+            background: rgba(250, 204, 21, 0.12);
+        }
+
+        .priority.low {
+            color: #4ade80;
+            border: 1px solid #4ade80;
+            background: rgba(74, 222, 128, 0.12);
+        }
+
+        .due {
+            color: #fff;
+            font-size: 0.8rem;
+        }
+
+        .back-link {
+            display: inline-block;
+            margin-top: 2rem;
+            color: #111;
+            font-weight: bold;
+            text-decoration: none;
+        }
+
+        .back-link:hover {
+            color: #fff;
+        }
+
+        @@media (max-width: 700px) {
+            .task-card {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .task-meta {
+                justify-content: flex-start;
+            }
+
+            .tasks-page {
+                padding: 2rem 1rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <main class="tasks-page">
+
+        <header class="page-header">
+            <div class="badge">Staff Access</div>
+
+            <h1>
+                My <span>To-Do List</span>
+            </h1>
+
+            <p>
+                Keep track of your assigned tasks and upcoming responsibilities.
+            </p>
+        </header>
+
+        <section class="toolbar">
+
+            <div class="filters">
+
+                <button type="button"
+                        class="filter-btn active"
+                        data-filter="all">
+                    All
+                </button>
+
+                <button type="button"
+                        class="filter-btn"
+                        data-filter="today">
+                    Today
+                </button>
+
+                <button type="button"
+                        class="filter-btn"
+                        data-filter="pending">
+                    Pending
+                </button>
+
+                <button type="button"
+                        class="filter-btn"
+                        data-filter="completed">
+                    Completed
+                </button>
+
+            </div>
+
+           n>
+
+        </section>
+
+        <section class="task-list">
+
+            <article class="task-card">
+
+                <div class="task-left">
+
+                    <input type="checkbox"
+                           class="task-check"
+                           aria-label="Complete floral arrangements task" />
+
+                    <div class="task-info">
+                        <h3>Set up floral arrangements</h3>
+
+                        <p>
+                            30th Birthday - Sandton
+                        </p>
+
+                        <p>
+                            Prepare and arrange the floral decorations before the client arrives.
+                        </p>
+                    </div>
+
+                </div>
+
+                <div class="task-meta">
+
+                    <span class="priority high">
+                        High
+                    </span>
+
+                    <span class="due">
+                        09:00 AM
+                    </span>
+
+                </div>
+
+            </article>
+            <article class="task-card"
+                     data-status="pending"
+                     data-date="today">
+
+                <div class="task-left">
+
+                    <input type="checkbox"
+                           class="task-check"
+                           aria-label="Complete floral arrangements task" />
+
+                    <div class="task-info">
+                        <h3>Set up floral arrangements</h3>
+
+                        <p>
+                            30th Birthday - Sandton
+                        </p>
+
+                        <p>
+                            Prepare and arrange the floral decorations before the client arrives.
+                        </p>
+                    </div>
+
+                </div>
+
+                <div class="task-meta">
+
+                    <span class="priority high">
+                        High
+                    </span>
+
+                    <span class="due">
+                        09:00 AM
+                    </span>
+
+                </div>
+
+            </article>
+
+
+            <article class="task-card"
+                     data-status="pending"
+                     data-date="today">
+
+                <div class="task-left">
+
+                    <input type="checkbox"
+                           class="task-check"
+                           aria-label="Complete catering task" />
+
+                    <div class="task-info">
+                        <h3>Confirm catering delivery</h3>
+
+                        <p>
+                            10th Anniversary - Cape Town
+                        </p>
+
+                        <p>
+                            Confirm the delivery time with the catering supplier.
+                        </p>
+                    </div>
+
+                </div>
+
+                <div class="task-meta">
+
+                    <span class="priority medium">
+                        Medium
+                    </span>
+
+                    <span class="due">
+                        11:30 AM
+                    </span>
+
+                </div>
+
+            </article>
+
+
+            <article class="task-card"
+                     data-status="pending"
+                     data-date="today">
+
+                <div class="task-left">
+
+                    <input type="checkbox"
+                           class="task-check"
+                           aria-label="Complete seating chart task" />
+
+                    <div class="task-info">
+                        <h3>Prepare guest seating chart</h3>
+
+                        <p>
+                            Graduation Party - JHB
+                        </p>
+
+                        <p>
+                            Finalise the seating arrangement for the event.
+                        </p>
+                    </div>
+
+                </div>
+
+                <div class="task-meta">
+
+                    <span class="priority low">
+                        Low
+                    </span>
+
+                    <span class="due">
+                        02:00 PM
+                    </span>
+
+                </div>
+
+            </article>
+
+
+
+
+        </section>
+
+        <a href="@Url.Action("StaffDashboard", "Cust")"
+           class="back-link">
+            ← Back to Dashboard
+        </a>
+
+    </main>
+    <script>
+    document.addEventListener("DOMContentLoaded", function () {
+
+        const filterButtons = document.querySelectorAll(".filter-btn");
+        const taskCards = document.querySelectorAll(".task-card");
+
+        filterButtons.forEach(function (button) {
+
+            button.addEventListener("click", function () {
+
+                const filter = button.getAttribute("data-filter");
+
+                // Change active button
+                filterButtons.forEach(function (btn) {
+                    btn.classList.remove("active");
+                });
+
+                button.classList.add("active");
+
+                // Filter tasks
+                taskCards.forEach(function (task) {
+
+                    const status = task.getAttribute("data-status");
+                    const date = task.getAttribute("data-date");
+
+                    let showTask = false;
+
+                    if (filter === "all") {
+                        showTask = true;
+                    }
+                    else if (filter === "today") {
+                        showTask = date === "today";
+                    }
+                    else if (filter === "pending") {
+                        showTask = status === "pending";
+                    }
+                    else if (filter === "completed") {
+                        showTask = status === "completed";
+                    }
+
+                    task.style.display = showTask ? "flex" : "none";
+                });
+
+            });
+
+        });
+
+
+        // Complete task
+        const checkboxes = document.querySelectorAll(".task-check");
+
+        checkboxes.forEach(function (checkbox) {
+
+            checkbox.addEventListener("change", function () {
+
+                const task = checkbox.closest(".task-card");
+
+                if (checkbox.checked) {
+
+                    task.setAttribute("data-status", "completed");
+
+                    task.style.opacity = "0.55";
+
+                    task.querySelector(".task-info h3").style.textDecoration =
+                        "line-through";
+
+                }
+                else {
+
+                    task.setAttribute("data-status", "pending");
+
+                    task.style.opacity = "1";
+
+                    task.querySelector(".task-info h3").style.textDecoration =
+                        "none";
+                }
+
+            });
+
+        });
+
+    });
+    </script>
+</body>
+</html>

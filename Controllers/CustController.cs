@@ -1813,7 +1813,32 @@ namespace WebApplication1.Controllers
             return View();
         }
 
+        public ActionResult StaffDashboard()
+        {
+            return View();
+        }
+
+        public ActionResult StaffTasks()
+        {
+            return View();
+        }
+        public ActionResult StaffComplaints()
+        {
+           
+
+                return View();
+            
+        }
+
+        public ActionResult StaffProfile()
+        {
+            return View();
+        }
+
 
     }
+
+
+    
 }
 

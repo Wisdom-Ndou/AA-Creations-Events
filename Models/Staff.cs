@@ -32,5 +32,6 @@ namespace WebApplication1.Models
 
         [StringLength(50)]
         public string staff_Type { get; set; }
+
     }
 }
