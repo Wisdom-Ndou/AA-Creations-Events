@@ -1,0 +1,539 @@
+﻿@{
+    ViewBag.Title = "Staff Complaints";
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>@ViewBag.Title</title>
+
+    <style>
+        body {
+            background: linear-gradient(135deg, #ff2a6d 0%, #d9005c 100%);
+            min-height: 100vh;
+            margin: 0;
+            font-family: 'Segoe UI', Roboto, Arial, sans-serif;
+        }
+
+        .complaints-page {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 3rem 2rem;
+        }
+
+        .page-header {
+            text-align: center;
+            margin-bottom: 2.5rem;
+        }
+
+        .badge {
+            display: inline-block;
+            background: #111;
+            color: #ff2a6d;
+            padding: 0.35rem 1rem;
+            border-radius: 999px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            text-transform: uppercase;
+            margin-bottom: 1rem;
+        }
+
+        .page-header h1 {
+            margin: 0;
+            color: #111;
+            font-size: 2.5rem;
+            font-weight: 800;
+        }
+
+            .page-header h1 span {
+                color: #fff;
+                font-style: italic;
+                text-shadow: 2px 2px 0 #111;
+            }
+
+        .page-header p {
+            color: #111;
+            margin-top: 0.7rem;
+        }
+
+        .complaint-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+        }
+
+        .panel {
+            background: #111;
+            border: 1px solid #333;
+            border-radius: 16px;
+            padding: 1.5rem;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+        }
+
+            .panel h2 {
+                color: #fff;
+                margin-top: 0;
+                margin-bottom: 1.3rem;
+                font-size: 1.3rem;
+            }
+
+        .form-group {
+            margin-bottom: 1.1rem;
+        }
+
+            .form-group label {
+                display: block;
+                color: #fff;
+                font-size: 0.85rem;
+                font-weight: 600;
+                margin-bottom: 0.4rem;
+            }
+
+        .form-control {
+            width: 100%;
+            box-sizing: border-box;
+            padding: 0.8rem;
+            border: 1px solid #444;
+            border-radius: 8px;
+            background: #1e1e2e;
+            color: #fff;
+            font-family: inherit;
+            outline: none;
+        }
+
+            .form-control:focus {
+                border-color: #ff2a6d;
+                box-shadow: 0 0 0 2px rgba(255, 42, 109, 0.15);
+            }
+
+        textarea.form-control {
+            min-height: 130px;
+            resize: vertical;
+        }
+
+        select.form-control {
+            cursor: pointer;
+        }
+
+        .submit-btn {
+            width: 100%;
+            border: none;
+            background: #ff2a6d;
+            color: #111;
+            padding: 0.85rem 1.2rem;
+            border-radius: 8px;
+            font-weight: 800;
+            cursor: pointer;
+            margin-top: 0.5rem;
+        }
+
+            .submit-btn:hover {
+                background: #fff;
+                color: #d9005c;
+            }
+
+        .complaint-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .complaint-card {
+            background: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 12px;
+            padding: 1rem;
+        }
+
+            .complaint-card:hover {
+                border-color: #ff2a6d;
+            }
+
+        .complaint-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 1rem;
+        }
+
+        .complaint-card h3 {
+            color: #fff;
+            margin: 0 0 0.4rem 0;
+            font-size: 1rem;
+        }
+
+        .complaint-card p {
+            color: #a0a0b0;
+            font-size: 0.85rem;
+            margin: 0.35rem 0;
+            line-height: 1.5;
+        }
+
+        .status {
+            display: inline-block;
+            padding: 0.3rem 0.7rem;
+            border-radius: 999px;
+            font-size: 0.7rem;
+            font-weight: bold;
+            white-space: nowrap;
+        }
+
+            .status.open {
+                color: #facc15;
+                border: 1px solid #facc15;
+                background: rgba(250, 204, 21, 0.12);
+            }
+
+            .status.resolved {
+                color: #4ade80;
+                border: 1px solid #4ade80;
+                background: rgba(74, 222, 128, 0.12);
+            }
+
+        .priority {
+            display: inline-block;
+            padding: 0.25rem 0.6rem;
+            border-radius: 999px;
+            font-size: 0.7rem;
+            font-weight: bold;
+            margin-top: 0.5rem;
+        }
+
+            .priority.high {
+                color: #f87171;
+                border: 1px solid #f87171;
+            }
+
+            .priority.medium {
+                color: #facc15;
+                border: 1px solid #facc15;
+            }
+
+            .priority.low {
+                color: #4ade80;
+                border: 1px solid #4ade80;
+            }
+
+        .empty-message {
+            color: #a0a0b0;
+            text-align: center;
+            padding: 2rem 1rem;
+            border: 1px dashed #444;
+            border-radius: 10px;
+        }
+
+        .back-link {
+            display: inline-block;
+            margin-top: 2rem;
+            color: #111;
+            font-weight: bold;
+            text-decoration: none;
+        }
+
+            .back-link:hover {
+                color: #fff;
+            }
+
+        @@media (max-width: 800px) {
+            .complaint-layout {
+                grid-template-columns: 1fr;
+            }
+
+            .complaints-page {
+                padding: 2rem 1rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <main class="complaints-page">
+
+        <header class="page-header">
+
+            <div class="badge">
+                Staff Access
+            </div>
+
+            <h1>
+                Staff <span>Complaints</span>
+            </h1>
+
+            <p>
+                Report workplace issues and keep track of previously submitted complaints.
+            </p>
+
+        </header>
+
+
+        <section class="complaint-layout">
+
+            <!-- Submit Complaint -->
+
+            <div class="panel">
+
+                <h2>Log a Complaint</h2>
+
+                <form id="complaintForm">
+
+                    <div class="form-group">
+
+                        <label for="complaintTitle">
+                            Complaint Title
+                        </label>
+
+                        <input type="text"
+                               id="complaintTitle"
+                               class="form-control"
+                               placeholder="Enter the complaint title"
+                               required />
+
+                    </div>
+
+
+                    <div class="form-group">
+
+                        <label for="complaintDescription">
+                            Description
+                        </label>
+
+                        <textarea id="complaintDescription"
+                                  class="form-control"
+                                  placeholder="Describe the issue..."
+                                  required></textarea>
+
+                    </div>
+
+
+                    <div class="form-group">
+
+                        <label for="complaintPriority">
+                            Priority
+                        </label>
+
+                        <select id="complaintPriority"
+                                class="form-control">
+
+                            <option value="Low">
+                                Low
+                            </option>
+
+                            <option value="Medium" selected>
+                                Medium
+                            </option>
+
+                            <option value="High">
+                                High
+                            </option>
+
+                        </select>
+
+                    </div>
+
+
+                    <button type="submit"
+                            class="submit-btn">
+                        Submit Complaint
+                    </button>
+
+                </form>
+
+            </div>
+
+
+            <!-- Previous Complaints -->
+
+            <div class="panel">
+
+                <h2>My Complaints</h2>
+
+                <div class="complaint-list"
+                     id="complaintList">
+
+                    <article class="complaint-card">
+
+                        <div class="complaint-header">
+
+                            <div>
+
+                                <h3>
+                                    Equipment Issue
+                                </h3>
+
+                                <p>
+                                    Some event equipment requires maintenance before the next booking.
+                                </p>
+
+                            </div>
+
+                            <span class="status open">
+                                Open
+                            </span>
+
+                        </div>
+
+                        <span class="priority medium">
+                            Medium Priority
+                        </span>
+
+                        <p>
+                            Submitted: 01 October 2026
+                        </p>
+
+                    </article>
+
+
+                    <article class="complaint-card">
+
+                        <div class="complaint-header">
+
+                            <div>
+
+                                <h3>
+                                    Scheduling Conflict
+                                </h3>
+
+                                <p>
+                                    Two assigned responsibilities overlap on the same event date.
+                                </p>
+
+                            </div>
+
+                            <span class="status resolved">
+                                Resolved
+                            </span>
+
+                        </div>
+
+                        <span class="priority low">
+                            Low Priority
+                        </span>
+
+                        <p>
+                            Submitted: 28 September 2026
+                        </p>
+
+                    </article>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <a href="@Url.Action("StaffDashboard", "Cust")"
+           class="back-link">
+            ← Back to Dashboard
+        </a>
+
+    </main>
+
+
+    <script>
+
+        document.addEventListener("DOMContentLoaded", function () {
+
+            const complaintForm =
+                document.getElementById("complaintForm");
+
+            const complaintList =
+                document.getElementById("complaintList");
+
+
+            complaintForm.addEventListener("submit", function (event) {
+
+                event.preventDefault();
+
+
+                const title =
+                    document.getElementById("complaintTitle").value.trim();
+
+                const description =
+                    document.getElementById("complaintDescription").value.trim();
+
+                const priority =
+                    document.getElementById("complaintPriority").value;
+
+
+                if (!title || !description) {
+                    return;
+                }
+
+
+                const priorityClass =
+                    priority.toLowerCase();
+
+
+                const today =
+                    new Date().toLocaleDateString("en-GB", {
+                        day: "2-digit",
+                        month: "long",
+                        year: "numeric"
+                    });
+
+
+                const complaint =
+                    document.createElement("article");
+
+                complaint.className = "complaint-card";
+
+
+                complaint.innerHTML = `
+                    <div class="complaint-header">
+
+                        <div>
+
+                            <h3>${escapeHtml(title)}</h3>
+
+                            <p>${escapeHtml(description)}</p>
+
+                        </div>
+
+                        <span class="status open">
+                            Open
+                        </span>
+
+                    </div>
+
+                    <span class="priority ${priorityClass}">
+                        ${escapeHtml(priority)} Priority
+                    </span>
+
+                    <p>
+                        Submitted: ${today}
+                    </p>
+                `;
+
+
+                complaintList.prepend(complaint);
+
+
+                complaintForm.reset();
+
+
+                alert("Complaint submitted successfully.");
+
+            });
+
+
+            function escapeHtml(value) {
+
+                const div = document.createElement("div");
+
+                div.textContent = value;
+
+                return div.innerHTML;
+
+            }
+
+        });
+
+    </script>
+
+</body>
+</html>

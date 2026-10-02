@@ -28,6 +28,13 @@ namespace WebApplication1.Models
 
         public DbSet<OtpVerification> OtpVerifications { get; set; }
 
+     
+
+        public DbSet<Staff> Staffs { get; set; }
+
+        public DbSet<StaffTask> StaffTasks { get; set; }
+        
+
     }
 
 }
