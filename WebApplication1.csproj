@@ -233,10 +233,6 @@
     <Compile Include="Migrations\202610031340385_DiagnoseStaffCity.Designer.cs">
       <DependentUpon>202610031340385_DiagnoseStaffCity.cs</DependentUpon>
     </Compile>
-    <Compile Include="Migrations\202610031358590_CheckModelSync.cs" />
-    <Compile Include="Migrations\202610031358590_CheckModelSync.Designer.cs">
-      <DependentUpon>202610031358590_CheckModelSync.cs</DependentUpon>
-    </Compile>
     <Compile Include="Migrations\Configuration.cs" />
     <Compile Include="Models\AddOn.cs" />
     <Compile Include="Models\Admin.cs" />
@@ -313,6 +309,8 @@
     <Content Include="Scripts\ViewBooking.js" />
     <Content Include="Views\Cust\StaffComplaints.cshtml" />
     <Content Include="Views\Cust\StaffLogin.cshtml" />
+    <Content Include="Views\Cust\Login.cshtml" />
+    <Content Include="Views\Cust\RegisterStaff.cshtml" />
     <None Include="Views\Cust\StaffDashboard.cshtml" />
     <Content Include="Web.config" />
     <Content Include="Web.Debug.config">
@@ -329,9 +327,6 @@
     <Content Include="Views\Home\Contact.cshtml" />
     <Content Include="Views\Home\Index.cshtml" />
     <Content Include="Views\Cust\Index.cshtml" />
-    <Content Include="F:\Login.cshtml">
-      <Link>Views\Cust\Login.cshtml</Link>
-    </Content>
     <Content Include="Views\Cust\Customerregister.cshtml" />
     <Content Include="Views\Cust\Adminregister.cshtml" />
     <Content Include="Views\Cust\Portfolio.cshtml" />
@@ -345,7 +340,6 @@
     <Content Include="Views\Cust\ForgotPassword.cshtml" />
     <Content Include="Views\Cust\ForgotPasswordMethod.cshtml" />
     <Content Include="Views\Cust\AdminDashboard.cshtml" />
-    <Content Include="Views\Cust\AdminLogin.cshtml" />
     <Content Include="Views\Cust\AllBookings.cshtml" />
     <Content Include="Views\Cust\UpcomingEvents.cshtml" />
     <Content Include="Views\Cust\PendingApprovals.cshtml" />
@@ -431,9 +425,6 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Migrations\202610031340385_DiagnoseStaffCity.resx">
       <DependentUpon>202610031340385_DiagnoseStaffCity.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Migrations\202610031358590_CheckModelSync.resx">
-      <DependentUpon>202610031358590_CheckModelSync.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <PropertyGroup>

@@ -47,10 +47,10 @@ namespace WebApplication1.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         public ActionResult Login(
-        string email,
-        string password,
-     string role,
-     string accessCode)
+    string email,
+    string password,
+    string role,
+    string adminAccessCode)
         {
             // ==========================================
             // CHECK REQUIRED FIELDS
@@ -143,7 +143,7 @@ namespace WebApplication1.Controllers
                 string correctAccessCode =
                     ConfigurationManager.AppSettings["AdminAccessCode"];
 
-                if (string.IsNullOrWhiteSpace(accessCode))
+                if (string.IsNullOrWhiteSpace(adminAccessCode))
                 {
                     ModelState.AddModelError(
                         "",
@@ -154,7 +154,10 @@ namespace WebApplication1.Controllers
                 }
 
                 if (string.IsNullOrWhiteSpace(correctAccessCode) ||
-                    accessCode.Trim() != correctAccessCode.Trim())
+                    !string.Equals(
+                        adminAccessCode.Trim(),
+                        correctAccessCode.Trim(),
+                        StringComparison.Ordinal))
                 {
                     ModelState.AddModelError(
                         "",
@@ -2110,6 +2113,59 @@ namespace WebApplication1.Controllers
             Session.Remove("StaffAuthenticated");
 
             return RedirectToAction("Login", "Cust");
+        }
+
+        [HttpGet]
+        public ActionResult RegisterStaff()
+        {
+            if (Session["AdminId"] == null ||
+                Session["AdminAuthenticated"] == null ||
+                !(bool)Session["AdminAuthenticated"])
+            {
+                return RedirectToAction("Login", "Cust");
+            }
+
+            return View(new Staff());
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public ActionResult RegisterStaff(
+            [Bind(Include = "staff_FName,staff_LName,staff_Email,staff_Passw,staff_Phone,staff_Type,staff_City")]
+            Staff staff)
+        {
+            if (Session["AdminId"] == null ||
+                Session["AdminAuthenticated"] == null ||
+                !(bool)Session["AdminAuthenticated"])
+            {
+                return RedirectToAction("Login", "Cust");
+            }
+
+            if (!ModelState.IsValid)
+            {
+                return View(staff);
+            }
+
+            staff.staff_FName = staff.staff_FName.Trim();
+            staff.staff_LName = staff.staff_LName.Trim();
+            staff.staff_Email = staff.staff_Email.Trim();
+
+            if (db.Staffs.Any(s => s.staff_Email == staff.staff_Email))
+            {
+                ModelState.AddModelError(
+                    "staff_Email",
+                    "A staff account with this email already exists."
+                );
+
+                return View(staff);
+            }
+
+            staff.staff_Passw = Crypto.HashPassword(staff.staff_Passw);
+
+            db.Staffs.Add(staff);
+            db.SaveChanges();
+
+            return RedirectToAction("AdminDashboard", "Cust");
         }
     }
 
