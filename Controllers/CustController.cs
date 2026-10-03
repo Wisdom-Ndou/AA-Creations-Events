@@ -628,46 +628,10 @@ namespace WebApplication1.Controllers
                     });
                 }
 
-                // Save the booking and its staff task together.
-                using (var transaction = db.Database.BeginTransaction())
-                {
-                    try
-                    {
-                        db.Bookings.Add(booking);
-                        db.SaveChanges();
-
-                        var assignedStaff = db.Staffs
-                            .Where(s => s.staff_City == booking.City)
-                            .OrderBy(s => s.staff_ID)
-                            .FirstOrDefault();
-
-                        if (assignedStaff != null)
-                        {
-                            db.StaffTasks.Add(new StaffTask
-                            {
-                                StaffId = assignedStaff.staff_ID,
-                                BookingId = booking.BookingId,
-                                TaskName = "Decorate event for " + booking.FirstName + " " + booking.LastName,
-                                Description = "Complete the event decoration setup at " +
-                                              booking.Address + ", " + booking.City +
-                                              " for the " + booking.Occasion + ".",
-                                DueDate = booking.EventDate,
-                                Priority = "High",
-                                Status = "Pending",
-                                CreatedAt = DateTime.Now
-                            });
-
-                            db.SaveChanges();
-                        }
-
-                        transaction.Commit();
-                    }
-                    catch
-                    {
-                        transaction.Rollback();
-                        throw;
-                    }
-                }
+                // Save the booking first. Staff work is created only after
+                // an administrator approves the booking.
+                db.Bookings.Add(booking);
+                db.SaveChanges();
 
                 return Json(new
                 {
@@ -1466,20 +1430,106 @@ namespace WebApplication1.Controllers
             }
 
 
-            // Update database
-            booking.Status = newStatus;
+            // Update database.
+            //
+            // A staff task is created only when the booking becomes Approved.
+            // This prevents staff from receiving work for bookings that are
+            // still awaiting admin review.
+            using (var transaction = db.Database.BeginTransaction())
+            {
+                try
+                {
+                    booking.Status = newStatus;
 
-            db.SaveChanges();
+                    if (newStatus == "Approved")
+                    {
+                        bool taskAlreadyExists = db.StaffTasks
+                            .Any(t => t.BookingId == booking.BookingId);
 
+                        if (!taskAlreadyExists)
+                        {
+                            // Choose the least-loaded staff member assigned
+                            // to the booking's city.
+                            var assignedStaff = db.Staffs
+                                .Where(s => s.staff_City == booking.City)
+                                .Select(s => new
+                                {
+                                    Staff = s,
+                                    ActiveTaskCount = db.StaffTasks.Count(t =>
+                                        t.StaffId == s.staff_ID &&
+                                        t.Status == "Pending")
+                                })
+                                .OrderBy(x => x.ActiveTaskCount)
+                                .ThenBy(x => x.Staff.staff_ID)
+                                .Select(x => x.Staff)
+                                .FirstOrDefault();
+
+                            if (assignedStaff == null)
+                            {
+                                transaction.Rollback();
+
+                                return Json(new
+                                {
+                                    success = false,
+                                    message = "The booking cannot be approved because no staff member is registered for " +
+                                              booking.City + ". Register a staff member for this city first."
+                                });
+                            }
+
+                            db.StaffTasks.Add(new StaffTask
+                            {
+                                StaffId = assignedStaff.staff_ID,
+                                BookingId = booking.BookingId,
+                                TaskName = "Decorate event for " +
+                                           booking.FirstName + " " +
+                                           booking.LastName,
+                                Description = "Complete the event decoration setup at " +
+                                              booking.Address + ", " +
+                                              booking.City + " for the " +
+                                              booking.Occasion + ".",
+                                DueDate = booking.EventDate,
+                                Priority = "High",
+                                Status = "Pending",
+                                CreatedAt = DateTime.Now
+                            });
+                        }
+                    }
+                    else if (newStatus == "Declined")
+                    {
+                        // Do not leave an active staff task behind if a booking
+                        // is declined.
+                        var existingTasks = db.StaffTasks
+                            .Where(t => t.BookingId == booking.BookingId &&
+                                        t.Status == "Pending")
+                            .ToList();
+
+                        foreach (var task in existingTasks)
+                        {
+                            task.Status = "Unable";
+                            task.CompletionReason = "Booking was declined by the administrator.";
+                            task.CompletedAt = DateTime.Now;
+                        }
+                    }
+
+                    db.SaveChanges();
+                    transaction.Commit();
+                }
+                catch
+                {
+                    transaction.Rollback();
+                    throw;
+                }
+            }
 
             return Json(new
             {
                 success = true,
                 bookingId = booking.BookingId,
                 status = newStatus,
-                message = "Booking status updated successfully."
+                message = newStatus == "Approved"
+                    ? "Booking approved and staff task assigned successfully."
+                    : "Booking status updated successfully."
             });
-        }
 
         // ==========================================
         // ALL BOOKINGS
