@@ -1514,10 +1514,17 @@ namespace WebApplication1.Controllers
                     db.SaveChanges();
                     transaction.Commit();
                 }
-                catch
+                catch (Exception ex)
                 {
                     transaction.Rollback();
-                    throw;
+
+                    // Return the error as JSON so the caller can diagnose
+                    // why the staff task was not created.
+                    return Json(new
+                    {
+                        success = false,
+                        message = "An error occurred while creating the staff task: " + ex.Message
+                    });
                 }
             }
 
@@ -1530,6 +1537,8 @@ namespace WebApplication1.Controllers
                     ? "Booking approved and staff task assigned successfully."
                     : "Booking status updated successfully."
             });
+
+        }
 
         // ==========================================
         // ALL BOOKINGS
@@ -2006,6 +2015,7 @@ namespace WebApplication1.Controllers
             }
 
             int staffId = (int)Session["StaffId"];
+
 
             var complaints = db.StaffComplaints
                 .Where(c => c.StaffId == staffId)
