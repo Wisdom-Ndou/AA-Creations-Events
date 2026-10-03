@@ -18,7 +18,8 @@
 
     <main class="bookings-page" id="bookingsApp"
           data-logged-in="@(Session["CustomerEmail"] != null ? "true" : "false")"
-          data-complete-url="@Url.Action("CompleteCustomerBooking", "Cust")">
+          data-complete-url="@Url.Action("CompleteCustomerBooking", "Cust")"
+          data-cancel-url="@Url.Action("CancelCustomerBooking", "Cust")">
         @Html.AntiForgeryToken()
 
         <!-- Login Overlay -->
