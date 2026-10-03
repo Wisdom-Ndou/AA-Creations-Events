@@ -80,6 +80,7 @@ function getStatusClass(status) {
     switch ((status || "").toLowerCase()) {
 
         case "confirmed":
+        case "approved":
             return "confirmed";
 
         case "preparing":
@@ -88,9 +89,13 @@ function getStatusClass(status) {
         case "in progress":
             return "in-progress";
 
+        case "setup completed":
+            return "in-progress";
+
         case "completed":
             return "completed";
 
+        case "declined":
         case "cancelled":
             return "cancelled";
 
@@ -536,6 +541,7 @@ function renderDetails(booking, isPast) {
 
                             ${(booking.status || "").toLowerCase() === "setup completed" ? '<button type="button" class="btn btn-primary" data-complete-booking="' + booking.id + '">Confirm Arrival & Complete</button>' : ""}
 
+                            ${["pending", "approved"].includes((booking.status || "Pending").toLowerCase()) ? `
                             <button
                                 type="button"
                                 class="btn btn-outline cancel"
@@ -543,7 +549,7 @@ function renderDetails(booking, isPast) {
 
                                 Cancel
 
-                            </button>
+                            </button>` : ""}
 
                         </div>
                       `
