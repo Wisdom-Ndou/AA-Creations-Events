@@ -67,10 +67,6 @@
         <p class="quote">"Every celebration deserves to be unforgettable."</p>
         <p>&copy; @DateTime.Now.Year - AA Creations &amp; Events. All rights reserved.</p>
         <p class="footer-contact">Contact: 073 123 2660 / 069 843 2686</p>
-        @if (!isAdmin && !isStaff)
-        {
-            <p>Staff member? <a href="@Url.Action("StaffLogin","Cust")">Staff Login</a></p>
-        }
     </footer>
 </div>
 
