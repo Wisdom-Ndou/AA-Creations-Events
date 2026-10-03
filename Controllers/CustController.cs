@@ -2479,6 +2479,67 @@ namespace WebApplication1.Controllers
         }
 
         [HttpGet]
+        public ActionResult StaffManagement()
+        {
+            if (Session["AdminId"] == null || Session["AdminAuthenticated"] == null || !(bool)Session["AdminAuthenticated"])
+                return RedirectToAction("Login", "Cust");
+
+            var staff = db.Staffs.OrderBy(s => s.staff_City).ThenBy(s => s.staff_FName).ToList();
+            var pendingCounts = db.StaffTasks
+                .Where(t => t.Status == "Pending")
+                .GroupBy(t => t.StaffId)
+                .ToDictionary(g => g.Key, g => g.Count());
+
+            ViewBag.PendingTaskCounts = pendingCounts;
+            return View(staff);
+        }
+
+        [HttpGet]
+        public ActionResult EditStaff(int id)
+        {
+            if (Session["AdminId"] == null || Session["AdminAuthenticated"] == null || !(bool)Session["AdminAuthenticated"])
+                return RedirectToAction("Login", "Cust");
+
+            var staff = db.Staffs.FirstOrDefault(s => s.staff_ID == id);
+            if (staff == null) return HttpNotFound();
+            return View(staff);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public ActionResult EditStaff(Staff model)
+        {
+            if (Session["AdminId"] == null || Session["AdminAuthenticated"] == null || !(bool)Session["AdminAuthenticated"])
+                return RedirectToAction("Login", "Cust");
+
+            var staff = db.Staffs.FirstOrDefault(s => s.staff_ID == model.staff_ID);
+            if (staff == null) return HttpNotFound();
+
+            if (string.IsNullOrWhiteSpace(model.staff_FName) || string.IsNullOrWhiteSpace(model.staff_LName) ||
+                string.IsNullOrWhiteSpace(model.staff_Email) || string.IsNullOrWhiteSpace(model.staff_Phone) ||
+                string.IsNullOrWhiteSpace(model.staff_Type) || string.IsNullOrWhiteSpace(model.staff_City))
+            {
+                ModelState.AddModelError("", "Please complete all staff details.");
+                return View(model);
+            }
+
+            staff.staff_FName = model.staff_FName.Trim();
+            staff.staff_LName = model.staff_LName.Trim();
+            staff.staff_Email = model.staff_Email.Trim();
+            staff.staff_Phone = model.staff_Phone.Trim();
+            staff.staff_Type = model.staff_Type;
+            staff.staff_City = model.staff_City;
+
+            // Keep the existing password unless the admin deliberately supplies a replacement.
+            if (!string.IsNullOrWhiteSpace(model.staff_Passw))
+                staff.staff_Passw = model.staff_Passw;
+
+            db.SaveChanges();
+            TempData["StaffManagementSuccess"] = "Staff details updated.";
+            return RedirectToAction("StaffManagement");
+        }
+
+        [HttpGet]
         public ActionResult RegisterStaff()
         {
             if (Session["AdminId"] == null ||
