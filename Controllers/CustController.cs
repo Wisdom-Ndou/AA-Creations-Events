@@ -799,8 +799,11 @@ namespace WebApplication1.Controllers
             if (booking == null)
                 return Json(new { success = false, message = "Booking could not be found." });
 
-            string current = booking.Status ?? "Pending";
-            if (current == "Setup Completed" || current == "Completed" || current == "Declined" || current == "Cancelled")
+            string current = (booking.Status ?? "Pending").Trim();
+            if (current.Equals("Setup Completed", StringComparison.OrdinalIgnoreCase) ||
+                current.Equals("Completed", StringComparison.OrdinalIgnoreCase) ||
+                current.Equals("Declined", StringComparison.OrdinalIgnoreCase) ||
+                current.Equals("Cancelled", StringComparison.OrdinalIgnoreCase))
                 return Json(new { success = false, message = "This booking can no longer be cancelled online." });
 
             booking.Status = "Cancelled";
@@ -2246,6 +2249,12 @@ namespace WebApplication1.Controllers
             if (task == null)
             {
                 TempData["StaffTaskError"] = "The task could not be found.";
+                return RedirectToAction("StaffTasks", "Cust");
+            }
+
+            if (!string.Equals(task.Status, "Pending", StringComparison.OrdinalIgnoreCase))
+            {
+                TempData["StaffTaskError"] = "This task has already reached a final status and cannot be changed.";
                 return RedirectToAction("StaffTasks", "Cust");
             }
 
