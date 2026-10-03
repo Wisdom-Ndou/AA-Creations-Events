@@ -142,6 +142,14 @@
             </div>
 
 
+
+            <div class="admin-booking-filters" role="group" aria-label="Filter bookings by status">
+                <button type="button" class="booking-filter active" data-status-filter="all">All</button>
+                <button type="button" class="booking-filter" data-status-filter="pending">Pending</button>
+                <button type="button" class="booking-filter" data-status-filter="approved">Approved</button>
+                <button type="button" class="booking-filter" data-status-filter="cancelled">Cancelled</button>
+            </div>
+
             <div class="table-wrap">
 
                 <table>
@@ -238,7 +246,7 @@
                                 </span>
                             </td>
 
-                            <tr>
+                            <tr data-booking-status="@status.ToLowerInvariant()">
 
                                 <td class="booking-actions">
 
@@ -472,6 +480,35 @@
 
     </p>
 
+
+
+    <script>
+        (function () {
+            var buttons = document.querySelectorAll(".booking-filter");
+            var rows = document.querySelectorAll("tr[data-booking-status]");
+
+            buttons.forEach(function (button) {
+                button.addEventListener("click", function () {
+                    var wanted = button.getAttribute("data-status-filter");
+
+                    buttons.forEach(function (item) {
+                        item.classList.remove("active");
+                    });
+                    button.classList.add("active");
+
+                    rows.forEach(function (row) {
+                        var status = (row.getAttribute("data-booking-status") || "pending").toLowerCase();
+                        var isCancelled = status === "declined" || status === "cancelled";
+                        var show = wanted === "all" ||
+                            status === wanted ||
+                            (wanted === "cancelled" && isCancelled);
+
+                        row.style.display = show ? "" : "none";
+                    });
+                });
+            });
+        })();
+    </script>
 
 </body>
 
