@@ -304,9 +304,9 @@ namespace WebApplication1.Controllers
                 return RedirectToAction("ForgotPassword", "Cust");
             }
 
-            if (deliveryMethod != "Email" && deliveryMethod != "Phone")
+            if (deliveryMethod != "Email")
             {
-                TempData["OtpError"] = "Please select a valid verification method.";
+                TempData["OtpError"] = "Password recovery is currently available by email.";
                 return RedirectToAction("ForgotPasswordMethod", "Cust");
             }
 
@@ -338,6 +338,7 @@ namespace WebApplication1.Controllers
 
             db.OtpVerifications.Add(otpVerification);
             db.SaveChanges();
+            Session["ExpectedOtpPurpose"] = "ForgotPassword";
 
             var deliveryService = new OtpDeliveryService();
 
@@ -368,9 +369,6 @@ namespace WebApplication1.Controllers
                     "Cust"
                 );
             }
-
-            // TEMPORARY TESTING ONLY
-            Session["TestOtp"] = otp;
 
             return RedirectToAction(
                 "VerifyOtp",
@@ -1036,6 +1034,7 @@ namespace WebApplication1.Controllers
 
             db.OtpVerifications.Add(otpVerification);
             db.SaveChanges();
+            Session["ExpectedOtpPurpose"] = purpose;
 
             var deliveryService = new OtpDeliveryService();
 
@@ -1114,9 +1113,18 @@ namespace WebApplication1.Controllers
                 return View();
             }
 
+            string expectedPurpose = Session["ExpectedOtpPurpose"] as string;
+
+            if (string.IsNullOrWhiteSpace(expectedPurpose))
+            {
+                ModelState.AddModelError("", "The verification session has expired. Please request a new code.");
+                return View();
+            }
+
             var verification = db.OtpVerifications
                 .Where(o =>
                     o.CustomerId == customerId &&
+                    o.Purpose == expectedPurpose &&
                     !o.IsUsed &&
                     o.ExpiresAt > DateTime.Now)
                 .OrderByDescending(o => o.CreatedAt)
@@ -1167,6 +1175,7 @@ namespace WebApplication1.Controllers
 
             Session["OtpVerified"] = true;
             Session["OtpPurpose"] = verification.Purpose;
+            Session.Remove("ExpectedOtpPurpose");
 
             // FORGOT PASSWORD
             if (verification.Purpose == "ForgotPassword")
