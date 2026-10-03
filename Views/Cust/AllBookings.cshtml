@@ -239,13 +239,6 @@
                                         : status.ToLower() == "declined"
                                             ? "declined"
                                             : "pending";
-                            <td>
-                                <span class="status @statusClass">
-                                    <span class="dot"></span>
-                                    @status
-                                </span>
-                            </td>
-
                             <tr data-booking-status="@status.ToLowerInvariant()">
 
                                 <td class="booking-actions">
@@ -346,7 +339,7 @@
                                     <span class="venue-address">
                                         @booking.Address
                                     </span>
-                                </td>>
+                                </td>
 
 
                                 <!-- TIME -->
