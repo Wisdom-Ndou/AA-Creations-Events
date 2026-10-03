@@ -1008,9 +1008,9 @@ namespace WebApplication1.Controllers
                 return RedirectToAction("Login", "Cust");
             }
 
-            if (deliveryMethod != "Email" && deliveryMethod != "Phone")
+            if (deliveryMethod != "Email")
             {
-                TempData["OtpError"] = "Invalid OTP delivery method.";
+                TempData["OtpError"] = "Password verification is currently available by email.";
                 return RedirectToAction("ManageAccount", "Cust");
             }
 
@@ -1064,16 +1064,6 @@ namespace WebApplication1.Controllers
                 return RedirectToAction("ManageAccount", "Cust");
             }
 
-            /*
-             * TEMPORARY TESTING ONLY
-             *
-             * Remove this once actual email/SMS delivery is connected.
-             */
-            // TEMPORARY TESTING ONLY
-            // Store the plaintext OTP in session so it remains visible
-            // if the user enters the wrong code.
-            Session["TestOtp"] = otp;
-
             return RedirectToAction("VerifyOtp", "Cust");
         }
 
@@ -1090,8 +1080,6 @@ namespace WebApplication1.Controllers
             {
                 return RedirectToAction("Login", "Cust");
             }
-
-            ViewBag.TestOtp = Session["TestOtp"];
 
             return View();
         }
@@ -1115,8 +1103,6 @@ namespace WebApplication1.Controllers
             {
                 return RedirectToAction("Login", "Cust");
             }
-
-            ViewBag.TestOtp = Session["TestOtp"];
 
             if (string.IsNullOrWhiteSpace(otp))
             {
@@ -1178,9 +1164,6 @@ namespace WebApplication1.Controllers
             verification.IsUsed = true;
 
             db.SaveChanges();
-
-            // Remove the test OTP now that it has been successfully used.
-            Session.Remove("TestOtp");
 
             Session["OtpVerified"] = true;
             Session["OtpPurpose"] = verification.Purpose;
