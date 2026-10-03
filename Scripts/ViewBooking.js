@@ -554,10 +554,30 @@ function renderDetails(booking, isPast) {
     `;
 }
 
-function cancelBooking(id) {
+async function cancelBooking(id) {
+    if (!confirm("Cancel this booking? This action cannot be undone.")) return;
 
-    alert("This feature will be implemented soon. Please contact us via WhatsApp for cancellation.");
+    const app = document.getElementById("bookingsApp");
+    const token = document.querySelector('input[name="__RequestVerificationToken"]');
+    const body = new URLSearchParams();
+    body.append("bookingId", id);
+    if (token) body.append("__RequestVerificationToken", token.value);
 
+    const response = await fetch(app.dataset.cancelUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8" },
+        body: body.toString()
+    });
+    const result = await response.json();
+
+    if (!result.success) {
+        alert(result.message || "The booking could not be cancelled.");
+        return;
+    }
+
+    const booking = bookings.find(item => item.id === id);
+    if (booking) booking.status = result.status;
+    renderBookings();
 }
 
 document.addEventListener("DOMContentLoaded", function () {
