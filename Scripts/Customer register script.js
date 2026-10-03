@@ -135,7 +135,10 @@ document.addEventListener("DOMContentLoaded", function () {
                 selectedPreference;
         }
 
-        // Acceptance is deliberately not persisted in localStorage.\n        // The server records it against the newly-created customer account.\n\n        // Close the Terms modal.
+        // Acceptance is deliberately not persisted in browser storage.
+        // The server records it against the newly-created customer account.
+
+        // Close the Terms modal.
         if (agreementModal) {
 
             agreementModal.style.display = "none";
@@ -676,79 +679,19 @@ document.addEventListener("DOMContentLoaded", function () {
     // ==================================================
     // INITIAL TERMS POPUP
     // ==================================================
-
+    // Every registration attempt represents a new account.
+    // Browser storage must never satisfy another customer's acceptance.
     if (agreementModal) {
-
-        var currentTermsVersion =
-            termsVersionInput
-                ? termsVersionInput.value
-                : "";
-
-        var acceptedTermsVersion = null;
-
-        try {
-
-            acceptedTermsVersion =
-                localStorage.getItem(
-                    "aa_registration_terms_accepted_version"
-                );
-
-        }
-        catch (error) {
-
-            console.warn(
-                "Unable to read Terms acceptance.",
-                error
-            );
-
+        if (termsAcceptedInput) {
+            termsAcceptedInput.value = "false";
         }
 
+        agreementModal.style.display = "flex";
+        agreementModal.setAttribute("aria-hidden", "false");
 
-        // --------------------------------------------------
-        // USER HAS ACCEPTED THIS EXACT VERSION
-        // --------------------------------------------------
-
-        if (
-            currentTermsVersion &&
-            acceptedTermsVersion === currentTermsVersion
-        ) {
-
-            if (termsAcceptedInput) {
-                termsAcceptedInput.value = "true";
-            }
-
-            agreementModal.style.display = "none";
-
-            agreementModal.setAttribute(
-                "aria-hidden",
-                "true"
-            );
-
+        if (agreeButton) {
+            agreeButton.focus();
         }
-
-        // --------------------------------------------------
-        // USER HAS NOT ACCEPTED THIS VERSION
-        // --------------------------------------------------
-
-        else {
-
-            if (termsAcceptedInput) {
-                termsAcceptedInput.value = "false";
-            }
-
-            agreementModal.style.display = "flex";
-
-            agreementModal.setAttribute(
-                "aria-hidden",
-                "false"
-            );
-
-            if (agreeButton) {
-                agreeButton.focus();
-            }
-
-        }
-
     }
 
 });
