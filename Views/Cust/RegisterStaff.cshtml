@@ -328,29 +328,18 @@
 
 
                 <!-- CITY -->
-
                 <div class="form-group">
-
-                    @Html.LabelFor(
-                        model => model.staff_City,
-                        "City"
-                    )
-
-                    @Html.DropDownListFor(
-                        model => model.staff_City,
-                        new SelectList(
-                            new[] { "Durban", "Pietermaritzburg", "Mandeni" },
-                            Model.staff_City
-                        ),
-                        "-- Select City --",
-                        new { @class = "form-control", required = "required" }
-                    )
-
-                    @Html.ValidationMessageFor(
-                        model => model.staff_City
-                    )
-
+                    <label>City</label>
+                    <input class="form-control"
+                           type="text"
+                           value="Assigned automatically from the selected team"
+                           readonly />
+                    <span class="team-description">
+                        Team Dbn = Durban | Team Peter = Pietermaritzburg | Team Mdn = Mandeni
+                    </span>
                 </div>
+
+            </div>
 
             </div>
 
