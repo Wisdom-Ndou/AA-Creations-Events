@@ -1340,7 +1340,7 @@ namespace WebApplication1.Controllers
             return View(model);
         }
 
-       
+
 
 
 
@@ -1601,6 +1601,7 @@ namespace WebApplication1.Controllers
         [HttpGet]
         public ActionResult PendingApprovals()
         {
+            // Check that an authenticated admin is logged in
             if (Session["AdminId"] == null ||
                 Session["AdminAuthenticated"] == null ||
                 !(bool)Session["AdminAuthenticated"])
@@ -1608,8 +1609,19 @@ namespace WebApplication1.Controllers
                 return RedirectToAction("Login", "Cust");
             }
 
-            return View();
+            // Get all bookings that are still waiting for admin approval
+            var bookings = db.Bookings
+                .Where(b =>
+                    b.Status != null &&
+                    b.Status.ToLower() == "pending")
+                .OrderByDescending(b => b.CreatedAt)
+                .ToList();
+
+            return View(bookings);
         }
+
+
+
 
 
         // ==========================================
@@ -1626,8 +1638,547 @@ namespace WebApplication1.Controllers
                 return RedirectToAction("Login", "Cust");
             }
 
+            // ---------------------------------------------------------
+            // BOOKING COUNTS
+            // ---------------------------------------------------------
+
+            int totalBookings = db.Bookings.Count();
+
+            int approvedBookings = db.Bookings.Count(b =>
+                b.Status != null &&
+                b.Status.ToLower() == "approved");
+
+            int pendingBookings = db.Bookings.Count(b =>
+                b.Status != null &&
+                b.Status.ToLower() == "pending");
+
+            int declinedBookings = db.Bookings.Count(b =>
+                b.Status != null &&
+                b.Status.ToLower() == "declined");
+
+
+            // ---------------------------------------------------------
+            // APPROVED BOOKING REVENUE
+            // ---------------------------------------------------------
+
+            decimal totalRevenue =
+                db.Bookings
+                    .Where(b =>
+                        b.Status != null &&
+                        b.Status.ToLower() == "approved")
+                    .Select(b => (decimal?)b.TotalPrice)
+                    .Sum() ?? 0m;
+
+
+            // ---------------------------------------------------------
+            // EXPENDITURE
+            // ---------------------------------------------------------
+
+            decimal totalExpenditure =
+                db.Expenses
+                    .Select(e => (decimal?)e.Amount)
+                    .Sum() ?? 0m;
+
+
+            // ---------------------------------------------------------
+            // NET PROFIT
+            // ---------------------------------------------------------
+
+            decimal netProfit =
+                totalRevenue - totalExpenditure;
+
+
+            // ---------------------------------------------------------
+            // AVERAGE APPROVED BOOKING VALUE
+            // ---------------------------------------------------------
+
+            decimal averageBookingValue = approvedBookings > 0
+                ? totalRevenue / approvedBookings
+                : 0m;
+
+
+            // ---------------------------------------------------------
+            // REVENUE BY OCCASION
+            // ---------------------------------------------------------
+
+            var revenueByOccasion = db.Bookings
+                .Where(b =>
+                    b.Status != null &&
+                    b.Status.ToLower() == "approved")
+                .GroupBy(b => b.Occasion)
+                .Select(g => new AnalyticsCategory
+                {
+                    Name = g.Key,
+                    Amount = g.Sum(b => b.TotalPrice)
+                })
+                .OrderByDescending(x => x.Amount)
+                .ToList();
+
+
+            // ---------------------------------------------------------
+            // RECENT EXPENSES
+            // ---------------------------------------------------------
+
+            var recentExpenses = db.Expenses
+                .OrderByDescending(e => e.ExpenseDate)
+                .Take(10)
+                .ToList();
+
+
+            // ---------------------------------------------------------
+            // CREATE VIEW MODEL
+            // ---------------------------------------------------------
+
+            var model = new BusinessAnalyticsViewModel
+            {
+                TotalRevenue = totalRevenue,
+
+                TotalExpenditure = totalExpenditure,
+
+                NetProfit = netProfit,
+
+                TotalBookings = totalBookings,
+
+                ApprovedBookings = approvedBookings,
+
+                PendingBookings = pendingBookings,
+
+                DeclinedBookings = declinedBookings,
+
+                AverageBookingValue = averageBookingValue,
+
+                RevenueByOccasion = revenueByOccasion,
+
+                RecentExpenses = recentExpenses
+            };
+
+
+            return View(model);
+        }
+
+
+
+        // ==========================================
+        // STAFF INFORMATION
+        // ==========================================
+
+        [HttpGet]
+        public ActionResult StaffInformation()
+        {
+            if (Session["AdminId"] == null ||
+                Session["AdminAuthenticated"] == null ||
+                !(bool)Session["AdminAuthenticated"])
+            {
+                return RedirectToAction("Login", "Cust");
+            }
+
             return View();
         }
+
+        // ==========================================
+        // REGISTER STAFF - GET
+        // ==========================================
+
+        [HttpGet]
+        public ActionResult RegisterStaff()
+        {
+            if (Session["AdminId"] == null ||
+                Session["AdminAuthenticated"] == null ||
+                !(bool)Session["AdminAuthenticated"])
+            {
+                return RedirectToAction("Login", "Cust");
+            }
+
+            return View();
+        }
+
+        // ==========================================
+        // REGISTER STAFF - POST
+        // ==========================================
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public ActionResult RegisterStaff(Staff staff)
+        {
+            if (Session["AdminId"] == null ||
+                Session["AdminAuthenticated"] == null ||
+                !(bool)Session["AdminAuthenticated"])
+            {
+                return RedirectToAction("Login", "Cust");
+            }
+
+            if (!ModelState.IsValid)
+            {
+                return View(staff);
+            }
+
+            db.Staffs.Add(staff);
+
+            db.SaveChanges();
+
+            TempData["StaffSuccess"] =
+                "Staff member registered successfully.";
+
+            return RedirectToAction("ViewStaff", "Cust");
+        }
+
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public ActionResult StaffRegister(Staff staff)
+        {
+            if (Session["AdminId"] == null ||
+                Session["AdminAuthenticated"] == null ||
+                !(bool)Session["AdminAuthenticated"])
+            {
+                return RedirectToAction("Login", "Cust");
+            }
+
+            if (!ModelState.IsValid)
+            {
+                return View(staff);
+            }
+
+            // Check whether email already exists
+            bool emailExists =
+                db.Staffs.Any(s => s.staff_Email == staff.staff_Email);
+
+            if (emailExists)
+            {
+                ModelState.AddModelError(
+                    "staff_Email",
+                    "A staff member with this email already exists."
+                );
+
+                return View(staff);
+            }
+
+            db.Staffs.Add(staff);
+
+            db.SaveChanges();
+
+            TempData["StaffSuccess"] =
+                "Staff member registered successfully.";
+
+            return RedirectToAction("StaffInformation", "Cust");
+        }
+
+
+
+        [HttpGet]
+        public ActionResult StaffTasks()
+        {
+            // ==========================================
+            // MAKE SURE STAFF MEMBER IS LOGGED IN
+            // ==========================================
+
+            if (Session["StaffAuthenticated"] == null ||
+                !(bool)Session["StaffAuthenticated"])
+            {
+                return RedirectToAction("StaffLogin", "Cust");
+            }
+
+            // ==========================================
+            // GET LOGGED-IN STAFF ID
+            // ==========================================
+
+            int staffId = (int)Session["StaffId"];
+
+            // ==========================================
+            // MAKE SURE STAFF MEMBER STILL EXISTS
+            // ==========================================
+
+            var staff = db.Staffs.FirstOrDefault(s => s.staff_ID == staffId);
+
+            if (staff == null)
+            {
+                Session.Clear();
+                return RedirectToAction("StaffLogin", "Cust");
+            }
+
+            // ==========================================
+            // GET THIS STAFF MEMBER'S TASKS
+            // ==========================================
+
+            var tasks = db.StaffTasks
+            .Include("Booking")
+            .Where(t => t.StaffId == staffId)
+            .OrderBy(t => t.Status == "Completed")
+            .ThenBy(t => t.DueDate)
+            .ThenByDescending(t => t.Priority == "High")
+            .ToList();
+
+            // ==========================================
+            // SEND STAFF INFORMATION TO VIEW
+            // ==========================================
+
+            ViewBag.StaffName = staff.staff_FName + " " + staff.staff_LName;
+            ViewBag.StaffType = staff.staff_Type;
+
+            return View(tasks);
+        }
+
+
+
+
+        // ==========================================
+        // VIEW STAFF
+        // ==========================================
+
+        [HttpGet]
+        public ActionResult ViewStaff()
+        {
+            if (Session["AdminId"] == null ||
+                Session["AdminAuthenticated"] == null ||
+                !(bool)Session["AdminAuthenticated"])
+            {
+                return RedirectToAction("Login", "Cust");
+            }
+
+            var staffMembers =
+                db.Staffs
+                  .OrderBy(s => s.staff_FName)
+                  .ThenBy(s => s.staff_LName)
+                  .ToList();
+
+            return View(staffMembers);
+        }
+
+
+
+        [HttpGet]
+        public ActionResult StaffLogin()
+        {
+            return View();
+        }
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public ActionResult StaffLogin(string email, string password)
+        {
+            if (string.IsNullOrWhiteSpace(email) ||
+                string.IsNullOrWhiteSpace(password))
+            {
+                ModelState.AddModelError("", "Please enter your email and password.");
+                return View();
+            }
+
+            var staff = db.Staffs.FirstOrDefault(s =>
+                s.staff_Email == email &&
+                s.staff_Passw == password);
+
+            if (staff == null)
+            {
+                ModelState.AddModelError(
+                    "",
+                    "Invalid staff email or password."
+                );
+
+                return View();
+            }
+
+            // ==========================================
+            // STAFF SESSION
+            // ==========================================
+
+            Session["StaffId"] = staff.staff_ID;
+
+            Session["StaffFirstName"] = staff.staff_FName;
+
+            Session["StaffLastName"] = staff.staff_LName;
+
+            Session["StaffEmail"] = staff.staff_Email;
+
+            Session["StaffType"] = staff.staff_Type;
+
+            Session["StaffAuthenticated"] = true;
+
+
+            // ==========================================
+            // REDIRECT TO STAFF DASHBOARD
+            // ==========================================
+
+            return RedirectToAction(
+                "StaffDashboard",
+                "Cust"
+            );
+        }
+
+
+        
+
+        private string GetCityFromStaffType(string staffType)
+        {
+            if (string.IsNullOrWhiteSpace(staffType))
+            {
+                return "";
+            }
+
+            switch (staffType.ToLower())
+            {
+                case "team dbn":
+                    return "Durban";
+
+                case "team peter":
+                    return "Pietermaritzburg";
+
+                case "team mdn":
+                    return "Mandeni";
+
+                default:
+                    return "";
+            }
+        }
+
+
+
+        [HttpGet]
+        public ActionResult StaffDashboard()
+        {
+            // Make sure a staff member is logged in
+            if (Session["StaffAuthenticated"] == null ||
+                !(bool)Session["StaffAuthenticated"])
+            {
+                return RedirectToAction("StaffLogin", "Cust");
+            }
+
+            // Get logged-in staff ID
+            int staffId = (int)Session["StaffId"];
+
+            // Get staff member
+            var staff = db.Staffs.FirstOrDefault(s => s.staff_ID == staffId);
+
+            if (staff == null)
+            {
+                Session.Clear();
+                return RedirectToAction("StaffLogin", "Cust");
+            }
+
+            // ==========================================
+            // DETERMINE TEAM CITY
+            // ==========================================
+
+            string teamCity = "";
+
+            switch (staff.staff_Type)
+            {
+                case "Team Dbn":
+                    teamCity = "Durban";
+                    break;
+
+                case "Team Peter":
+                    teamCity = "Pietermaritzburg";
+                    break;
+
+                case "Team Mdn":
+                    teamCity = "Mandeni";
+                    break;
+            }
+
+            // ==========================================
+            // GET TODAY'S TASKS
+            // ==========================================
+
+            var today = DateTime.Today;
+
+            var todayTasks = db.StaffTasks
+                .Where(t =>
+                    t.StaffId == staffId &&
+                    DbFunctions.TruncateTime(t.DueDate) == today)
+                .ToList();
+
+            // ==========================================
+            // HIGH PRIORITY TASKS
+            // ==========================================
+
+            int highPriorityTasks = todayTasks.Count(t =>
+                t.Priority == "High");
+
+            // ==========================================
+            // EVENTS THIS WEEK
+            // ==========================================
+
+            DateTime weekStart = today;
+            DateTime weekEnd = today.AddDays(7);
+
+            var eventsThisWeek = db.Bookings
+                .Where(b =>
+                    b.City == teamCity &&
+                    b.Status == "Approved" &&
+                    b.EventDate >= weekStart &&
+                    b.EventDate < weekEnd)
+                .ToList();
+
+            // ==========================================
+            // CREATE DASHBOARD MODEL
+            // ==========================================
+
+            var model = new StaffDashboardViewModel
+            {
+                StaffMember = staff,
+
+                TeamCity = teamCity,
+
+                // Number shown in statistics card
+                TasksDueToday = todayTasks.Count,
+
+                HighPriorityTasks = highPriorityTasks,
+
+                HoursLogged = 0,
+
+                EventsThisWeek = eventsThisWeek.Count,
+
+                OpenComplaints = 0,
+
+                // Actual task collection
+                Tasks = todayTasks,
+
+                // Actual upcoming event collection
+                UpcomingEvents = eventsThisWeek
+                    .Select(b => new StaffEventDashboardItem
+                    {
+                        BookingId = b.BookingId,
+
+                        FirstName = b.FirstName,
+
+                        LastName = b.LastName,
+
+                        Occasion = b.Occasion,
+
+                        EventDate = b.EventDate,
+
+                        EventTime = b.EventTime,
+
+                        Address = b.Address,
+
+                        City = b.City,
+
+                        Status = b.Status
+
+                    })
+                    .ToList()
+            };
+
+            return View(model);
+        }
+
+
+        [HttpGet]
+        public ActionResult StaffLogout()
+        {
+            Session.Remove("StaffId");
+            Session.Remove("StaffFirstName");
+            Session.Remove("StaffLastName");
+            Session.Remove("StaffEmail");
+            Session.Remove("StaffType");
+            Session.Remove("StaffAuthenticated");
+
+            return RedirectToAction(
+                "StaffLogin",
+                "Cust"
+            );
+        }
+
+
 
         // ===============================
         // ADMIN LOGIN - GET
@@ -1813,32 +2364,6 @@ namespace WebApplication1.Controllers
             return View();
         }
 
-        public ActionResult StaffDashboard()
-        {
-            return View();
-        }
-
-        public ActionResult StaffTasks()
-        {
-            return View();
-        }
-        public ActionResult StaffComplaints()
-        {
-           
-
-                return View();
-            
-        }
-
-        public ActionResult StaffProfile()
-        {
-            return View();
-        }
-
 
     }
-
-
-    
 }
-

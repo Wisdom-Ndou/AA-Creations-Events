@@ -1,0 +1,277 @@
+﻿@{
+    ViewBag.Title = "Staff Information";
+}
+
+<link rel="stylesheet"
+      href="~/Content/AdminDashboard.css" />
+
+<style>
+
+    .staff-page {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 40px 20px;
+    }
+
+    .staff-header {
+        margin-bottom: 30px;
+    }
+
+    .staff-header h1 {
+        color: #ffffff;
+        font-size: 2.3rem;
+        margin-bottom: 8px;
+    }
+
+    .staff-header h1 span {
+        color: #ff2a6d;
+    }
+
+    .staff-header p {
+        color: #a0a0b0;
+    }
+
+    .staff-actions {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 20px;
+    }
+
+    .staff-card {
+        background: #111111;
+        border: 1px solid #333;
+        border-left: 4px solid #ff2a6d;
+        border-radius: 12px;
+        padding: 25px;
+        text-decoration: none;
+        color: #ffffff;
+        transition: all 0.25s ease;
+    }
+
+    .staff-card:hover {
+        transform: translateY(-5px);
+        border-color: #ff2a6d;
+        box-shadow: 0 0 20px rgba(255, 42, 109, 0.25);
+    }
+
+    .staff-card h2 {
+        color: #ffffff;
+        margin-bottom: 10px;
+        font-size: 1.2rem;
+    }
+
+    .staff-card p {
+        color: #a0a0b0;
+        font-size: 0.9rem;
+        margin-bottom: 15px;
+    }
+
+    .staff-card .arrow {
+        color: #ff2a6d;
+        font-weight: 600;
+    }
+
+    .team-info {
+        margin-top: 30px;
+        background: #111111;
+        border: 1px solid #333;
+        border-radius: 12px;
+        padding: 25px;
+    }
+
+    .team-info h2 {
+        color: #ffffff;
+        margin-bottom: 20px;
+    }
+
+    .team-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 15px;
+    }
+
+    .team-box {
+        background: #1e1e2e;
+        border: 1px solid #333;
+        border-radius: 10px;
+        padding: 20px;
+    }
+
+    .team-box h3 {
+        color: #ff2a6d;
+        margin-bottom: 5px;
+    }
+
+    .team-box p {
+        color: #a0a0b0;
+        font-size: 0.9rem;
+    }
+
+    .back-dashboard {
+        display: inline-block;
+        margin-top: 30px;
+        padding: 10px 18px;
+        border: 1px solid #ff2a6d;
+        border-radius: 8px;
+        color: #ff2a6d;
+        text-decoration: none;
+        transition: all 0.2s ease;
+    }
+
+    .back-dashboard:hover {
+        background: #ff2a6d;
+        color: #ffffff;
+        box-shadow: 0 0 15px rgba(255, 42, 109, 0.4);
+    }
+
+    @@media (max-width: 800px) {
+        .staff-actions,
+        .team-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+</style>
+
+<div class="staff-page">
+
+    <div class="staff-header">
+
+        <h1>
+            Staff <span>Information</span>
+        </h1>
+
+        <p>
+            Manage AA Creations & Events staff members and team assignments.
+        </p>
+
+    </div>
+
+
+    <!-- STAFF ACTIONS -->
+
+    <div class="staff-actions">
+
+        <!-- REGISTER STAFF -->
+
+        <a href="@Url.Action("RegisterStaff", "Cust")"
+           class="staff-card">
+
+            <h2>
+                Register Staff
+            </h2>
+
+            <p>
+                Create a new staff member and assign them to a team.
+            </p>
+
+            <span class="arrow">
+                Register Staff →
+            </span>
+
+        </a>
+
+
+        <!-- VIEW STAFF -->
+
+        <a href="@Url.Action("ViewStaff", "Cust")"
+           class="staff-card">
+
+            <h2>
+                View Staff
+            </h2>
+
+            <p>
+                View all registered staff members and their team assignments.
+            </p>
+
+            <span class="arrow">
+                View Staff →
+            </span>
+
+        </a>
+
+
+        <!-- STAFF JOBS -->
+
+        <a href="@Url.Action("StaffJobs", "Cust")"
+           class="staff-card">
+
+            <h2>
+                Staff Jobs
+            </h2>
+
+            <p>
+                View jobs assigned to staff teams from customer bookings.
+            </p>
+
+            <span class="arrow">
+                Staff Jobs →
+            </span>
+
+        </a>
+
+    </div>
+
+
+    <!-- TEAM STRUCTURE -->
+
+    <div class="team-info">
+
+        <h2>
+            Team Structure
+        </h2>
+
+        <div class="team-grid">
+
+            <div class="team-box">
+
+                <h3>
+                    Team Dbn
+                </h3>
+
+                <p>
+                    Durban events
+                </p>
+
+            </div>
+
+
+            <div class="team-box">
+
+                <h3>
+                    Team Peter
+                </h3>
+
+                <p>
+                    Pietermaritzburg events
+                </p>
+
+            </div>
+
+
+            <div class="team-box">
+
+                <h3>
+                    Team Mdn
+                </h3>
+
+                <p>
+                    Mandeni events
+                </p>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <a href="@Url.Action("AdminDashboard", "Cust")"
+       class="back-dashboard">
+
+        ← Back to Dashboard
+
+    </a>
+
+</div>

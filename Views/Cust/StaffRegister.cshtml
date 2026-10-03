@@ -1,0 +1,294 @@
+﻿﻿@model WebApplication1.Models.Staff
+
+@{
+    ViewBag.Title = "Register Staff";
+}
+
+<link rel="stylesheet"
+      href="~/Content/AdminDashboard.css" />
+
+<div class="dashboard-container">
+
+    <div class="page-header">
+
+        <div>
+
+            <h1>Register Staff</h1>
+
+            <p>
+                Create a new staff member and assign their team.
+            </p>
+
+        </div>
+
+        <a href="@Url.Action("AdminDashboard", "Cust")"
+           class="dashboard-link">
+
+            ← Back to Dashboard
+
+        </a>
+
+    </div>
+
+
+    <div class="dashboard-panel staff-form-panel">
+
+        @using (Html.BeginForm(
+            "StaffRegister",
+            "Cust",
+            FormMethod.Post))
+        {
+            @Html.AntiForgeryToken()
+
+            @Html.ValidationSummary(
+                true,
+                "",
+                new { @class = "validation-summary" }
+            )
+
+
+            <!-- ==============================
+                 PERSONAL INFORMATION
+            =============================== -->
+
+            <div class="form-section">
+
+                <h2>Personal Information</h2>
+
+                <div class="form-grid">
+
+                    <div class="field">
+
+                        <label for="staff_FName">
+                            First Name
+                        </label>
+
+                        @Html.TextBoxFor(
+                            m => m.staff_FName,
+                            new
+                            {
+                                @class = "form-control",
+                                placeholder = "First Name"
+                            }
+                        )
+
+                        @Html.ValidationMessageFor(
+                            m => m.staff_FName,
+                            "",
+                            new { @class = "text-danger" }
+                        )
+
+                    </div>
+
+
+                    <div class="field">
+
+                        <label for="staff_LName">
+                            Last Name
+                        </label>
+
+                        @Html.TextBoxFor(
+                            m => m.staff_LName,
+                            new
+                            {
+                                @class = "form-control",
+                                placeholder = "Last Name"
+                            }
+                        )
+
+                        @Html.ValidationMessageFor(
+                            m => m.staff_LName,
+                            "",
+                            new { @class = "text-danger" }
+                        )
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- ==============================
+                 CONTACT INFORMATION
+            =============================== -->
+
+            <div class="form-section">
+
+                <h2>Contact Information</h2>
+
+                <div class="form-grid">
+
+                    <div class="field">
+
+                        <label for="staff_Email">
+                            Email Address
+                        </label>
+
+                        @Html.TextBoxFor(
+                            m => m.staff_Email,
+                            new
+                            {
+                                @class = "form-control",
+                                type = "email",
+                                placeholder = "staff@example.com"
+                            }
+                        )
+
+                        @Html.ValidationMessageFor(
+                            m => m.staff_Email,
+                            "",
+                            new { @class = "text-danger" }
+                        )
+
+                    </div>
+
+
+                    <div class="field">
+
+                        <label for="staff_Phone">
+                            Phone Number
+                        </label>
+
+                        @Html.TextBoxFor(
+                            m => m.staff_Phone,
+                            new
+                            {
+                                @class = "form-control",
+                                type = "tel",
+                                maxlength = "10",
+                                placeholder = "0812345678"
+                            }
+                        )
+
+                        @Html.ValidationMessageFor(
+                            m => m.staff_Phone,
+                            "",
+                            new { @class = "text-danger" }
+                        )
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- ==============================
+                 STAFF TEAM
+            =============================== -->
+
+            <div class="form-section">
+
+                <h2>Staff Assignment</h2>
+
+                <div class="field">
+
+                    <label for="staff_Type">
+                        Staff Team
+                    </label>
+
+                    @Html.DropDownListFor(
+                        m => m.staff_Type,
+
+                        new SelectList(
+                            new[]
+                            {
+                                new
+                                {
+                                    Value = "Team Dbn",
+                                    Text = "Team Dbn"
+                                },
+
+                                new
+                                {
+                                    Value = "Team Peter",
+                                    Text = "Team Peter"
+                                },
+
+                                new
+                                {
+                                    Value = "Team Mdn",
+                                    Text = "Team Mdn"
+                                }
+                            },
+                            "Value",
+                            "Text"
+                        ),
+
+                        "Select Staff Team",
+
+                        new
+                        {
+                            @class = "form-control"
+                        }
+                    )
+
+                    @Html.ValidationMessageFor(
+                        m => m.staff_Type,
+                        "",
+                        new { @class = "text-danger" }
+                    )
+
+                </div>
+
+            </div>
+
+
+            <!-- ==============================
+                 SECURITY
+            =============================== -->
+
+            <div class="form-section">
+
+                <h2>Account Security</h2>
+
+                <div class="field">
+
+                    <label for="staff_Passw">
+                        Password
+                    </label>
+
+                    @Html.PasswordFor(
+                        m => m.staff_Passw,
+                        new
+                        {
+                            @class = "form-control",
+                            placeholder = "Create password"
+                        }
+                    )
+
+                    @Html.ValidationMessageFor(
+                        m => m.staff_Passw,
+                        "",
+                        new { @class = "text-danger" }
+                    )
+
+                </div>
+
+            </div>
+
+
+            <div class="form-actions">
+
+                <button type="submit"
+                        class="submit-btn">
+
+                    Register Staff
+
+                </button>
+
+                <a href="@Url.Action("AdminDashboard", "Cust")"
+                   class="dashboard-link">
+
+                    Cancel
+
+                </a>
+
+            </div>
+
+        }
+
+    </div>
+
+</div>

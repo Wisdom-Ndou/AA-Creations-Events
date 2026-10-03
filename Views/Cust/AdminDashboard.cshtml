@@ -1,4 +1,4 @@
-﻿@model WebApplication1.Models.AdminDashboardViewModel
+﻿﻿@model WebApplication1.Models.AdminDashboardViewModel
 
 <!DOCTYPE html>
 <html lang="en">
@@ -41,14 +41,14 @@
 
 
         <!-- ==========================================
-             STATISTICS
-        =========================================== -->
+         STATISTICS
+    =========================================== -->
 
         <section class="stat-row dashboard-widgets">
 
             <!-- ==========================================
-         ALL BOOKINGS
-    =========================================== -->
+             ALL BOOKINGS
+        =========================================== -->
 
             <a href="@Url.Action("AllBookings", "Cust")"
                class="stat-card dashboard-widget">
@@ -69,8 +69,8 @@
 
 
             <!-- ==========================================
-         UPCOMING EVENTS
-    =========================================== -->
+             UPCOMING EVENTS
+        =========================================== -->
 
             <a href="@Url.Action("UpcomingEvents", "Cust")"
                class="stat-card dashboard-widget">
@@ -91,8 +91,8 @@
 
 
             <!-- ==========================================
-         CANCELLED BOOKINGS
-    =========================================== -->
+             CANCELLED BOOKINGS
+        =========================================== -->
 
             <a href="@Url.Action("CancelledBookings", "Cust")"
                class="stat-card dashboard-widget">
@@ -113,8 +113,8 @@
 
 
             <!-- ==========================================
-         BUSINESS ANALYTICS
-    =========================================== -->
+             BUSINESS ANALYTICS
+        =========================================== -->
 
             <a href="@Url.Action("BusinessAnalytics", "Cust")"
                class="stat-card dashboard-widget">
@@ -135,8 +135,8 @@
 
 
             <!-- ==========================================
-         PENDING APPROVALS
-    =========================================== -->
+             PENDING APPROVALS
+        =========================================== -->
 
             <a href="@Url.Action("PendingApprovals", "Cust")"
                class="stat-card dashboard-widget">
@@ -157,18 +157,123 @@
 
         </section>
 
-        
+
+
+
 
         <!-- ==========================================
-             CONTENT GRID
-        =========================================== -->
+         STAFF INFORMATION
+    =========================================== -->
+
+        <section class="panel staff-dashboard-panel">
+
+            <div class="panel-head">
+
+                <div>
+
+                    <h2>
+                        Staff Information
+                    </h2>
+
+                    <p>
+                        Manage staff members and team assignments.
+                    </p>
+
+                </div>
+
+                <a href="@Url.Action("StaffInformation", "Cust")"
+                   class="panel-link">
+
+                    Manage Staff →
+
+                </a>
+
+            </div>
+
+
+            <div class="staff-dashboard-actions">
+
+                <a href="@Url.Action("RegisterStaff", "Cust")"
+                   class="staff-dashboard-card">
+
+                    <span class="staff-icon">
+                        +
+                    </span>
+
+                    <div>
+
+                        <strong>
+                            Register Staff
+                        </strong>
+
+                        <small>
+                            Add a new staff member
+                        </small>
+
+                    </div>
+
+                </a>
+
+
+                <a href="@Url.Action("ViewStaff", "Cust")"
+                   class="staff-dashboard-card">
+
+                    <span class="staff-icon">
+                        👥
+                    </span>
+
+                    <div>
+
+                        <strong>
+                            View Staff
+                        </strong>
+
+                        <small>
+                            Manage registered staff
+                        </small>
+
+                    </div>
+
+                </a>
+
+
+                <a href="@Url.Action("StaffJobs", "Cust")"
+                   class="staff-dashboard-card">
+
+                    <span class="staff-icon">
+                        📋
+                    </span>
+
+                    <div>
+
+                        <strong>
+                            Staff Jobs
+                        </strong>
+
+                        <small>
+                            View team job assignments
+                        </small>
+
+                    </div>
+
+                </a>
+
+            </div>
+
+        </section>
+
+
+
+        <!-- ==========================================
+         CONTENT GRID
+    =========================================== -->
 
         <section class="content-grid">
 
 
             <!-- ======================================
-                 BOOKINGS
-            ======================================= -->
+             BOOKINGS
+        ======================================= -->
 
             <div class="panel">
 
@@ -210,7 +315,7 @@
                                 </th>
 
                                 <th>
-                                City
+                                    City
                                 </th>
 
                                 <th>
@@ -385,6 +490,10 @@
                 </div>
 
 
+
+
+
+
                 <div class="table-foot">
 
                     <span>
@@ -400,15 +509,15 @@
 
 
             <!-- ======================================
-                 SIDE COLUMN
-            ======================================= -->
+             SIDE COLUMN
+        ======================================= -->
 
             <div class="stack">
 
 
                 <!-- ==================================
-                     RECENT ACTIVITY
-                =================================== -->
+                 RECENT ACTIVITY
+            =================================== -->
 
                 <div class="panel">
 
@@ -482,8 +591,8 @@
 
 
                 <!-- ==================================
-                     QUICK ACTIONS
-                =================================== -->
+                 QUICK ACTIONS
+            =================================== -->
 
                 <div class="panel">
 
@@ -557,8 +666,8 @@
 
 
                 <!-- ==================================
-                     THIS WEEK'S LOAD
-                =================================== -->
+                 THIS WEEK'S LOAD
+            =================================== -->
 
                 <div class="panel">
 
@@ -664,17 +773,17 @@
          SIGN OUT
     =========================================== -->
 
-    
-
-        <a class="footer-link"
-           href="@Url.Action("AdminLogout", "Cust")">
-
-            Sign Out
-
-        </a>
 
 
-        <script>
+    <a class="footer-link"
+       href="@Url.Action("AdminLogout", "Cust")">
+
+        Sign Out
+
+    </a>
+
+
+    <script>
 
             function updateBookingStatus(bookingId, status) {
 
@@ -711,7 +820,7 @@
                       else {
 
                           alert(response.message);
-  
+
                       }
                  },
 
@@ -726,6 +835,6 @@
 
             }
 
-        </script>
+    </script>
 </body>
 </html>

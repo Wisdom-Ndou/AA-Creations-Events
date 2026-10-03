@@ -1,521 +1,603 @@
-﻿@{
-    ViewBag.Title = "My To-Do List";
+﻿@model IEnumerable<WebApplication1.Models.StaffTask>
+
+@{
+    ViewBag.Title = "My Tasks";
+
+    int totalTasks = Model != null ? Model.Count() : 0;
+
+    int pendingTasks = Model != null
+        ? Model.Count(t => t.Status == "Pending")
+        : 0;
+
+    int inProgressTasks = Model != null
+        ? Model.Count(t => t.Status == "In Progress")
+        : 0;
+
+    int completedTasks = Model != null
+        ? Model.Count(t => t.Status == "Completed")
+        : 0;
 }
 
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<style>
 
-    <title>@ViewBag.Title</title>
+    /* ==========================================
+       PAGE HEADER
+       ========================================== */
 
-    <style>
-        body {
-            background: linear-gradient(135deg, #ff2a6d 0%, #d9005c 100%);
-            min-height: 100vh;
-            margin: 0;
-            font-family: 'Segoe UI', Roboto, Arial, sans-serif;
-        }
+    .staff-task-page {
+        max-width: 1250px;
+        margin: 0 auto;
+        padding: 45px 25px 70px;
+    }
 
-        .tasks-page {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 3rem 2rem;
-        }
+    .task-header {
+        margin-bottom: 35px;
+    }
 
-        .page-header {
-            text-align: center;
-            margin-bottom: 2.5rem;
-        }
+    .task-badge {
+        display: inline-block;
+        padding: 7px 15px;
+        border-radius: 20px;
+        background: #f4e8e2;
+        color: #8a5b4b;
+        font-size: 12px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin-bottom: 15px;
+    }
 
-        .badge {
-            display: inline-block;
-            background: #111;
-            color: #ff2a6d;
-            padding: 0.35rem 1rem;
-            border-radius: 999px;
-            font-size: 0.8rem;
-            font-weight: bold;
-            text-transform: uppercase;
-            margin-bottom: 1rem;
-        }
+    .task-header h1 {
+        font-size: 42px;
+        margin: 0 0 10px;
+        color: #222;
+    }
 
-        .page-header h1 {
-            margin: 0;
-            color: #111;
-            font-size: 2.5rem;
-            font-weight: 800;
-        }
-
-        .page-header h1 span {
-            color: #fff;
+        .task-header h1 em {
             font-style: italic;
-            text-shadow: 2px 2px 0 #111;
+            color: #b27b68;
         }
 
-        .page-header p {
-            color: #111;
-            margin-top: 0.7rem;
-        }
+    .task-header p {
+        color: #777;
+        font-size: 15px;
+        margin: 0;
+    }
 
-        .toolbar {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 1rem;
-            margin-bottom: 1.5rem;
-            flex-wrap: wrap;
-        }
 
-        .filters {
-            display: flex;
-            gap: 0.5rem;
-            flex-wrap: wrap;
-        }
+    /* ==========================================
+       TOP NAVIGATION
+       ========================================== */
 
-        .filter-btn {
-            border: 1px solid #333;
-            background: #111;
-            color: #fff;
-            padding: 0.65rem 1rem;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: 600;
-        }
+    .task-navigation {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 30px;
+        gap: 15px;
+        flex-wrap: wrap;
+    }
 
-        .filter-btn:hover,
-        .filter-btn.active {
-            background: #ff2a6d;
-            border-color: #ff2a6d;
-        }
+    .back-dashboard {
+        display: inline-block;
+        padding: 11px 18px;
+        background: #222;
+        color: white;
+        border-radius: 7px;
+        text-decoration: none;
+        font-size: 14px;
+        font-weight: 600;
+    }
 
-        .add-task-btn {
-            border: none;
-            background: #111;
-            color: #ff2a6d;
-            padding: 0.75rem 1.2rem;
-            border-radius: 8px;
-            font-weight: bold;
-            cursor: pointer;
-        }
-
-        .add-task-btn:hover {
-            background: #fff;
-            color: #d9005c;
-        }
-
-        .task-list {
-            display: flex;
-            flex-direction: column;
-            gap: 1rem;
-        }
-
-        .task-card {
-            background: #111;
-            border: 1px solid #333;
-            border-radius: 14px;
-            padding: 1.3rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 1rem;
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
-        }
-
-        .task-card:hover {
-            border-color: #ff2a6d;
-        }
-
-        .task-left {
-            display: flex;
-            align-items: flex-start;
-            gap: 1rem;
-        }
-
-        .task-check {
-            width: 20px;
-            height: 20px;
-            margin-top: 3px;
-            accent-color: #ff2a6d;
-            cursor: pointer;
-        }
-
-        .task-info h3 {
-            color: #fff;
-            margin: 0 0 0.4rem 0;
-            font-size: 1.05rem;
-        }
-
-        .task-info p {
-            color: #a0a0b0;
-            margin: 0.2rem 0;
-            font-size: 0.85rem;
-        }
-
-        .task-meta {
-            display: flex;
-            align-items: center;
-            gap: 0.6rem;
-            flex-wrap: wrap;
-            justify-content: flex-end;
-        }
-
-        .priority {
-            padding: 0.3rem 0.75rem;
-            border-radius: 999px;
-            font-size: 0.75rem;
-            font-weight: bold;
-        }
-
-        .priority.high {
-            color: #f87171;
-            border: 1px solid #f87171;
-            background: rgba(248, 113, 113, 0.12);
-        }
-
-        .priority.medium {
-            color: #facc15;
-            border: 1px solid #facc15;
-            background: rgba(250, 204, 21, 0.12);
-        }
-
-        .priority.low {
-            color: #4ade80;
-            border: 1px solid #4ade80;
-            background: rgba(74, 222, 128, 0.12);
-        }
-
-        .due {
-            color: #fff;
-            font-size: 0.8rem;
-        }
-
-        .back-link {
-            display: inline-block;
-            margin-top: 2rem;
-            color: #111;
-            font-weight: bold;
+        .back-dashboard:hover {
+            background: #444;
+            color: white;
             text-decoration: none;
         }
 
-        .back-link:hover {
-            color: #fff;
+    .staff-info {
+        color: #666;
+        font-size: 14px;
+    }
+
+        .staff-info strong {
+            color: #333;
         }
 
-        @@media (max-width: 700px) {
-            .task-card {
-                flex-direction: column;
-                align-items: stretch;
-            }
 
-            .task-meta {
-                justify-content: flex-start;
-            }
+    /* ==========================================
+       STATISTICS
+       ========================================== */
 
-            .tasks-page {
-                padding: 2rem 1rem;
-            }
+    .task-stats {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 18px;
+        margin-bottom: 35px;
+    }
+
+    .task-stat-card {
+        background: white;
+        border: 1px solid #eee;
+        border-radius: 12px;
+        padding: 22px;
+        box-shadow: 0 5px 18px rgba(0,0,0,0.04);
+    }
+
+        .task-stat-card .stat-label {
+            color: #888;
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: .6px;
+            margin-bottom: 10px;
         }
-    </style>
-</head>
 
-<body>
+        .task-stat-card .stat-number {
+            font-size: 30px;
+            font-weight: 700;
+            color: #222;
+        }
+
+
+    /* ==========================================
+       TASK PANEL
+       ========================================== */
+
+    .task-panel {
+        background: white;
+        border: 1px solid #eee;
+        border-radius: 14px;
+        overflow: hidden;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.04);
+    }
+
+    .task-panel-header {
+        padding: 22px 25px;
+        border-bottom: 1px solid #eee;
+    }
+
+        .task-panel-header h2 {
+            margin: 0 0 5px;
+            font-size: 21px;
+            color: #222;
+        }
+
+        .task-panel-header p {
+            margin: 0;
+            color: #888;
+            font-size: 13px;
+        }
+
+
+    /* ==========================================
+       TABLE
+       ========================================== */
+
+    .task-table-wrapper {
+        overflow-x: auto;
+    }
+
+    .task-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+        .task-table th {
+            background: #fafafa;
+            color: #777;
+            padding: 15px 18px;
+            text-align: left;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: .5px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .task-table td {
+            padding: 18px;
+            border-bottom: 1px solid #f1f1f1;
+            vertical-align: middle;
+            color: #444;
+            font-size: 14px;
+        }
+
+        .task-table tr:last-child td {
+            border-bottom: none;
+        }
+
+    .task-name {
+        font-weight: 700;
+        color: #222;
+        margin-bottom: 4px;
+    }
+
+    .task-description {
+        color: #888;
+        font-size: 12px;
+        max-width: 320px;
+    }
+
+
+    /* ==========================================
+       PRIORITY
+       ========================================== */
+
+    .priority {
+        display: inline-block;
+        padding: 5px 10px;
+        border-radius: 20px;
+        font-size: 11px;
+        font-weight: 700;
+    }
+
+    .priority-high {
+        background: #fde8e8;
+        color: #b42318;
+    }
 
-    <main class="tasks-page">
+    .priority-medium {
+        background: #fff3d6;
+        color: #9a6700;
+    }
 
-        <header class="page-header">
-            <div class="badge">Staff Access</div>
+    .priority-low {
+        background: #e7f6ec;
+        color: #237a42;
+    }
 
-            <h1>
-                My <span>To-Do List</span>
-            </h1>
 
-            <p>
-                Keep track of your assigned tasks and upcoming responsibilities.
-            </p>
-        </header>
+    /* ==========================================
+       STATUS
+       ========================================== */
 
-        <section class="toolbar">
+    .task-status {
+        display: inline-block;
+        padding: 6px 11px;
+        border-radius: 20px;
+        font-size: 11px;
+        font-weight: 700;
+    }
 
-            <div class="filters">
+    .status-pending {
+        background: #f3f3f3;
+        color: #666;
+    }
 
-                <button type="button"
-                        class="filter-btn active"
-                        data-filter="all">
-                    All
-                </button>
+    .status-progress {
+        background: #e8f1ff;
+        color: #2f65b9;
+    }
 
-                <button type="button"
-                        class="filter-btn"
-                        data-filter="today">
-                    Today
-                </button>
+    .status-completed {
+        background: #e7f6ec;
+        color: #237a42;
+    }
 
-                <button type="button"
-                        class="filter-btn"
-                        data-filter="pending">
-                    Pending
-                </button>
 
-                <button type="button"
-                        class="filter-btn"
-                        data-filter="completed">
-                    Completed
-                </button>
+    /* ==========================================
+       EMPTY STATE
+       ========================================== */
 
-            </div>
+    .empty-tasks {
+        padding: 60px 25px;
+        text-align: center;
+    }
 
-           n>
+        .empty-tasks h3 {
+            color: #333;
+            margin-bottom: 8px;
+        }
 
-        </section>
+        .empty-tasks p {
+            color: #888;
+            margin: 0;
+        }
 
-        <section class="task-list">
 
-            <article class="task-card">
+    /* ==========================================
+       RESPONSIVE
+       ========================================== */
 
-                <div class="task-left">
+    @@media (max-width: 900px) {
 
-                    <input type="checkbox"
-                           class="task-check"
-                           aria-label="Complete floral arrangements task" />
+        .task-stats {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
 
-                    <div class="task-info">
-                        <h3>Set up floral arrangements</h3>
+    @@media (max-width: 550px) {
 
-                        <p>
-                            30th Birthday - Sandton
-                        </p>
+        .task-stats {
+            grid-template-columns: 1fr;
+        }
 
-                        <p>
-                            Prepare and arrange the floral decorations before the client arrives.
-                        </p>
-                    </div>
+        .task-header h1 {
+            font-size: 34px;
+        }
+    }
+</style>
 
-                </div>
 
-                <div class="task-meta">
+<div class="staff-task-page">
 
-                    <span class="priority high">
-                        High
-                    </span>
+    <!-- ==========================================
+         PAGE HEADER
+         ========================================== -->
 
-                    <span class="due">
-                        09:00 AM
-                    </span>
+    <section class="task-header">
 
-                </div>
+        <div class="task-badge">
+            Staff Access
+        </div>
 
-            </article>
-            <article class="task-card"
-                     data-status="pending"
-                     data-date="today">
+        <h1>
+            My <em>To-Do List</em>
+        </h1>
 
-                <div class="task-left">
+        <p>
+            View and manage the tasks assigned to you.
+        </p>
 
-                    <input type="checkbox"
-                           class="task-check"
-                           aria-label="Complete floral arrangements task" />
+    </section>
 
-                    <div class="task-info">
-                        <h3>Set up floral arrangements</h3>
 
-                        <p>
-                            30th Birthday - Sandton
-                        </p>
+    <!-- ==========================================
+         NAVIGATION / STAFF INFORMATION
+         ========================================== -->
 
-                        <p>
-                            Prepare and arrange the floral decorations before the client arrives.
-                        </p>
-                    </div>
-
-                </div>
-
-                <div class="task-meta">
-
-                    <span class="priority high">
-                        High
-                    </span>
-
-                    <span class="due">
-                        09:00 AM
-                    </span>
-
-                </div>
-
-            </article>
-
-
-            <article class="task-card"
-                     data-status="pending"
-                     data-date="today">
-
-                <div class="task-left">
-
-                    <input type="checkbox"
-                           class="task-check"
-                           aria-label="Complete catering task" />
-
-                    <div class="task-info">
-                        <h3>Confirm catering delivery</h3>
-
-                        <p>
-                            10th Anniversary - Cape Town
-                        </p>
-
-                        <p>
-                            Confirm the delivery time with the catering supplier.
-                        </p>
-                    </div>
-
-                </div>
-
-                <div class="task-meta">
-
-                    <span class="priority medium">
-                        Medium
-                    </span>
-
-                    <span class="due">
-                        11:30 AM
-                    </span>
-
-                </div>
-
-            </article>
-
-
-            <article class="task-card"
-                     data-status="pending"
-                     data-date="today">
-
-                <div class="task-left">
-
-                    <input type="checkbox"
-                           class="task-check"
-                           aria-label="Complete seating chart task" />
-
-                    <div class="task-info">
-                        <h3>Prepare guest seating chart</h3>
-
-                        <p>
-                            Graduation Party - JHB
-                        </p>
-
-                        <p>
-                            Finalise the seating arrangement for the event.
-                        </p>
-                    </div>
-
-                </div>
-
-                <div class="task-meta">
-
-                    <span class="priority low">
-                        Low
-                    </span>
-
-                    <span class="due">
-                        02:00 PM
-                    </span>
-
-                </div>
-
-            </article>
-
-
-
-
-        </section>
+    <div class="task-navigation">
 
         <a href="@Url.Action("StaffDashboard", "Cust")"
-           class="back-link">
+           class="back-dashboard">
             ← Back to Dashboard
         </a>
 
-    </main>
-    <script>
-    document.addEventListener("DOMContentLoaded", function () {
+        <div class="staff-info">
 
-        const filterButtons = document.querySelectorAll(".filter-btn");
-        const taskCards = document.querySelectorAll(".task-card");
+            <strong>@ViewBag.StaffName</strong>
 
-        filterButtons.forEach(function (button) {
+            @if (ViewBag.StaffType != null)
+            {
+                <span> | @ViewBag.StaffType</span>
+            }
 
-            button.addEventListener("click", function () {
+        </div>
 
-                const filter = button.getAttribute("data-filter");
-
-                // Change active button
-                filterButtons.forEach(function (btn) {
-                    btn.classList.remove("active");
-                });
-
-                button.classList.add("active");
-
-                // Filter tasks
-                taskCards.forEach(function (task) {
-
-                    const status = task.getAttribute("data-status");
-                    const date = task.getAttribute("data-date");
-
-                    let showTask = false;
-
-                    if (filter === "all") {
-                        showTask = true;
-                    }
-                    else if (filter === "today") {
-                        showTask = date === "today";
-                    }
-                    else if (filter === "pending") {
-                        showTask = status === "pending";
-                    }
-                    else if (filter === "completed") {
-                        showTask = status === "completed";
-                    }
-
-                    task.style.display = showTask ? "flex" : "none";
-                });
-
-            });
-
-        });
+    </div>
 
 
-        // Complete task
-        const checkboxes = document.querySelectorAll(".task-check");
+    <!-- ==========================================
+         TASK STATISTICS
+         ========================================== -->
 
-        checkboxes.forEach(function (checkbox) {
+    <section class="task-stats">
 
-            checkbox.addEventListener("change", function () {
+        <div class="task-stat-card">
+            <div class="stat-label">
+                Total Tasks
+            </div>
 
-                const task = checkbox.closest(".task-card");
+            <div class="stat-number">
+                @totalTasks
+            </div>
+        </div>
 
-                if (checkbox.checked) {
 
-                    task.setAttribute("data-status", "completed");
+        <div class="task-stat-card">
+            <div class="stat-label">
+                Pending
+            </div>
 
-                    task.style.opacity = "0.55";
+            <div class="stat-number">
+                @pendingTasks
+            </div>
+        </div>
 
-                    task.querySelector(".task-info h3").style.textDecoration =
-                        "line-through";
 
-                }
-                else {
+        <div class="task-stat-card">
+            <div class="stat-label">
+                In Progress
+            </div>
 
-                    task.setAttribute("data-status", "pending");
+            <div class="stat-number">
+                @inProgressTasks
+            </div>
+        </div>
 
-                    task.style.opacity = "1";
 
-                    task.querySelector(".task-info h3").style.textDecoration =
-                        "none";
-                }
+        <div class="task-stat-card">
+            <div class="stat-label">
+                Completed
+            </div>
 
-            });
+            <div class="stat-number">
+                @completedTasks
+            </div>
+        </div>
 
-        });
+    </section>
 
-    });
-    </script>
-</body>
-</html>
+
+    <!-- ==========================================
+         TASK LIST
+         ========================================== -->
+
+    <section class="task-panel">
+
+        <div class="task-panel-header">
+
+            <h2>My Assigned Tasks</h2>
+
+            <p>
+                Tasks assigned specifically to your staff account.
+            </p>
+
+        </div>
+
+
+        @if (Model != null && Model.Any())
+        {
+            <div class="task-table-wrapper">
+
+                <table class="task-table">
+
+                    <thead>
+                        <tr>
+                            <th>Task</th>
+                            <th>Event</th>
+                            <th>Due</th>
+                            <th>Priority</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+
+                        @foreach (var task in Model)
+                        {
+                            string priorityClass = "priority-low";
+
+                            if (!string.IsNullOrWhiteSpace(task.Priority))
+                            {
+                                if (task.Priority.Equals(
+                                    "High",
+                                    StringComparison.OrdinalIgnoreCase))
+                                {
+                                    priorityClass = "priority-high";
+                                }
+                                else if (task.Priority.Equals(
+                                    "Medium",
+                                    StringComparison.OrdinalIgnoreCase))
+                                {
+                                    priorityClass = "priority-medium";
+                                }
+                            }
+
+
+                            string statusClass = "status-pending";
+
+                            if (!string.IsNullOrWhiteSpace(task.Status))
+                            {
+                                if (task.Status.Equals(
+                                    "Completed",
+                                    StringComparison.OrdinalIgnoreCase))
+                                {
+                                    statusClass = "status-completed";
+                                }
+                                else if (task.Status.Equals(
+                                    "In Progress",
+                                    StringComparison.OrdinalIgnoreCase))
+                                {
+                                    statusClass = "status-progress";
+                                }
+                            }
+
+
+                            <tr>
+
+                                <!-- TASK -->
+
+                                <td>
+
+                                    <div class="task-name">
+                                        @task.TaskName
+                                    </div>
+
+                                    @if (!string.IsNullOrWhiteSpace(task.Description))
+                                    {
+                                        <div class="task-description">
+                                            @task.Description
+                                        </div>
+                                    }
+
+                                </td>
+
+
+                                <!-- EVENT -->
+
+                                <td>
+
+                                    @if (task.Booking != null)
+                                    {
+                                        <span>
+                                            @task.Booking.Occasion
+                                        </span>
+                                    }
+                                    else if (task.BookingId.HasValue)
+                                    {
+                                        <span>
+                                            Booking #@task.BookingId
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span>
+                                            General Task
+                                        </span>
+                                    }
+
+                                </td>
+
+
+                                <!-- DUE DATE -->
+
+                                <td>
+
+                                    @task.DueDate.ToString("dd MMM yyyy")
+
+                                    <br />
+
+                                    <small>
+                                        @task.DueDate.ToString("hh:mm tt")
+                                    </small>
+
+                                </td>
+
+
+                                <!-- PRIORITY -->
+
+                                <td>
+
+                                    <span class="priority @priorityClass">
+                                        @task.Priority
+                                    </span>
+
+                                </td>
+
+
+                                <!-- STATUS -->
+
+                                <td>
+
+                                    <span class="task-status @statusClass">
+                                        @task.Status
+                                    </span>
+
+                                </td>
+
+                            </tr>
+                        }
+
+                    </tbody>
+
+                </table>
+
+            </div>
+        }
+        else
+        {
+            <div class="empty-tasks">
+
+                <h3>No tasks assigned</h3>
+
+                <p>
+                    You currently have no tasks assigned to your account.
+                </p>
+
+            </div>
+        }
+
+    </section>
+
+</div>
