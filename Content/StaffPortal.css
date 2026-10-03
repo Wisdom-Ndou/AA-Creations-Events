@@ -4,3 +4,11 @@
 .staff-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px}.staff-panel{margin-bottom:20px}.staff-panel h2{margin-top:0}.staff-table{width:100%;border-collapse:collapse}.staff-table th,.staff-table td{padding:10px;border-bottom:1px solid #2b2b2b;text-align:left}.staff-table th{color:var(--staff-pink);font-size:.78rem;text-transform:uppercase}.staff-link{color:var(--staff-pink);text-decoration:none;font-weight:600}
 .staff-login-page{min-height:75vh;display:grid;place-items:center;padding:30px}.staff-login-card{width:min(430px,92vw);padding:34px;border:1px solid var(--staff-border);border-radius:22px;background:linear-gradient(145deg,#171717,#10090c);box-shadow:0 24px 70px rgba(0,0,0,.35)}.staff-login-card h1{font-size:2rem;margin:.3rem 0}.staff-login-card>p{color:var(--staff-muted)}.staff-field{margin:16px 0}.staff-field label{display:block;margin-bottom:7px}.staff-field input{width:100%;box-sizing:border-box;padding:13px;border-radius:10px;border:1px solid #3a3a3a;background:#0d0d0d;color:#fff}.staff-submit{width:100%;padding:13px;border:0;border-radius:10px;background:var(--staff-pink);color:#fff;font-weight:700;cursor:pointer}.staff-error{color:#ff9ab8;margin:12px 0}
 @media(max-width:850px){.staff-stats{grid-template-columns:repeat(2,1fr)}.staff-grid{grid-template-columns:1fr}}@media(max-width:500px){.staff-stats{grid-template-columns:1fr}}
+
+.staff-muted{color:var(--staff-muted)}
+.staff-panel label{display:block;margin:14px 0 7px;font-weight:600}
+.staff-panel input,.staff-panel textarea,.staff-panel select{width:100%;box-sizing:border-box;padding:12px;border:1px solid #3a3a3a;border-radius:10px;background:#0d0d0d;color:#fff}
+.staff-panel textarea{min-height:120px;resize:vertical}
+.staff-panel button{margin-top:16px;padding:12px 18px;border:0;border-radius:10px;background:var(--staff-pink);color:#fff;font-weight:700;cursor:pointer}
+.complaint{padding:15px 0;border-bottom:1px solid #2b2b2b}.complaint:last-child{border-bottom:0}
+.alert{padding:12px 14px;margin:0 0 16px;border:1px solid #6b263d;border-radius:10px;background:#291019;color:#ffb1c8}.alert.success{border-color:#285b42;background:#10271d;color:#a9e8c5}
