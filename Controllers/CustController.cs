@@ -1601,7 +1601,8 @@ namespace WebApplication1.Controllers
             }
 
             string currentStatus = (booking.Status ?? "Pending").Trim();
-            if (currentStatus.Equals("Cancelled", StringComparison.OrdinalIgnoreCase) ||
+            if (currentStatus.Equals("Declined", StringComparison.OrdinalIgnoreCase) ||
+                currentStatus.Equals("Cancelled", StringComparison.OrdinalIgnoreCase) ||
                 currentStatus.Equals("Setup Completed", StringComparison.OrdinalIgnoreCase) ||
                 currentStatus.Equals("Completed", StringComparison.OrdinalIgnoreCase))
             {
