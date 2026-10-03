@@ -2636,25 +2636,23 @@ namespace WebApplication1.Controllers
                 return View(model);
             }
 
-            string canonicalCity = NormalizeCity(model.staff_City);
-            if (canonicalCity == "durban")
+            // Team is the source of truth for staff assignment. Derive the city
+            // server-side so a tampered form cannot save a mismatched team/city pair.
+            if (model.staff_Type == "Team Dbn")
             {
                 model.staff_City = "Durban";
-                model.staff_Type = "Team Dbn";
             }
-            else if (canonicalCity == "pietermaritzburg")
+            else if (model.staff_Type == "Team Peter")
             {
                 model.staff_City = "Pietermaritzburg";
-                model.staff_Type = "Team Peter";
             }
-            else if (canonicalCity == "mandeni")
+            else if (model.staff_Type == "Team Mdn")
             {
                 model.staff_City = "Mandeni";
-                model.staff_Type = "Team Mdn";
             }
             else
             {
-                ModelState.AddModelError("staff_City", "Select Durban, Pietermaritzburg or Mandeni.");
+                ModelState.AddModelError("staff_Type", "Select a valid staff team.");
                 return View(model);
             }
 
