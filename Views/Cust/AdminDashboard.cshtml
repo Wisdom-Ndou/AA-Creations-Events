@@ -12,7 +12,7 @@
     <p>Welcome, @ViewBag.AdminFirstName. Here's an overview of the platform.</p>
 </section>
 
-<main class="main">
+<main class="main">\n    @if (TempData["AdminSuccess"] != null) { <p>@TempData["AdminSuccess"]</p> }
     <section class="stat-row dashboard-widgets">
         <a href="@Url.Action("AllBookings","Cust")" class="stat-card dashboard-widget">
             <div class="label">All Bookings</div><div class="value">@Model.TotalBookings</div>
