@@ -11,6 +11,7 @@
 
     var currentTerms =
         ViewBag.CurrentTerms as WebApplication1.Models.TermsAndConditions;
+    var registrationSuccess = TempData["RegistrationSuccess"] as string;
 }
 
 <!DOCTYPE html>
@@ -45,7 +46,7 @@
         Only show while registration has not succeeded.
         ========================================================= *@
 
-    @if (TempData["RegistrationSuccess"] == null)
+    @if (registrationSuccess == null)
     {
         <div id="registrationAgreement"
              class="aa-agreement-overlay">
@@ -280,7 +281,7 @@
 
 
             <div class="form-wrap"
-                 @(TempData["RegistrationSuccess"] != null ? "hidden=\"hidden\"" : "")>
+                 @(registrationSuccess != null ? "hidden=\"hidden\"" : "")>
 
 
                 <h2 class="form-title">
@@ -646,7 +647,7 @@
 
             <div class="success-page"
                  id="successPage"
-                 @(TempData["RegistrationSuccess"] != null ? "" : "hidden")>
+                 @(registrationSuccess != null ? "" : "hidden")>
 
 
                 <div class="success-content"
@@ -666,8 +667,7 @@
 
                     <p id="successMessage">
 
-                        @(TempData["RegistrationSuccess"]
-                            ?? "Your registration was successful. You can now sign in and start booking.")
+                        @registrationSuccess
 
                     </p>
 
