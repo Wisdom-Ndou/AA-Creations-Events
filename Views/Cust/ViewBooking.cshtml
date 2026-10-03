@@ -1,4 +1,7 @@
 ﻿@model IEnumerable<WebApplication1.Models.Booking>
+@{
+    var assignedBookingIds = ViewBag.AssignedBookingIds as List<int> ?? new List<int>();
+}
 
 <!DOCTYPE html>
 <html lang="en-ZA">
@@ -145,7 +148,7 @@
                     totalPrice = b.TotalPrice,
                     createdAt = b.CreatedAt,
                     status = b.Status,
-                    staffAssigned = b.BookingAddOns != null && b.BookingId > 0
+                    staffAssigned = assignedBookingIds.Contains(b.BookingId)
                 })
             )
         );
