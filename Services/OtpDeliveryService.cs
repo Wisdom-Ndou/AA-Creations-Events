@@ -114,10 +114,5 @@ namespace WebApplication1.Services
 <p>We will keep you updated as your booking progresses.</p>");
         }
 
-        public bool SendOtpByPhone(string phone, string otp)
-        {
-            // SMS/WhatsApp delivery can be integrated separately.
-            return true;
-        }
     }
 }
