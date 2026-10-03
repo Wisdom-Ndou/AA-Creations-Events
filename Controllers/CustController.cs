@@ -1437,6 +1437,7 @@ namespace WebApplication1.Controllers
         // ==========================================
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public JsonResult UpdateBookingStatus(int bookingId, string status)
         {
             // Check admin authentication
@@ -2351,6 +2352,28 @@ namespace WebApplication1.Controllers
 
             if (!ModelState.IsValid)
             {
+                return View(staff);
+            }
+
+            string canonicalCity = NormalizeCity(staff.staff_City);
+            if (canonicalCity == "durban")
+            {
+                staff.staff_City = "Durban";
+                staff.staff_Type = "Team Dbn";
+            }
+            else if (canonicalCity == "pietermaritzburg")
+            {
+                staff.staff_City = "Pietermaritzburg";
+                staff.staff_Type = "Team Peter";
+            }
+            else if (canonicalCity == "mthatha")
+            {
+                staff.staff_City = "Mthatha";
+                staff.staff_Type = "Team Mdn";
+            }
+            else
+            {
+                ModelState.AddModelError("staff_City", "Select Durban, Pietermaritzburg or Mthatha.");
                 return View(staff);
             }
 
