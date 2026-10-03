@@ -2479,6 +2479,54 @@ namespace WebApplication1.Controllers
         }
 
         [HttpGet]
+        public ActionResult FinancialOverview()
+        {
+            if (Session["AdminId"] == null || Session["AdminAuthenticated"] == null || !(bool)Session["AdminAuthenticated"])
+                return RedirectToAction("Login", "Cust");
+
+            decimal income = db.Bookings
+                .Where(b => b.Status == "Approved" || b.Status == "Setup Completed" || b.Status == "Completed")
+                .Select(b => (decimal?)b.TotalPrice)
+                .Sum() ?? 0m;
+
+            var expenses = db.Expenditures.OrderByDescending(e => e.ExpenseDate).ToList();
+            decimal expenditure = expenses.Select(e => e.Amount).DefaultIfEmpty(0m).Sum();
+
+            return View(new FinancialOverviewViewModel
+            {
+                Income = income,
+                TotalExpenditure = expenditure,
+                Expenditures = expenses
+            });
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public ActionResult AddExpenditure(string description, decimal amount, DateTime expenseDate, string category)
+        {
+            if (Session["AdminId"] == null || Session["AdminAuthenticated"] == null || !(bool)Session["AdminAuthenticated"])
+                return RedirectToAction("Login", "Cust");
+
+            if (string.IsNullOrWhiteSpace(description) || amount <= 0)
+            {
+                TempData["FinanceError"] = "Enter a description and an expenditure amount greater than zero.";
+                return RedirectToAction("FinancialOverview");
+            }
+
+            db.Expenditures.Add(new Expenditure
+            {
+                Description = description.Trim(),
+                Amount = amount,
+                ExpenseDate = expenseDate,
+                Category = string.IsNullOrWhiteSpace(category) ? "General" : category.Trim(),
+                CreatedAt = DateTime.Now
+            });
+            db.SaveChanges();
+            TempData["FinanceSuccess"] = "Expenditure recorded.";
+            return RedirectToAction("FinancialOverview");
+        }
+
+        [HttpGet]
         public ActionResult StaffManagement()
         {
             if (Session["AdminId"] == null || Session["AdminAuthenticated"] == null || !(bool)Session["AdminAuthenticated"])
