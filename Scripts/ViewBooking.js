@@ -131,10 +131,18 @@ function renderBookingProgress(status, staffAssigned) {
     }).join("") + '</div>';
 }
 
+function getLocalToday() {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, "0");
+    const day = String(now.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+}
+
 function getVisibleBookings() {
 
     const today =
-        new Date().toISOString().split("T")[0];
+        getLocalToday();
 
     const filtered = bookings.filter(booking => {
 
@@ -166,7 +174,7 @@ function renderBookings() {
         document.getElementById("bookingCount");
 
     const today =
-        new Date().toISOString().split("T")[0];
+        getLocalToday();
 
     const visible =
         getVisibleBookings();
