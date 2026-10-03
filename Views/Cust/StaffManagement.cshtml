@@ -1,0 +1,11 @@
+@using System.Collections.Generic
+@model IEnumerable<WebApplication1.Models.Staff>
+@{ ViewBag.Title = "Staff Management"; var counts = ViewBag.PendingTaskCounts as Dictionary<int,int> ?? new Dictionary<int,int>(); }
+<link rel="stylesheet" href="~/Content/AdminDashboard.css" />
+<main class="main">
+<section class="page-head"><span class="badge">Admin</span><h1>Staff <em>Management</em></h1><p>Manage staff accounts, teams, cities and current workload.</p></section>
+@if(TempData["StaffManagementSuccess"]!=null){<div class="panel">@TempData["StaffManagementSuccess"]</div>}
+<section class="panel"><div class="panel-head"><div><h2>Staff Directory</h2><p>@Model.Count() registered staff members</p></div><a class="panel-link" href="@Url.Action("RegisterStaff","Cust")">+ Register Staff</a></div>
+<div class="table-wrap"><table><thead><tr><th>Staff</th><th>Team</th><th>City</th><th>Phone</th><th>Workload</th><th></th></tr></thead><tbody>
+@foreach(var s in Model){var n=counts.ContainsKey(s.staff_ID)?counts[s.staff_ID]:0;<tr><td><strong>@s.staff_FName @s.staff_LName</strong><br/><small>@s.staff_Email</small></td><td>@s.staff_Type</td><td>@s.staff_City</td><td>0@s.staff_Phone</td><td><span class="status @(n>0?"pending":"approved")"><span class="dot"></span>@(n>0?n+" active task(s)":"Available")</span></td><td><a class="panel-link" href="@Url.Action("EditStaff","Cust",new{id=s.staff_ID})">Edit →</a></td></tr>}
+</tbody></table></div></section></main>
