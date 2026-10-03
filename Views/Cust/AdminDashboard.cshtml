@@ -1,731 +1,123 @@
-﻿@model WebApplication1.Models.AdminDashboardViewModel
+@model WebApplication1.Models.AdminDashboardViewModel
+@using System
+@using System.Linq
+@{
+    ViewBag.Title = "Admin Dashboard";
+}
+<link rel="stylesheet" href="~/Content/AdminDashboard.css" />
 
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<section class="page-head">
+    <div class="badge">Admin Access</div>
+    <h1>Admin <em>Dashboard</em></h1>
+    <p>Welcome, @ViewBag.AdminFirstName. Here's an overview of the platform.</p>
+</section>
 
-    <title>Admin Dashboard - AA Creations & Events</title>
-
-    <link rel="stylesheet"
-          href="~/Content/AdminDashboard.css" />
-</head>
-
-<body>
-
-    <!-- ==========================================
-         PAGE HEADER
-    =========================================== -->
-
-    <section class="page-head">
-
-        <div class="badge">
-            Admin Access
+<main class="main">
+    @if (TempData["AdminSuccess"] != null) { <p>@TempData["AdminSuccess"]</p> }
+    <section class="stat-row dashboard-widgets">
+        <a href="@Url.Action("AllBookings","Cust")" class="stat-card dashboard-widget">
+            <div class="label">All Bookings</div><div class="value">@Model.TotalBookings</div>
+        </a>
+        <a href="@Url.Action("PendingApprovals","Cust")" class="stat-card dashboard-widget">
+            <div class="label">Pending Approvals</div><div class="value">@Model.PendingBookings</div>
+        </a>
+        <a href="@Url.Action("UpcomingEvents","Cust")" class="stat-card dashboard-widget">
+            <div class="label">Upcoming Events</div><div class="value">@Model.UpcomingEvents</div>
+        </a>
+        <div class="stat-card dashboard-widget">
+            <div class="label">Approved Revenue</div><div class="value">R @Model.ConfirmedRevenue.ToString("N2")</div>
         </div>
-
-        <h1>
-            Admin <em>Dashboard</em>
-        </h1>
-
-        <p>
-            Welcome,
-            @ViewBag.AdminFirstName.
-            Here's an overview of your platform.
-        </p>
-
     </section>
 
+    <section class="panel staff-dashboard-panel">
+        <div class="panel-head">
+            <div><h2>Staff Overview</h2><p>Live workload based on pending assigned event tasks.</p></div>
+            <a href="@Url.Action("StaffManagement","Cust")" class="panel-link">Manage Staff →</a>
+        </div>
+        <div class="staff-overview-grid">
+            <div class="staff-overview-item"><span>Total Staff</span><strong>@Model.TotalStaff</strong></div>
+            <div class="staff-overview-item available"><span>Available</span><strong>@Model.AvailableStaff</strong></div>
+            <div class="staff-overview-item busy"><span>Busy</span><strong>@Model.BusyStaff</strong></div>
+        </div>
+    </section>
 
-    <main class="main">
-
-
-        <!-- ==========================================
-             STATISTICS
-        =========================================== -->
-
-        <section class="stat-row dashboard-widgets">
-
-            <!-- ==========================================
-         ALL BOOKINGS
-    =========================================== -->
-
-            <a href="@Url.Action("AllBookings", "Cust")"
-               class="stat-card dashboard-widget">
-
-                <div class="label">
-                    All Bookings
-                </div>
-
-                <div class="value">
-                    @Model.TotalBookings
-                </div>
-
-                <div class="delta">
-                    Past, upcoming & cancelled →
-                </div>
-
-            </a>
-
-
-            <!-- ==========================================
-         UPCOMING EVENTS
-    =========================================== -->
-
-            <a href="@Url.Action("UpcomingEvents", "Cust")"
-               class="stat-card dashboard-widget">
-
-                <div class="label">
-                    Upcoming Events
-                </div>
-
-                <div class="value">
-                    @Model.UpcomingEvents
-                </div>
-
-                <div class="delta">
-                    Approved upcoming events →
-                </div>
-
-            </a>
-
-
-            <!-- ==========================================
-         CANCELLED BOOKINGS
-    =========================================== -->
-
-            <a href="@Url.Action("CancelledBookings", "Cust")"
-               class="stat-card dashboard-widget">
-
-                <div class="label">
-                    Cancelled Bookings
-                </div>
-
-                <div class="value">
-                    @Model.CancelledBookings
-                </div>
-
-                <div class="delta down">
-                    View cancelled bookings →
-                </div>
-
-            </a>
-
-
-            <!-- ==========================================
-         BUSINESS ANALYTICS
-    =========================================== -->
-
-            <a href="@Url.Action("BusinessAnalytics", "Cust")"
-               class="stat-card dashboard-widget">
-
-                <div class="label">
-                    Business Analytics
-                </div>
-
-                <div class="value">
-                    R @Model.ConfirmedRevenue.ToString("N2")
-                </div>
-
-                <div class="delta">
-                    Confirmed booking revenue →
-                </div>
-
-            </a>
-
-
-            <!-- ==========================================
-         PENDING APPROVALS
-    =========================================== -->
-
-            <a href="@Url.Action("PendingApprovals", "Cust")"
-               class="stat-card dashboard-widget">
-
-                <div class="label">
-                    Pending Approvals
-                </div>
-
-                <div class="value">
-                    @Model.PendingBookings
-                </div>
-
-                <div class="delta">
-                    Awaiting admin review →
-                </div>
-
-            </a>
-
-        </section>
-
-        
-
-        <!-- ==========================================
-             CONTENT GRID
-        =========================================== -->
-
-        <section class="content-grid">
-
-
-            <!-- ======================================
-                 BOOKINGS
-            ======================================= -->
-
-            <div class="panel">
-
-                <div class="panel-head">
-
-                    <div>
-
-                        <h2>
-                            All Bookings
-                        </h2>
-
-                        <p>
-                            Most recent bookings made by customers
-                        </p>
-
-                    </div>
-
-                </div>
-
-
-                <div class="table-wrap">
-
-                    <table>
-
-                        <thead>
-
+    <section class="content-grid">
+        <div class="panel">
+            <div class="panel-head">
+                <div><h2>Recent Bookings</h2><p>Approve or decline pending customer bookings.</p></div>
+                <a href="@Url.Action("AllBookings","Cust")" class="panel-link">View all →</a>
+            </div>
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr><th>Booking</th><th>Client</th><th>Event</th><th>City</th><th>Date</th><th>Status</th><th>Action</th></tr>
+                    </thead>
+                    <tbody>
+                    @if (Model.RecentBookings != null && Model.RecentBookings.Any())
+                    {
+                        foreach (var booking in Model.RecentBookings)
+                        {
+                            var status = string.IsNullOrWhiteSpace(booking.Status) ? "Pending" : booking.Status;
                             <tr>
-
-                                <th>
-                                    Booking ID
-                                </th>
-
-                                <th>
-                                    Client
-                                </th>
-
-                                <th>
-                                    Event
-                                </th>
-
-                                <th>
-                                City
-                                </th>
-
-                                <th>
-                                    Date
-                                </th>
-
-                                <th>
-                                    Status
-                                </th>
-
-                            </tr>
-
-                        </thead>
-
-
-                        <tbody>
-
-                            @if (Model.RecentBookings != null &&
-                                 Model.RecentBookings.Any())
-                            {
-                                foreach (var booking in Model.RecentBookings)
+                                <td>#BK-@booking.BookingId</td>
+                                <td>@booking.FirstName @booking.LastName</td>
+                                <td>@booking.Occasion</td>
+                                <td>@booking.City</td>
+                                <td>@booking.EventDate.ToString("dd MMM yyyy")</td>
+                                <td>@status</td>
+                                <td>
+                                @if (status.Equals("Pending", StringComparison.OrdinalIgnoreCase))
                                 {
-                                    string clientName =
-                                        ((booking.FirstName ?? "") +
-                                         " " +
-                                         (booking.LastName ?? "")).Trim();
-
-                                    if (string.IsNullOrWhiteSpace(clientName))
+                                    using (Html.BeginForm("UpdateBookingStatus", "Cust", FormMethod.Post, new { style = "display:inline" }))
                                     {
-                                        clientName = "Customer";
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="bookingId" value="@booking.BookingId" />
+                                        <button type="submit" name="status" value="Approved" class="approve-btn">Approve</button>
                                     }
-
-                                    string status =
-                                        string.IsNullOrWhiteSpace(booking.Status)
-                                            ? "Pending"
-                                            : booking.Status;
-
-                                    string statusClass =
-                                        status.ToLower() == "confirmed"
-                                            ? "confirmed"
-                                            : status.ToLower() == "cancelled"
-                                                ? "cancelled"
-                                                : "pending";
-
-                                    <tr>
-
-                                        <!-- BOOKING ID -->
-                                        <td class="cell-id">
-                                            #BK-@booking.BookingId
-                                        </td>
-
-                                        <!-- CLIENT -->
-                                        <td>
-                                            @clientName
-                                        </td>
-
-                                        <!-- EVENT / OCCASION -->
-                                        <td>
-                                            @booking.Occasion
-                                        </td>
-
-                                        <!-- CITY -->
-                                        <td>
-                                            @booking.City
-                                        </td>
-
-                                        <!-- EVENT DATE -->
-                                        <td>
-                                            @booking.EventDate.ToString("dd MMM yyyy")
-                                        </td>
-
-                                        <!-- STATUS -->
-                                        <td>
-
-                                            <span class="status @statusClass">
-                                                <span class="dot"></span>
-                                                @status
-                                            </span>
-
-                                        <td class="booking-actions">
-
-                                            @if (status.Equals("Pending", StringComparison.OrdinalIgnoreCase))
-                                            {
-                                                <form action="@Url.Action("UpdateBookingStatus", "Cust")"
-                                                      method="post"
-                                                      style="display:inline;">
-
-                                                    @Html.AntiForgeryToken()
-
-                                                    <input type="hidden"
-                                                           name="bookingId"
-                                                           value="@booking.BookingId" />
-
-                                                    <input type="hidden"
-                                                           name="status"
-                                                           value="Approved" />
-
-                                                    <button type="submit"
-                                                            class="approve-btn">
-                                                        Approve
-                                                    </button>
-                                                </form>
-
-                                                <form action="@Url.Action("UpdateBookingStatus", "Cust")"
-                                                      method="post"
-                                                      style="display:inline;">
-
-                                                    @Html.AntiForgeryToken()
-
-                                                    <input type="hidden"
-                                                           name="bookingId"
-                                                           value="@booking.BookingId" />
-
-                                                    <input type="hidden"
-                                                           name="status"
-                                                           value="Declined" />
-
-                                                    <button type="submit"
-                                                            class="decline-btn">
-                                                        Decline
-                                                    </button>
-                                                </form>
-                                            }
-                                            else
-                                            {
-                                                <span class="no-action">Reviewed</span>
-                                            }
-
-                                        </td>
-
-
-                                        @if (status.ToLower() == "pending")
-                                        {
-                                            <div class="booking-actions">
-
-                                                <button type="button"
-                                                        class="approve-btn"
-                                                        onclick="updateBookingStatus(@booking.BookingId, 'approved')">
-                                                    Approve
-                                                </button>
-
-                                                <button type="button"
-                                                        class="decline-btn"
-                                                        onclick="updateBookingStatus(@booking.BookingId, 'declined')">
-                                                    Decline
-                                                </button>
-
-                                            </div>
-                                        }
-
-                                        </td>
-
-                                    </tr>
+                                    using (Html.BeginForm("UpdateBookingStatus", "Cust", FormMethod.Post, new { style = "display:inline" }))
+                                    {
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="bookingId" value="@booking.BookingId" />
+                                        <button type="submit" name="status" value="Declined" class="decline-btn">Decline</button>
+                                    }
                                 }
-                            }
-                            else
-                            {
-                                <tr>
-                                    <td colspan="6"
-                                        style="text-align:center;">
-
-                                        No bookings have been made yet.
-
-                                    </td>
-                                </tr>
-                            }
-
-                        </tbody>
-
-                    </table>
-
-                </div>
-
-
-                <div class="table-foot">
-
-                    <span>
-                        Showing
-                        @(Model.RecentBookings?.Count ?? 0)
-                        recent bookings
-                    </span>
-
-                </div>
-
-            </div>
-
-
-
-            <!-- ======================================
-                 SIDE COLUMN
-            ======================================= -->
-
-            <div class="stack">
-
-
-                <!-- ==================================
-                     RECENT ACTIVITY
-                =================================== -->
-
-                <div class="panel">
-
-                    <div class="panel-head">
-
-                        <div>
-
-                            <h2>
-                                Recent Activity
-                            </h2>
-
-                        </div>
-
-                    </div>
-
-
-                    <div class="activity-list">
-
-                        @if (Model.RecentActivities != null &&
-                             Model.RecentActivities.Any())
-                        {
-
-                            foreach (var activity
-                                     in Model.RecentActivities)
-                            {
-
-                                <div class="activity-item">
-
-                                    <div class="activity-dot"></div>
-
-                                    <div class="activity-text">
-
-                                        <p>
-                                            @activity.Description
-                                        </p>
-
-                                        <span>
-                                            @activity.ActivityDate.ToString(
-                                                "dd MMM yyyy HH:mm"
-                                            )
-                                        </span>
-
-                                    </div>
-
-                                </div>
-
-                            }
-
+                                else
+                                {
+                                    <span>Reviewed</span>
+                                }
+                                </td>
+                            </tr>
                         }
-                        else
-                        {
-
-                            <div class="activity-item">
-
-                                <div class="activity-text">
-
-                                    <p>
-                                        No recent activity.
-                                    </p>
-
-                                </div>
-
-                            </div>
-
-                        }
-
-                    </div>
-
-                </div>
-
-
-
-                <!-- ==================================
-                     QUICK ACTIONS
-                =================================== -->
-
-                <div class="panel">
-
-                    <div class="panel-head">
-
-                        <div>
-
-                            <h2>
-                                Quick Actions
-                            </h2>
-
-                        </div>
-
-                    </div>
-
-
-                    <div class="quick-actions">
-
-
-                        <a href="#bookings"
-                           class="quick-action">
-
-                            Review pending
-
-                            <span>
-                                @Model.PendingBookings waiting
-                            </span>
-
-                        </a>
-
-
-                        <a href="@Url.Action("MakeBooking", "Cust")"
-                           class="quick-action">
-
-                            Create booking
-
-                            <span>
-                                New booking
-                            </span>
-
-                        </a>
-
-
-                        <a href="#customers"
-                           class="quick-action">
-
-                            View customers
-
-                            <span>
-                                @Model.RegisteredCustomers registered
-                            </span>
-
-                        </a>
-
-
-                        <a href="#reports"
-                           class="quick-action">
-
-                            Dashboard data
-
-                            <span>
-                                Live database
-                            </span>
-
-                        </a>
-
-                    </div>
-
-                </div>
-
-
-
-                <!-- ==================================
-                     THIS WEEK'S LOAD
-                =================================== -->
-
-                <div class="panel">
-
-                    <div class="panel-head">
-
-                        <div>
-
-                            <h2>
-                                This Week's Load
-                            </h2>
-
-                        </div>
-
-                    </div>
-
-
-                    <div class="occupancy">
-
-
-                        <!-- WEDDINGS -->
-
-                        <div class="occupancy-row">
-
-                            <span>
-                                Wedding events
-                            </span>
-
-                            <span class="figure">
-                                @Model.WeddingLoad%
-                            </span>
-
-                        </div>
-
-                        <div class="bar-track">
-
-                            <div class="bar-fill"
-                                 style="width:@Model.WeddingLoad%;">
-                            </div>
-
-                        </div>
-
-
-
-                        <!-- CORPORATE -->
-
-                        <div class="occupancy-row">
-
-                            <span>
-                                Corporate events
-                            </span>
-
-                            <span class="figure">
-                                @Model.CorporateLoad%
-                            </span>
-
-                        </div>
-
-                        <div class="bar-track">
-
-                            <div class="bar-fill"
-                                 style="width:@Model.CorporateLoad%;">
-                            </div>
-
-                        </div>
-
-
-
-                        <!-- BIRTHDAY -->
-
-                        <div class="occupancy-row">
-
-                            <span>
-                                Birthday & baby showers
-                            </span>
-
-                            <span class="figure">
-                                @Model.BirthdayLoad%
-                            </span>
-
-                        </div>
-
-                        <div class="bar-track">
-
-                            <div class="bar-fill"
-                                 style="width:@Model.BirthdayLoad%;">
-                            </div>
-
-                        </div>
-
-                    </div>
-
-                </div>
-
+                    }
+                    else
+                    {
+                        <tr><td colspan="7">No bookings have been made yet.</td></tr>
+                    }
+                    </tbody>
+                </table>
             </div>
+        </div>
 
-        </section>
-
-    </main>
-
-
-
-    <!-- ==========================================
-         SIGN OUT
-    =========================================== -->
-
-    
-
-        <a class="footer-link"
-           href="@Url.Action("AdminLogout", "Cust")">
-
-            Sign Out
-
-        </a>
-
-
-        <script>
-
-            function updateBookingStatus(bookingId, status) {
-
-                var confirmationMessage =
-                   status === "approved"
-                    ? "Are you sure you want to approve this booking?"
-                    : "Are you sure you want to decline this booking?";
-
-                if (!confirm(confirmationMessage)) {
-                    return;
+        <div class="stack">
+            <div class="panel">
+                <div class="panel-head"><div><h2>Recent Activity</h2></div></div>
+                @if (Model.RecentActivities != null && Model.RecentActivities.Any())
+                {
+                    foreach (var activity in Model.RecentActivities)
+                    {
+                        <div class="activity-item">
+                            <div class="activity-text">
+                                <p>@activity.Description</p>
+                                <span>@activity.ActivityDate.ToString("dd MMM yyyy HH:mm")</span>
+                            </div>
+                        </div>
+                    }
                 }
-
-
-                $.ajax({
-                    url: '@Url.Action("UpdateBookingStatus", "Cust")',
-                    type: 'POST',
-
-                    data: {
-                        bookingId: bookingId,
-                        status: status
-                 },
-
-                 success: function (response) {
-
-                      if (response.success) {
-
-                          alert(response.message);
-
-                    // Refresh dashboard so all statistics
-                    // and booking statuses are updated
-                          location.reload();
-
-                      }
-                      else {
-
-                          alert(response.message);
-  
-                      }
-                 },
-
-                 error: function () {
-
-                     alert(
-                       "An error occurred while updating the booking status."
-                     );
-
-                 }
-              });
-
-            }
-
-        </script>
-</body>
-</html>
+                else
+                {
+                    <p>No recent activity.</p>
+                }
+            </div>
+        </div>
+    </section>
+</main>

@@ -45,65 +45,87 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Antlr3.Runtime, Version=3.5.0.2, Culture=neutral, PublicKeyToken=eb42632606e9261f, processorArchitecture=MSIL">
+      <HintPath>packages\Antlr.3.5.0.2\lib\Antlr3.Runtime.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="EntityFramework, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL">
       <HintPath>packages\EntityFramework.6.5.1\lib\net45\EntityFramework.dll</HintPath>
+      <Private>True</Private>
     </Reference>
     <Reference Include="EntityFramework.SqlServer, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL">
       <HintPath>packages\EntityFramework.6.5.1\lib\net45\EntityFramework.SqlServer.dll</HintPath>
+      <Private>True</Private>
     </Reference>
     <Reference Include="Google.Api.Gax, Version=4.15.0.0, Culture=neutral, PublicKeyToken=3ec5ea7f18953e47, processorArchitecture=MSIL">
       <HintPath>packages\Google.Api.Gax.4.15.0\lib\net462\Google.Api.Gax.dll</HintPath>
+      <Private>True</Private>
     </Reference>
     <Reference Include="Google.Api.Gax.Rest, Version=4.15.0.0, Culture=neutral, PublicKeyToken=3ec5ea7f18953e47, processorArchitecture=MSIL">
       <HintPath>packages\Google.Api.Gax.Rest.4.15.0\lib\net462\Google.Api.Gax.Rest.dll</HintPath>
+      <Private>True</Private>
     </Reference>
     <Reference Include="Google.Apis, Version=1.76.0.0, Culture=neutral, PublicKeyToken=4b01fa6e34db77ab, processorArchitecture=MSIL">
       <HintPath>packages\Google.Apis.1.76.0\lib\net462\Google.Apis.dll</HintPath>
+      <Private>True</Private>
     </Reference>
     <Reference Include="Google.Apis.Auth, Version=1.76.0.0, Culture=neutral, PublicKeyToken=4b01fa6e34db77ab, processorArchitecture=MSIL">
       <HintPath>packages\Google.Apis.Auth.1.76.0\lib\net462\Google.Apis.Auth.dll</HintPath>
+      <Private>True</Private>
     </Reference>
     <Reference Include="Google.Apis.Core, Version=1.76.0.0, Culture=neutral, PublicKeyToken=4b01fa6e34db77ab, processorArchitecture=MSIL">
       <HintPath>packages\Google.Apis.Core.1.76.0\lib\net462\Google.Apis.Core.dll</HintPath>
+      <Private>True</Private>
     </Reference>
     <Reference Include="Microsoft.Bcl.AsyncInterfaces, Version=10.0.0.11, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
       <HintPath>packages\Microsoft.Bcl.AsyncInterfaces.10.0.11\lib\net462\Microsoft.Bcl.AsyncInterfaces.dll</HintPath>
+      <Private>True</Private>
     </Reference>
     <Reference Include="Microsoft.CodeDom.Providers.DotNetCompilerPlatform, Version=4.1.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <HintPath>packages\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.4.1.0\lib\net472\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.dll</HintPath>
+      <Private>True</Private>
     </Reference>
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="Microsoft.Extensions.DependencyInjection.Abstractions, Version=10.0.0.11, Culture=neutral, PublicKeyToken=adb9793829ddae60, processorArchitecture=MSIL">
       <HintPath>packages\Microsoft.Extensions.DependencyInjection.Abstractions.10.0.11\lib\net462\Microsoft.Extensions.DependencyInjection.Abstractions.dll</HintPath>
+      <Private>True</Private>
     </Reference>
     <Reference Include="Newtonsoft.Json, Version=13.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <HintPath>packages\Newtonsoft.Json.13.0.4\lib\net45\Newtonsoft.Json.dll</HintPath>
+      <Private>True</Private>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Buffers, Version=4.0.5.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
       <HintPath>packages\System.Buffers.4.6.1\lib\net462\System.Buffers.dll</HintPath>
+      <Private>True</Private>
     </Reference>
     <Reference Include="System.Collections.Immutable, Version=10.0.0.11, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <HintPath>packages\System.Collections.Immutable.10.0.11\lib\net462\System.Collections.Immutable.dll</HintPath>
+      <Private>True</Private>
     </Reference>
     <Reference Include="System.Data" />
     <Reference Include="System.Diagnostics.DiagnosticSource, Version=10.0.0.11, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
       <HintPath>packages\System.Diagnostics.DiagnosticSource.10.0.11\lib\net462\System.Diagnostics.DiagnosticSource.dll</HintPath>
+      <Private>True</Private>
     </Reference>
     <Reference Include="System.Drawing" />
     <Reference Include="System.Management" />
     <Reference Include="System.Memory, Version=4.0.5.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
       <HintPath>packages\System.Memory.4.6.3\lib\net462\System.Memory.dll</HintPath>
+      <Private>True</Private>
     </Reference>
     <Reference Include="System.Numerics" />
     <Reference Include="System.Numerics.Vectors, Version=4.1.6.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <HintPath>packages\System.Numerics.Vectors.4.6.1\lib\net462\System.Numerics.Vectors.dll</HintPath>
+      <Private>True</Private>
     </Reference>
     <Reference Include="System.Runtime.CompilerServices.Unsafe, Version=6.0.3.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <HintPath>packages\System.Runtime.CompilerServices.Unsafe.6.1.2\lib\net462\System.Runtime.CompilerServices.Unsafe.dll</HintPath>
+      <Private>True</Private>
     </Reference>
     <Reference Include="System.Threading.Tasks.Extensions, Version=4.2.4.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
       <HintPath>packages\System.Threading.Tasks.Extensions.4.6.3\lib\net462\System.Threading.Tasks.Extensions.dll</HintPath>
+      <Private>True</Private>
     </Reference>
     <Reference Include="System.ValueTuple" />
     <Reference Include="System.Web.DynamicData" />
@@ -114,21 +136,31 @@
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="System.Web.Helpers, Version=3.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <HintPath>packages\Microsoft.AspNet.WebPages.3.2.9\lib\net45\System.Web.Helpers.dll</HintPath>
+      <Private>True</Private>
     </Reference>
     <Reference Include="System.Web.Mvc, Version=5.2.9.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <HintPath>packages\Microsoft.AspNet.Mvc.5.2.9\lib\net45\System.Web.Mvc.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.Web.Optimization, Version=1.1.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>packages\Microsoft.AspNet.Web.Optimization.1.1.3\lib\net40\System.Web.Optimization.dll</HintPath>
+      <Private>True</Private>
     </Reference>
     <Reference Include="System.Web.Razor, Version=3.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <HintPath>packages\Microsoft.AspNet.Razor.3.2.9\lib\net45\System.Web.Razor.dll</HintPath>
+      <Private>True</Private>
     </Reference>
     <Reference Include="System.Web.WebPages, Version=3.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <HintPath>packages\Microsoft.AspNet.WebPages.3.2.9\lib\net45\System.Web.WebPages.dll</HintPath>
+      <Private>True</Private>
     </Reference>
     <Reference Include="System.Web.WebPages.Deployment, Version=3.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <HintPath>packages\Microsoft.AspNet.WebPages.3.2.9\lib\net45\System.Web.WebPages.Deployment.dll</HintPath>
+      <Private>True</Private>
     </Reference>
     <Reference Include="System.Web.WebPages.Razor, Version=3.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <HintPath>packages\Microsoft.AspNet.WebPages.3.2.9\lib\net45\System.Web.WebPages.Razor.dll</HintPath>
+      <Private>True</Private>
     </Reference>
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Web" />
@@ -147,16 +179,9 @@
     </Reference>
     <Reference Include="System.Net.Http.WebRequest">
     </Reference>
-    <Reference Include="System.Web.Optimization">
-      <HintPath>packages\Microsoft.AspNet.Web.Optimization.1.1.3\lib\net40\System.Web.Optimization.dll</HintPath>
-    </Reference>
-    <Reference Include="WebGrease">
-      <Private>True</Private>
+    <Reference Include="WebGrease, Version=1.6.5135.21930, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <HintPath>packages\WebGrease.1.6.0\lib\WebGrease.dll</HintPath>
-    </Reference>
-    <Reference Include="Antlr3.Runtime">
       <Private>True</Private>
-      <HintPath>packages\Antlr.3.5.0.2\lib\Antlr3.Runtime.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
@@ -229,6 +254,15 @@
     <Compile Include="Migrations\202609231430406_InitialCreate1.Designer.cs">
       <DependentUpon>202609231430406_InitialCreate1.cs</DependentUpon>
     </Compile>
+    <Compile Include="Migrations\202610031340385_DiagnoseStaffCity.cs" />
+    <Compile Include="Migrations\202610031340385_DiagnoseStaffCity.Designer.cs">
+      <DependentUpon>202610031340385_DiagnoseStaffCity.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\202610032100554_SyncTermsAcceptanceSchema.cs" />
+    <Compile Include="Migrations\202610032100554_SyncTermsAcceptanceSchema.Designer.cs">
+      <DependentUpon>202610032100554_SyncTermsAcceptanceSchema.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\202610040030000_AddExpenditures.cs" />
     <Compile Include="Migrations\Configuration.cs" />
     <Compile Include="Models\AddOn.cs" />
     <Compile Include="Models\Admin.cs" />
@@ -240,11 +274,17 @@
     <Compile Include="Models\ChangePasswordViewModel.cs" />
     <Compile Include="Models\CreateBookingRequest.cs" />
     <Compile Include="Models\Customer.cs" />
+    <Compile Include="Models\CustomerAgreement.cs" />
     <Compile Include="Models\DatabaseContext.cs" />
+    <Compile Include="Models\Expenditure.cs" />
+    <Compile Include="Models\FinancialOverviewViewModel.cs" />
     <Compile Include="Models\OtpVerification.cs" />
     <Compile Include="Models\Package.cs" />
     <Compile Include="Models\Staff.cs" />
     <Compile Include="Models\StaffTask.cs" />
+    <Compile Include="Models\StaffComplaint.cs" />
+    <Compile Include="Models\StaffDashboardViewModel.cs" />
+    <Compile Include="Models\TermsAndConditions.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Services\OtpDeliveryService.cs" />
   </ItemGroup>
@@ -268,7 +308,8 @@
     <Content Include="Content\bootstrap.rtl.css" />
     <Content Include="Content\bootstrap.rtl.min.css" />
     <Content Include="Content\contactus.css" />
-    <Content Include="Content\Customer register styles.css" />
+    <Content Include="Content\CustomerRegister.css" />
+    <Content Include="Content\StaffPortal.css" />
     <Content Include="Content\Login Style.css" />
     <Content Include="Content\Manage Account styles.css" />
     <Content Include="Content\sstyle.css" />
@@ -288,7 +329,7 @@
     <Content Include="Scripts\bootstrap.min.js" />
     <Content Include="Scripts\Common.js" />
     <Content Include="Scripts\contactus.js" />
-    <Content Include="Scripts\Customer register script.js" />
+    <Content Include="Scripts\CustomerRegister.js" />
     <None Include="Scripts\jquery-3.7.1.intellisense.js" />
     <Content Include="Scripts\jquery-3.7.1.js" />
     <Content Include="Scripts\jquery-3.7.1.min.js" />
@@ -303,50 +344,14 @@
     <Content Include="Scripts\modernizr-2.8.3.js" />
     <Content Include="Scripts\ViewBooking.js" />
     <Content Include="Views\Cust\StaffComplaints.cshtml" />
-    <None Include="Views\Cust\StaffDashboard.cshtml" />
-    <Content Include="Web.config" />
-    <Content Include="Web.Debug.config">
-      <DependentUpon>Web.config</DependentUpon>
-    </Content>
-    <Content Include="Web.Release.config">
-      <DependentUpon>Web.config</DependentUpon>
-    </Content>
-    <Content Include="Views\Web.config" />
-    <Content Include="Views\_ViewStart.cshtml" />
-    <Content Include="Views\Shared\Error.cshtml" />
-    <Content Include="Views\Shared\_Layout.cshtml" />
-    <Content Include="Views\Home\About.cshtml" />
-    <Content Include="Views\Home\Contact.cshtml" />
-    <Content Include="Views\Home\Index.cshtml" />
-    <Content Include="Views\Cust\Index.cshtml" />
-    <Content Include="F:\Login.cshtml">
-      <Link>Views\Cust\Login.cshtml</Link>
-    </Content>
-    <Content Include="Views\Cust\Customerregister.cshtml" />
-    <Content Include="Views\Cust\Adminregister.cshtml" />
-    <Content Include="Views\Cust\Portfolio.cshtml" />
-    <Content Include="Views\Cust\Booking.cshtml" />
-    <Content Include="Views\Cust\ViewBooking.cshtml" />
-    <Content Include="Views\Cust\contactus.cshtml" />
-    <Content Include="Views\Cust\Bankingdetails.cshtml" />
-    <Content Include="Views\Cust\ManageAccount.cshtml" />
-    <Content Include="Views\Cust\VerifyOtp.cshtml" />
-    <Content Include="Views\Cust\ChangePassword.cshtml" />
-    <Content Include="Views\Cust\ForgotPassword.cshtml" />
-    <Content Include="Views\Cust\ForgotPasswordMethod.cshtml" />
-    <Content Include="Views\Cust\AdminDashboard.cshtml" />
-    <Content Include="Views\Cust\AdminLogin.cshtml" />
-    <Content Include="Views\Cust\AllBookings.cshtml" />
-    <Content Include="Views\Cust\UpcomingEvents.cshtml" />
-    <Content Include="Views\Cust\PendingApprovals.cshtml" />
-    <Content Include="Views\Cust\StaffTasks.cshtml" />
-    <Content Include="Views\Cust\StaffProfile.cshtml" />
-  </ItemGroup>
-  <ItemGroup>
-    <Folder Include="App_Data\" />
-    <Folder Include="Content\Images\" />
-  </ItemGroup>
-  <ItemGroup>
+    <Content Include="Views\Cust\StaffLogin.cshtml" />
+    <Content Include="Views\Cust\TermsAndConditions.cshtml" />
+    <Content Include="Database\TermsAcceptance.sql" />
+    <Content Include="Views\Cust\Login.cshtml" />
+    <Content Include="Views\Cust\RegisterStaff.cshtml" />
+    <Content Include="Views\Cust\StaffManagement.cshtml" />
+    <Content Include="Views\Cust\FinancialOverview.cshtml" />
+    <Content Include="Views\Cust\EditStaff.cshtml" />
     <Content Include="Content\bootstrap.rtl.min.css.map" />
     <Content Include="Content\bootstrap.rtl.css.map" />
     <Content Include="Content\bootstrap.min.css.map" />
@@ -372,6 +377,45 @@
     <Content Include="Scripts\bootstrap.bundle.js.map" />
     <Content Include="Scripts\jquery-3.7.1.slim.min.map" />
     <Content Include="Scripts\jquery-3.7.1.min.map" />
+    <Content Include="Views\Cust\StaffDashboard.cshtml" />
+    <Content Include="Web.config" />
+    <Content Include="Web.Debug.config">
+      <DependentUpon>Web.config</DependentUpon>
+    </Content>
+    <Content Include="Web.Release.config">
+      <DependentUpon>Web.config</DependentUpon>
+    </Content>
+    <Content Include="Views\Web.config" />
+    <Content Include="Views\_ViewStart.cshtml" />
+    <Content Include="Views\Shared\Error.cshtml" />
+    <Content Include="Views\Shared\_Layout.cshtml" />
+    <Content Include="Views\Home\About.cshtml" />
+    <Content Include="Views\Home\Contact.cshtml" />
+    <Content Include="Views\Home\Index.cshtml" />
+    <Content Include="Views\Cust\Index.cshtml" />
+    <Content Include="Views\Cust\Customerregister.cshtml" />
+    <Content Include="Views\Cust\Adminregister.cshtml" />
+    <Content Include="Views\Cust\Portfolio.cshtml" />
+    <Content Include="Views\Cust\Booking.cshtml" />
+    <Content Include="Views\Cust\ViewBooking.cshtml" />
+    <Content Include="Views\Cust\contactus.cshtml" />
+    <Content Include="Views\Cust\Bankingdetails.cshtml" />
+    <Content Include="Views\Cust\ManageAccount.cshtml" />
+    <Content Include="Views\Cust\VerifyOtp.cshtml" />
+    <Content Include="Views\Cust\ChangePassword.cshtml" />
+    <Content Include="Views\Cust\ForgotPassword.cshtml" />
+    <Content Include="Views\Cust\ForgotPasswordMethod.cshtml" />
+    <Content Include="Views\Cust\AdminDashboard.cshtml" />
+    <Content Include="Views\Cust\AdminStaffComplaints.cshtml" />
+    <Content Include="Views\Cust\AllBookings.cshtml" />
+    <Content Include="Views\Cust\UpcomingEvents.cshtml" />
+    <Content Include="Views\Cust\PendingApprovals.cshtml" />
+    <Content Include="Views\Cust\StaffTasks.cshtml" />
+    <Content Include="Views\Cust\StaffProfile.cshtml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="App_Data\" />
+    <Folder Include="Content\Images\" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Migrations\202608251303244_InitialCreate.resx">
@@ -419,6 +463,12 @@
     <EmbeddedResource Include="Migrations\202609231430406_InitialCreate1.resx">
       <DependentUpon>202609231430406_InitialCreate1.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\202610031340385_DiagnoseStaffCity.resx">
+      <DependentUpon>202610031340385_DiagnoseStaffCity.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\202610032100554_SyncTermsAcceptanceSchema.resx">
+      <DependentUpon>202610032100554_SyncTermsAcceptanceSchema.cs</DependentUpon>
+    </EmbeddedResource>
   </ItemGroup>
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
@@ -452,14 +502,14 @@
     <PropertyGroup>
       <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
     </PropertyGroup>
-    <Error Condition="!Exists('packages\System.ValueTuple.4.6.2\build\net471\System.ValueTuple.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\System.ValueTuple.4.6.2\build\net471\System.ValueTuple.targets'))" />
-    <Error Condition="!Exists('packages\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.4.1.0\build\net472\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.4.1.0\build\net472\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.targets'))" />
     <Error Condition="!Exists('packages\EntityFramework.6.5.1\build\EntityFramework.props')" Text="$([System.String]::Format('$(ErrorText)', 'packages\EntityFramework.6.5.1\build\EntityFramework.props'))" />
     <Error Condition="!Exists('packages\EntityFramework.6.5.1\build\EntityFramework.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\EntityFramework.6.5.1\build\EntityFramework.targets'))" />
+    <Error Condition="!Exists('packages\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.4.1.0\build\net472\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.4.1.0\build\net472\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.targets'))" />
+    <Error Condition="!Exists('packages\System.ValueTuple.4.6.2\build\net471\System.ValueTuple.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\System.ValueTuple.4.6.2\build\net471\System.ValueTuple.targets'))" />
   </Target>
-  <Import Project="packages\System.ValueTuple.4.6.2\build\net471\System.ValueTuple.targets" Condition="Exists('packages\System.ValueTuple.4.6.2\build\net471\System.ValueTuple.targets')" />
-  <Import Project="packages\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.4.1.0\build\net472\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.targets" Condition="Exists('packages\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.4.1.0\build\net472\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.targets')" />
   <Import Project="packages\EntityFramework.6.5.1\build\EntityFramework.targets" Condition="Exists('packages\EntityFramework.6.5.1\build\EntityFramework.targets')" />
+  <Import Project="packages\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.4.1.0\build\net472\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.targets" Condition="Exists('packages\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.4.1.0\build\net472\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.targets')" />
+  <Import Project="packages\System.ValueTuple.4.6.2\build\net471\System.ValueTuple.targets" Condition="Exists('packages\System.ValueTuple.4.6.2\build\net471\System.ValueTuple.targets')" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it.
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">

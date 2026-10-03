@@ -1,0 +1,44 @@
+@model IEnumerable<WebApplication1.Models.StaffComplaint>
+@using System.Linq
+@{
+    ViewBag.Title = "Staff Complaints";
+}
+<main style="max-width:1100px;margin:40px auto;padding:0 20px;">
+@if (TempData["ComplaintAdminError"] != null)
+{
+    <div class="alert">@TempData["ComplaintAdminError"]</div>
+}
+
+    <h1>Staff Complaints</h1>
+    @if (TempData["ComplaintAdminSuccess"] != null) { <p>@TempData["ComplaintAdminSuccess"]</p> }
+
+    @if (!Model.Any())
+    {
+        <p>No staff complaints have been submitted.</p>
+    }
+    else
+    {
+        foreach (var complaint in Model)
+        {
+            <section style="margin-bottom:24px;padding:20px;border:1px solid #444;">
+                <h2>@complaint.Title</h2>
+                <p><strong>Staff:</strong> @complaint.Staff.staff_FName @complaint.Staff.staff_LName</p>
+                <p><strong>Priority:</strong> @complaint.Priority | <strong>Status:</strong> @complaint.Status</p>
+                <p>@complaint.Description</p>
+                @if (complaint.Booking != null)
+                {
+                    <p><strong>Booking:</strong> #@complaint.BookingId - @complaint.Booking.Occasion, @complaint.Booking.City</p>
+                }
+
+                @using (Html.BeginForm("RespondToStaffComplaint", "Cust", FormMethod.Post))
+                {
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="complaintId" value="@complaint.ComplaintId" />
+                    <textarea name="adminResponse" maxlength="2000" required style="width:100%;min-height:90px;">@complaint.AdminResponse</textarea>
+                    <button type="submit" name="status" value="Open">Save Response</button>
+                    <button type="submit" name="status" value="Resolved">Resolve</button>
+                }
+            </section>
+        }
+    }
+</main>

@@ -1,13 +1,13 @@
-﻿using System;
+using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace WebApplication1.Models
 {
-    public class StaffTask
+    public class StaffComplaint
     {
         [Key]
-        public int TaskId { get; set; }
+        public int ComplaintId { get; set; }
 
         [Required]
         public int StaffId { get; set; }
@@ -15,20 +15,18 @@ namespace WebApplication1.Models
         [ForeignKey("StaffId")]
         public virtual Staff Staff { get; set; }
 
-        [Required]
-        [StringLength(200)]
-        public string TaskName { get; set; }
-
-        [StringLength(500)]
-        public string Description { get; set; }
-
         public int? BookingId { get; set; }
 
         [ForeignKey("BookingId")]
         public virtual Booking Booking { get; set; }
 
         [Required]
-        public DateTime DueDate { get; set; }
+        [StringLength(200)]
+        public string Title { get; set; }
+
+        [Required]
+        [StringLength(2000)]
+        public string Description { get; set; }
 
         [Required]
         [StringLength(20)]
@@ -38,10 +36,10 @@ namespace WebApplication1.Models
         [StringLength(20)]
         public string Status { get; set; }
 
-        [StringLength(1000)]
-        public string CompletionReason { get; set; }
+        [StringLength(2000)]
+        public string AdminResponse { get; set; }
 
-        public DateTime? CompletedAt { get; set; }
+        public DateTime? ResolvedAt { get; set; }
 
         public DateTime CreatedAt { get; set; }
     }

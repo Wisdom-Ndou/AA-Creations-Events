@@ -1,0 +1,25 @@
+@using System.Linq
+@model WebApplication1.Models.FinancialOverviewViewModel
+@{ ViewBag.Title = "Financial Overview"; }
+<link rel="stylesheet" href="~/Content/AdminDashboard.css" />
+<main class="main">
+<section class="page-head"><span class="badge">Admin Finance</span><h1>Financial <em>Overview</em></h1><p>Track confirmed booking income, recorded expenditure and operating profit.</p></section>
+<section class="stats">
+<div class="stat"><span>Income</span><strong>R @Model.Income.ToString("N2")</strong><small>Approved and completed bookings</small></div>
+<div class="stat"><span>Expenditure</span><strong>R @Model.TotalExpenditure.ToString("N2")</strong><small>Recorded business expenses</small></div>
+<div class="stat"><span>Profit</span><strong>R @Model.Profit.ToString("N2")</strong><small>Income minus expenditure</small></div>
+</section>
+@if(TempData["FinanceError"]!=null){<section class="panel">@TempData["FinanceError"]</section>}
+@if(TempData["FinanceSuccess"]!=null){<section class="panel">@TempData["FinanceSuccess"]</section>}
+<div class="dashboard-grid">
+<section class="panel"><div class="panel-head"><div><h2>Record Expenditure</h2><p>Add an actual business cost to the financial report.</p></div></div>
+@using(Html.BeginForm("AddExpenditure","Cust",FormMethod.Post)){@Html.AntiForgeryToken()
+<div class="form-grid"><div class="form-group"><label>Description</label><input class="form-control" name="description" required /></div>
+<div class="form-group"><label>Amount (R)</label><input class="form-control" name="amount" type="number" min="0.01" step="0.01" required /></div>
+<div class="form-group"><label>Date</label><input class="form-control" name="expenseDate" type="date" value="@(DateTime.Today.ToString("yyyy-MM-dd"))" required /></div>
+<div class="form-group"><label>Category</label><input class="form-control" name="category" placeholder="Decor, transport, supplies..." /></div></div>
+<p style="margin-top:18px"><button type="submit" class="approve-btn">Record Expenditure</button></p>}</section>
+<section class="panel"><div class="panel-head"><div><h2>Recent Expenditure</h2><p>@Model.Expenditures.Count recorded expenses</p></div></div>
+@if(!Model.Expenditures.Any()){<p>No expenditure has been recorded yet.</p>}else{<div class="table-wrap"><table><thead><tr><th>Date</th><th>Description</th><th>Category</th><th>Amount</th></tr></thead><tbody>
+@foreach(var e in Model.Expenditures.Take(12)){<tr><td>@e.ExpenseDate.ToString("dd MMM yyyy")</td><td>@e.Description</td><td>@e.Category</td><td>R @e.Amount.ToString("N2")</td></tr>}
+</tbody></table></div>}</section></div></main>

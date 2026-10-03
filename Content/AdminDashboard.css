@@ -657,3 +657,14 @@ tbody tr:hover {
     .status.declined .dot {
         background: #f87171;
     }
+
+/* Admin refinements */
+.staff-overview-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1rem}
+.staff-overview-item{padding:1.2rem;border:1px solid var(--border-color);border-radius:12px;background:#171717;display:flex;justify-content:space-between;align-items:center}
+.staff-overview-item span{color:var(--text-muted);font-size:.85rem;text-transform:uppercase;letter-spacing:.06em}
+.staff-overview-item strong{font-size:1.8rem}
+.staff-overview-item.available strong{color:#4ade80}.staff-overview-item.busy strong{color:#facc15}
+.admin-booking-filters{display:flex;gap:.65rem;flex-wrap:wrap;margin:0 0 1.2rem}
+.booking-filter{padding:.55rem 1rem;border-radius:999px;border:1px solid var(--border-color);background:#171717;color:var(--text-muted)}
+.booking-filter:hover,.booking-filter.active{border-color:var(--accent-pink);background:rgba(255,42,109,.12);color:#fff}
+@media(max-width:600px){.staff-overview-grid{grid-template-columns:1fr}}

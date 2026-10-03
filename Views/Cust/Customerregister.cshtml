@@ -1,94 +1,461 @@
-﻿@{
-    ViewBag.Title = "Customerregister";
-}
+﻿@model WebApplication1.Models.Customer
+@using System
+@using System.Linq
+@using System.Web
+@using System.Web.Mvc
+@using WebApplication1.Models
 
-<h2>Customerregister</h2>
+@{
+    Layout = null;
+    ViewBag.Title = "Customerregister";
+
+    var currentTerms =
+        ViewBag.CurrentTerms as WebApplication1.Models.TermsAndConditions;
+    var registrationSuccess = TempData["RegistrationSuccess"] as string;
+}
 
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Customer Registration | AA Creations &amp; Events</title>
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0" />
 
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <title>
+        Customer Registration | AA Creations &amp; Events
+    </title>
+
+    <link rel="preconnect"
+          href="https://fonts.googleapis.com" />
+
+    <link rel="preconnect"
+          href="https://fonts.gstatic.com"
+          crossorigin />
+
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital@0;1&family=Outfit:wght@400;500;600&display=swap"
           rel="stylesheet" />
 
-    <link rel="stylesheet" href="~/Content/Customer register styles.css" />
+    <link rel="stylesheet"
+          href="@Url.Content("~/Content/CustomerRegister.css")" />
 </head>
+
 <body>
+
+    @* =========================================================
+        TERMS & CONDITIONS AGREEMENT
+        Only show while registration has not succeeded.
+        ========================================================= *@
+
+    @if (registrationSuccess == null)
+    {
+        <div id="registrationAgreement"
+             class="aa-agreement-overlay">
+
+            <div class="aa-agreement-modal"
+                 role="dialog"
+                 aria-modal="true"
+                 aria-labelledby="agreementTitle">
+
+                <button type="button"
+                        class="aa-agreement-close"
+                        id="cancelAgreementTop"
+                        aria-label="Cancel account registration">
+                    &times;
+                </button>
+
+                <h2 id="agreementTitle">
+                    Before You Create Your Account
+                </h2>
+
+                <p class="aa-agreement-introduction">
+                    Please review and accept the Terms &amp; Conditions
+                    before continuing with account creation.
+                </p>
+
+
+                @* ==========================
+                    CURRENT TERMS FROM DATABASE
+                    ========================== *@
+
+                <div class="aa-agreement-scroll">
+
+                    @if (currentTerms != null)
+                    {
+                        <h3>Terms &amp; Conditions</h3>
+
+                        <p>
+                            <strong>Version:</strong>
+                            @currentTerms.Version
+                            |
+                            <strong>Effective:</strong>
+                            @currentTerms.EffectiveDate.ToString("dd MMMM yyyy")
+                        </p>
+
+                        @Html.Raw(currentTerms.Content)
+
+                        <p>
+                            <a href="@Url.Action("TermsAndConditions", "Cust")"
+                               target="_blank"
+                               rel="noopener noreferrer">
+                                View Complete Terms &amp; Conditions
+                            </a>
+                        </p>
+                    }
+                    else
+                    {
+                        <p class="aa-agreement-error-notice">
+
+                            <strong>
+                                Terms &amp; Conditions unavailable.
+                            </strong>
+
+                            Please try again later or contact support.
+
+                        </p>
+                    }
+
+                </div>
+
+
+                @* ==========================
+                    COOKIE PREFERENCES
+                    ========================== *@
+
+                <div class="aa-cookie-preference">
+
+                    <h3>Cookie Preferences</h3>
+
+                    <p>
+                        Choose how you would like cookies to be used
+                        on this website.
+                    </p>
+
+                    <label class="aa-cookie-choice">
+
+                        <input type="radio"
+                               name="agreementCookiePreference"
+                               value="necessary"
+                               checked />
+
+                        <span>
+
+                            <strong>
+                                Necessary Cookies Only
+                            </strong>
+
+                            <small>
+                                Allows cookies required for essential
+                                website functionality, security and
+                                authentication.
+                            </small>
+
+                        </span>
+
+                    </label>
+
+
+                    <label class="aa-cookie-choice">
+
+                        <input type="radio"
+                               name="agreementCookiePreference"
+                               value="all" />
+
+                        <span>
+
+                            <strong>
+                                Accept All Cookies
+                            </strong>
+
+                            <small>
+                                Allows necessary cookies and additional
+                                cookies used to improve the website
+                                experience and understand website usage.
+                            </small>
+
+                        </span>
+
+                    </label>
+
+                </div>
+
+
+                @* ==========================
+                    TERMS ACCEPTANCE
+                    ========================== *@
+
+                <label class="aa-agreement-checkbox">
+
+                    <input type="checkbox"
+                           id="termsAgreementCheckbox" />
+
+                    <span>
+                        I have read and agree to the
+                        Terms &amp; Conditions.
+                    </span>
+
+                </label>
+
+
+                <p id="agreementError"
+                   class="aa-agreement-error"
+                   hidden>
+
+                    Please agree to the Terms &amp; Conditions
+                    before continuing.
+
+                </p>
+
+
+                <div class="aa-agreement-actions">
+
+                    <button type="button"
+                            id="cancelAgreement"
+                            class="aa-agreement-cancel">
+                        Cancel
+                    </button>
+
+                    <button type="button"
+                            id="agreeAndContinue"
+                            class="aa-agreement-continue">
+                        Agree &amp; Continue
+                    </button>
+
+                </div>
+
+            </div>
+
+        </div>
+    }
+
+
+    @* =========================================================
+        REGISTRATION PAGE
+        ========================================================= *@
 
     <div class="page">
 
-        <!-- ============ LEFT: BRAND PANEL (hidden on small screens) ============ -->
-        <aside class="brand-panel">
-            <div class="circle" aria-hidden="true"></div>
 
-            <div class="brand-mid" style="position: relative; width: 70%; height: 50%;">
-                <p class="eyebrow">Join the Celebration</p>
-                <h1 class="brand-title">
-                    Create Your <br />Customer <br />Account
-                </h1>
+        @* =====================================================
+            LEFT BRAND PANEL
+            ===================================================== *@
+
+        <aside class="brand-panel">
+
+            <div class="circle"
+                 aria-hidden="true">
             </div>
 
+            <div class="brand-mid"
+                 style="position: relative; width: 70%; height: 50%;">
+
+                <p class="eyebrow">
+                    Join the Celebration
+                </p>
+
+                <h1 class="brand-title">
+                    Create Your <br />
+                    Customer <br />
+                    Account
+                </h1>
+
+            </div>
+
+
             <div class="divider"></div>
+
+
             <h1 class="brand-desc">
-                Book celebrations, track your events, and stay inspired with AA Creations &amp; Events.
+                Book celebrations, track your events, and stay
+                inspired with AA Creations &amp; Events.
             </h1>
+
         </aside>
 
-        <!-- ============ RIGHT: FORM PANEL ============ -->
+
+
+        @* =====================================================
+            RIGHT FORM PANEL
+            ===================================================== *@
+
         <main class="form-panel">
+
+
             <div class="form-wrap"
-                 @(TempData["RegistrationSuccess"] != null ? "hidden" : "")>
+                 @(registrationSuccess != null ? "hidden=\"hidden\"" : "")>
 
-                <h2 class="form-title">Customer Registration</h2>
-                <p class="form-subtitle">Fill in your details to get started</p>
 
-                @using (Html.BeginForm("Customerregister", "Cust", FormMethod.Post, new { id = "registerForm" }))
+                <h2 class="form-title">
+                    Customer Registration
+                </h2>
+
+                <p class="form-subtitle">
+                    Fill in your details to get started
+                </p>
+
+
+
+                @using (
+                    Html.BeginForm(
+                        "Customerregister",
+                        "Cust",
+                        FormMethod.Post,
+                        new { id = "registerForm" }
+                    )
+                )
                 {
+
                     @Html.AntiForgeryToken()
 
-                    <!-- ===== Step 0: Personal ===== -->
-                    <div class="step-panel" id="panel0">
-                        <div class="grid-2">
-                            <div class="field">
-                                <label for="firstName">First Name</label>
-                                <input type="text" id="firstName" name="Cust_FName" placeholder="Nobuhle" required pattern="^[A-Za-z]+$" title="Only letters allowed" aria-describedby="firstNameError" aria-invalid="false" maxlength="60" />
-                                <p class="error-text" id="firstNameError" aria-live="polite" hidden>Only letters allowed</p>
-                            </div>
-                            <div class="field">
-                                <label for="lastName">Last Name</label>
-                                <input type="text" id="lastName" name="Cust_LName" placeholder="Zulu" required pattern="^[A-Za-z]+$" title="Only letters allowed" aria-describedby="lastNameError" aria-invalid="false" maxlength="60" />
-                                <p class="error-text" id="lastNameError" aria-live="polite" hidden>Only letters allowed</p>
-                            </div>
-                        </div>
 
+                    @* =========================================
+                        TERMS VALUES SENT TO CONTROLLER
+                        ========================================= *@
+
+                    <input type="hidden"
+                           id="termsAccepted"
+                           name="termsAccepted"
+                           value="false" />
+
+
+                    <input type="hidden"
+                           id="termsVersion"
+                           name="termsVersion"
+                           value="@ViewBag.TermsVersion" />
+
+
+                    <input type="hidden"
+                           id="cookiePreference"
+                           name="cookiePreference"
+                           value="necessary" />
+
+
+
+                    @* =========================================
+                        PERSONAL DETAILS
+                        ========================================= *@
+
+                    <div class="step-panel"
+                         id="panel0">
+
+
+                        <div class="grid-2">
+
+
+                            <div class="field">
+
+                                <label for="firstName">
+                                    First Name
+                                </label>
+
+                                <input type="text"
+                                       id="firstName"
+                                       name="Cust_FName"
+                                       placeholder="Nobuhle"
+                                       required
+                                       pattern="^[A-Za-z]+$"
+                                       title="Only letters allowed"
+                                       aria-describedby="firstNameError"
+                                       aria-invalid="false"
+                                       maxlength="60" />
+
+                                <p class="error-text"
+                                   id="firstNameError"
+                                   aria-live="polite"
+                                   hidden>
+                                    Only letters allowed
+                                </p>
+
+                            </div>
+
+
+
+                            <div class="field">
+
+                                <label for="lastName">
+                                    Last Name
+                                </label>
+
+                                <input type="text"
+                                       id="lastName"
+                                       name="Cust_LName"
+                                       placeholder="Zulu"
+                                       required
+                                       pattern="^[A-Za-z]+$"
+                                       title="Only letters allowed"
+                                       aria-describedby="lastNameError"
+                                       aria-invalid="false"
+                                       maxlength="60" />
+
+                                <p class="error-text"
+                                   id="lastNameError"
+                                   aria-live="polite"
+                                   hidden>
+                                    Only letters allowed
+                                </p>
+
+                            </div>
+
+
+                        </div>
 
                     </div>
 
-                    <!-- ===== Step 1: Contact ===== -->
-                    <div class="step-panel" id="panel1">
-                        <div class="field">
-                            <label for="email">Email Address</label>
-                            <input type="email" id="email" name="Cust_Email" placeholder="nobuzulu@gmail.com" required />
 
-                            @if (ViewData.ModelState["Cust_Email"] != null &&
-                            ViewData.ModelState["Cust_Email"].Errors.Count > 0)
+
+                    @* =========================================
+                        CONTACT DETAILS
+                        ========================================= *@
+
+                    <div class="step-panel"
+                         id="panel1">
+
+
+                        <div class="field">
+
+                            <label for="email">
+                                Email Address
+                            </label>
+
+                            <input type="email"
+                                   id="email"
+                                   name="Cust_Email"
+                                   placeholder="nobuzulu@gmail.com"
+                                   required />
+
+
+                            @if (
+                                ViewData.ModelState["Cust_Email"] != null &&
+                                ViewData.ModelState["Cust_Email"].Errors.Count > 0
+                            )
                             {
-                                <p class="error-text server-error" aria-live="polite">
-                                    @ViewData.ModelState["Cust_Email"].Errors[0].ErrorMessage
+                                <p class="error-text server-error"
+                                   aria-live="polite">
+
+                                    @ViewData
+                                    .ModelState["Cust_Email"]
+                                    .Errors[0]
+                                    .ErrorMessage
+
                                 </p>
                             }
 
                         </div>
 
+
+
                         <div class="field">
-                            <label for="phone">Phone Number</label>
+
+                            <label for="phone">
+                                Phone Number
+                            </label>
+
+
                             <div class="phone-row">
-                                <span class="phone-prefix">+27</span>
+
+                                <span class="phone-prefix">
+                                    +27
+                                </span>
+
                                 <input type="tel"
                                        id="phone"
                                        name="Cust_Phone"
@@ -99,16 +466,43 @@
                                        maxlength="9"
                                        aria-describedby="phoneError"
                                        aria-invalid="false" />
+
                             </div>
-                            <p class="error-text" id="phoneError" aria-live="polite" hidden>Enter 9 digits and do not start with 0</p>
+
+
+                            <p class="error-text"
+                               id="phoneError"
+                               aria-live="polite"
+                               hidden>
+
+                                Enter 9 digits and do not start with 0
+
+                            </p>
+
                         </div>
+
+
                     </div>
 
-                    <!-- ===== Step 2: Security ===== -->
-                    <div class="step-panel" id="panel2">
+
+
+                    @* =========================================
+                        PASSWORD
+                        ========================================= *@
+
+                    <div class="step-panel"
+                         id="panel2">
+
+
                         <div class="field">
-                            <label for="password">Create Password</label>
+
+                            <label for="password">
+                                Create Password
+                            </label>
+
+
                             <div class="password-row">
+
                                 <input type="password"
                                        id="password"
                                        name="Cust_Passw"
@@ -118,64 +512,167 @@
                                        title="At least 6 characters and must include letters and numbers"
                                        aria-describedby="passwordError"
                                        aria-invalid="false" />
-                                <button type="button" class="toggle-pass" id="togglePass">Show</button>
+
+
+                                <button type="button"
+                                        class="toggle-pass"
+                                        id="togglePass">
+                                    Show
+                                </button>
+
                             </div>
-                            <!-- Strength bar -->
-                            <div class="strength-bar" id="strengthBar">
-                                <div class="strength-seg" id="seg1"></div>
-                                <div class="strength-seg" id="seg2"></div>
-                                <div class="strength-seg" id="seg3"></div>
-                                <div class="strength-seg" id="seg4"></div>
+
+
+
+                            <div class="strength-bar"
+                                 id="strengthBar">
+
+                                <div class="strength-seg"
+                                     id="seg1">
+                                </div>
+
+                                <div class="strength-seg"
+                                     id="seg2">
+                                </div>
+
+                                <div class="strength-seg"
+                                     id="seg3">
+                                </div>
+
+                                <div class="strength-seg"
+                                     id="seg4">
+                                </div>
+
                             </div>
-                            <p class="error-text" id="passwordError" aria-live="polite" hidden>
-                                Password must be at least 6 characters and include letters and numbers.
+
+
+
+                            <p class="error-text"
+                               id="passwordError"
+                               aria-live="polite"
+                               hidden>
+
+                                Password must be at least 6 characters
+                                and include letters and numbers.
+
                             </p>
+
                         </div>
+
+
 
                         <div class="field">
-                            <label for="confirm">Confirm Password</label>
-                            <input type="password" id="confirm" name="confirm" placeholder="******" required />
-                            <p class="error-text" id="mismatchText" hidden>
+
+                            <label for="confirm">
+                                Confirm Password
+                            </label>
+
+
+                            <input type="password"
+                                   id="confirm"
+                                   name="confirm"
+                                   placeholder="******"
+                                   required />
+
+
+                            <p class="error-text"
+                               id="mismatchText"
+                               hidden>
+
                                 Passwords do not match
+
                             </p>
+
                         </div>
 
+
                     </div>
 
-                    <!-- Navigation -->
+
+
+                    @* =========================================
+                        NAVIGATION
+                        ========================================= *@
+
                     <div class="nav-row">
-                        @Html.ActionLink("Back to Login", "Login", "Cust", new { area = "" }, new { @class = "btn btn-back" })
 
-                        <button type="submit" class="btn btn-primary" id="submitBtn">Create Account</button>
+
+                        @Html.ActionLink(
+                            "Back to Login",
+                            "Login",
+                            "Cust",
+                            new { area = "" },
+                            new { @class = "btn btn-back" }
+                        )
+
+
+                        <button type="submit"
+                                class="btn btn-primary"
+                                id="submitBtn">
+
+                            Create Account
+
+                        </button>
+
 
                     </div>
 
-                    <div class="nav-row">
 
-
-                    </div>
 
                     <div class="note-box">
-                        <p class="note-title">Why we need your contact details</p>
-                        <p class="note-body">
-                            We use your email and phone to send booking confirmations and important updates about your events. We never share your information.
+
+                        <p class="note-title">
+                            Why we need your contact details
                         </p>
+
+                        <p class="note-body">
+
+                            We use your email and phone to send booking
+                            confirmations and important updates about
+                            your events. We never share your information.
+
+                        </p>
+
                     </div>
 
                 }
 
             </div>
 
-            <!-- ============ SUCCESS STATE ============ -->
-            <div class="success-page"
-                 id="successPage"
-                 @(TempData["RegistrationSuccess"] != null ? "" : "hidden")>
-                <div class="success-content" role="status" aria-live="polite">
-                    <div class="success-icon">✓</div>
-                    <h2 id="successTitle">Registration successful</h2>
+
+
+            @* =================================================
+                SUCCESS STATE
+                ================================================= *@
+
+            @if (!string.IsNullOrWhiteSpace(registrationSuccess))
+            {
+                <div class="success-page"
+                     id="successPage">
+
+
+                <div class="success-content"
+                     role="status"
+                     aria-live="polite">
+
+
+                    <div class="success-icon">
+                        ✓
+                    </div>
+
+
+                    <h2 id="successTitle">
+                        Registration successful
+                    </h2>
+
+
                     <p id="successMessage">
-                        @(TempData["RegistrationSuccess"] ?? "Your registration was successful. You can now sign in and start booking.")
+
+                        @registrationSuccess
+
                     </p>
+
+
                     @Html.ActionLink(
                         "Go to Sign In",
                         "Login",
@@ -183,12 +680,21 @@
                         new { area = "" },
                         new { @class = "sale-btn" }
                     )
+
+
                 </div>
+
             </div>
+            }
+
+
+
         </main>
 
     </div>
 
-    <script src="~/Scripts/Customer register script.js"></script>
+
+    <script src="@Url.Content("~/Scripts/CustomerRegister.js")"></script>
+
 </body>
 </html>

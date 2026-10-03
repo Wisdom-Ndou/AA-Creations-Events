@@ -1,4 +1,9 @@
-﻿@model IEnumerable<WebApplication1.Models.Booking>
+﻿@using System.Collections.Generic
+@using System.Linq
+@model IEnumerable<WebApplication1.Models.Booking>
+@{
+    var assignedBookingIds = ViewBag.AssignedBookingIds as List<int> ?? new List<int>();
+}
 
 <!DOCTYPE html>
 <html lang="en-ZA">
@@ -14,7 +19,10 @@
 <body data-page="bookings">
 
     <main class="bookings-page" id="bookingsApp"
-          data-logged-in="@(Session["CustomerEmail"] != null ? "true" : "false")">
+          data-logged-in="@(Session["CustomerEmail"] != null ? "true" : "false")"
+          data-complete-url="@Url.Action("CompleteCustomerBooking", "Cust")"
+          data-cancel-url="@Url.Action("CancelCustomerBooking", "Cust")">
+        @Html.AntiForgeryToken()
 
         <!-- Login Overlay -->
         <div id="bookingsLoginOverlay" class="booking-login-overlay">
@@ -142,7 +150,8 @@
                     }),
                     totalPrice = b.TotalPrice,
                     createdAt = b.CreatedAt,
-                    status = b.Status
+                    status = b.Status,
+                    staffAssigned = assignedBookingIds.Contains(b.BookingId)
                 })
             )
         );

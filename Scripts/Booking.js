@@ -225,7 +225,7 @@ function renderBookingStep() {
             <option value="">Select city…</option>
             <option value="Pietermaritzburg" ${state.form.city === "Pietermaritzburg" ? "selected" : ""}>Pietermaritzburg</option>
             <option value="Durban" ${state.form.city === "Durban" ? "selected" : ""}>Durban</option>
-            <option value="Mandeni" ${state.form.city === "Mandeni" ? "selected" : ""}>Mandeni</option>
+            <option value="Mthatha" ${state.form.city === "Mthatha" ? "selected" : ""}>Mthatha</option>
           </select>
          
         </div>
@@ -268,7 +268,7 @@ function renderBookingStep() {
         </div>
         <div class="form-group full">
           <label class="form-label" for="city">City / Town</label>
-          <input class="form-control" id="city" name="city" value="${escapeHtml(state.form.city)}" placeholder="Johannesburg" required>
+          <select class="form-control" id="city" name="city" required disabled>\n            <option value="Pietermaritzburg" ${state.form.city === "Pietermaritzburg" ? "selected" : ""}>Pietermaritzburg</option>\n            <option value="Durban" ${state.form.city === "Durban" ? "selected" : ""}>Durban</option>\n            <option value="Mthatha" ${state.form.city === "Mthatha" ? "selected" : ""}>Mthatha</option>\n          </select>
         </div>
       </div>
 
