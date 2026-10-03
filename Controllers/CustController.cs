@@ -475,8 +475,15 @@ namespace WebApplication1.Controllers
                 }
             }
 
-            TempData["RegistrationSuccess"] =
-                "Your registration was successful. You can now sign in and start booking.";
+            var registrationEmailService = new OtpDeliveryService();
+            bool registrationEmailSent = registrationEmailService.SendRegistrationEmail(
+                obj.Cust_Email,
+                obj.Cust_FName
+            );
+
+            TempData["RegistrationSuccess"] = registrationEmailSent
+                ? "Your registration was successful. A confirmation email has been sent to you."
+                : "Your registration was successful. You can now sign in and start booking.";
 
             return RedirectToAction("Customerregister", "Cust");
         }
@@ -714,6 +721,20 @@ namespace WebApplication1.Controllers
                 // an administrator approves the booking.
                 db.Bookings.Add(booking);
                 db.SaveChanges();
+
+                // Send a receipt/booking-received email after the booking is safely stored.
+                // A delivery failure does not roll back the booking.
+                var bookingEmailService = new OtpDeliveryService();
+                bookingEmailService.SendBookingConfirmationEmail(
+                    booking.Email,
+                    booking.FirstName,
+                    booking.BookingId,
+                    booking.Occasion,
+                    booking.EventDate,
+                    booking.EventTime,
+                    booking.City,
+                    booking.TotalPrice
+                );
 
                 return Json(new
                 {
