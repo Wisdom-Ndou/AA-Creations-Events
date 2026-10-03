@@ -1575,6 +1575,18 @@ namespace WebApplication1.Controllers
                 });
             }
 
+            string currentStatus = (booking.Status ?? "Pending").Trim();
+            if (currentStatus.Equals("Cancelled", StringComparison.OrdinalIgnoreCase) ||
+                currentStatus.Equals("Setup Completed", StringComparison.OrdinalIgnoreCase) ||
+                currentStatus.Equals("Completed", StringComparison.OrdinalIgnoreCase))
+            {
+                return Json(new
+                {
+                    success = false,
+                    message = "This booking has reached a final workflow stage and its approval status can no longer be changed."
+                });
+            }
+
 
             // Convert to display format
             string newStatus;
@@ -2574,6 +2586,9 @@ namespace WebApplication1.Controllers
             var staff = db.Staffs.FirstOrDefault(s => s.staff_ID == model.staff_ID);
             if (staff == null) return HttpNotFound();
 
+            // Password is optional when editing an existing staff account.
+            ModelState.Remove("staff_Passw");
+
             if (string.IsNullOrWhiteSpace(model.staff_FName) || string.IsNullOrWhiteSpace(model.staff_LName) ||
                 string.IsNullOrWhiteSpace(model.staff_Email) || string.IsNullOrWhiteSpace(model.staff_Phone) ||
                 string.IsNullOrWhiteSpace(model.staff_Type) || string.IsNullOrWhiteSpace(model.staff_City))
@@ -2582,9 +2597,38 @@ namespace WebApplication1.Controllers
                 return View(model);
             }
 
+            string editedEmail = model.staff_Email.Trim();
+            if (db.Staffs.Any(s => s.staff_ID != model.staff_ID && s.staff_Email == editedEmail))
+            {
+                ModelState.AddModelError("staff_Email", "A staff account with this email already exists.");
+                return View(model);
+            }
+
+            string canonicalCity = NormalizeCity(model.staff_City);
+            if (canonicalCity == "durban")
+            {
+                model.staff_City = "Durban";
+                model.staff_Type = "Team Dbn";
+            }
+            else if (canonicalCity == "pietermaritzburg")
+            {
+                model.staff_City = "Pietermaritzburg";
+                model.staff_Type = "Team Peter";
+            }
+            else if (canonicalCity == "mandeni")
+            {
+                model.staff_City = "Mandeni";
+                model.staff_Type = "Team Mdn";
+            }
+            else
+            {
+                ModelState.AddModelError("staff_City", "Select Durban, Pietermaritzburg or Mandeni.");
+                return View(model);
+            }
+
             staff.staff_FName = model.staff_FName.Trim();
             staff.staff_LName = model.staff_LName.Trim();
-            staff.staff_Email = model.staff_Email.Trim();
+            staff.staff_Email = editedEmail;
             staff.staff_Phone = model.staff_Phone.Trim();
             staff.staff_Type = model.staff_Type;
             staff.staff_City = model.staff_City;
@@ -2647,7 +2691,7 @@ namespace WebApplication1.Controllers
             }
             else
             {
-                ModelState.AddModelError("staff_City", "Select Durban, Pietermaritzburg or Mthatha.");
+                ModelState.AddModelError("staff_City", "Select Durban, Pietermaritzburg or Mandeni.");
                 return View(staff);
             }
 
