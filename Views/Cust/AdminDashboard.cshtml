@@ -31,8 +31,13 @@
 
     <section class="panel staff-dashboard-panel">
         <div class="panel-head">
-            <div><h2>Staff</h2><p>Staff accounts are created and assigned to cities by administrators.</p></div>
+            <div><h2>Staff Overview</h2><p>Live workload based on pending assigned event tasks.</p></div>
             <a href="@Url.Action("RegisterStaff","Cust")" class="panel-link">Register Staff →</a>
+        </div>
+        <div class="staff-overview-grid">
+            <div class="staff-overview-item"><span>Total Staff</span><strong>@Model.TotalStaff</strong></div>
+            <div class="staff-overview-item available"><span>Available</span><strong>@Model.AvailableStaff</strong></div>
+            <div class="staff-overview-item busy"><span>Busy</span><strong>@Model.BusyStaff</strong></div>
         </div>
     </section>
 
