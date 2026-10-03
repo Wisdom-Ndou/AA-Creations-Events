@@ -1,0 +1,14 @@
+@model WebApplication1.Models.Staff
+@{ ViewBag.Title="Edit Staff"; }
+<link rel="stylesheet" href="~/Content/AdminDashboard.css" />
+<main class="main"><section class="page-head"><span class="badge">Admin</span><h1>Edit <em>Staff</em></h1><p>Update staff account and team information.</p></section>
+<section class="panel">@using(Html.BeginForm("EditStaff","Cust",FormMethod.Post)){@Html.AntiForgeryToken() @Html.HiddenFor(m=>m.staff_ID) @Html.ValidationSummary(false,"",new{@class="text-danger"})
+<div class="form-grid">
+<div class="form-group">@Html.LabelFor(m=>m.staff_FName,"First Name") @Html.TextBoxFor(m=>m.staff_FName,new{@class="form-control"})</div>
+<div class="form-group">@Html.LabelFor(m=>m.staff_LName,"Last Name") @Html.TextBoxFor(m=>m.staff_LName,new{@class="form-control"})</div>
+<div class="form-group">@Html.LabelFor(m=>m.staff_Email,"Email") @Html.TextBoxFor(m=>m.staff_Email,new{@class="form-control",type="email"})</div>
+<div class="form-group">@Html.LabelFor(m=>m.staff_Phone,"Phone") @Html.TextBoxFor(m=>m.staff_Phone,new{@class="form-control",maxlength="9"})</div>
+<div class="form-group"><label>Team</label><select class="form-control" name="staff_Type"><option @(Model.staff_Type=="Team Dbn"?"selected":"")>Team Dbn</option><option @(Model.staff_Type=="Team Peter"?"selected":"")>Team Peter</option><option @(Model.staff_Type=="Team Mdn"?"selected":"")>Team Mdn</option></select></div>
+<div class="form-group"><label>City</label><select class="form-control" name="staff_City"><option @(Model.staff_City=="Durban"?"selected":"")>Durban</option><option @(Model.staff_City=="Pietermaritzburg"?"selected":"")>Pietermaritzburg</option><option @(Model.staff_City=="Mandeni"?"selected":"")>Mandeni</option></select></div>
+<div class="form-group"><label>New Password (optional)</label><input class="form-control" type="password" name="staff_Passw" placeholder="Leave blank to keep current password"/></div></div>
+<p style="margin-top:20px"><button class="approve-btn" type="submit">Save Changes</button> <a class="panel-link" href="@Url.Action("StaffManagement","Cust")">Cancel</a></p>}</section></main>
