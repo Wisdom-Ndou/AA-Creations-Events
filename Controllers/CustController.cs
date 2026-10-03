@@ -773,6 +773,41 @@ namespace WebApplication1.Controllers
             return View(bookings);
         }
 
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public JsonResult CompleteCustomerBooking(int bookingId)
+        {
+            if (Session["CustomerId"] == null)
+            {
+                return Json(new { success = false, requiresLogin = true, message = "Please sign in first." });
+            }
+
+            int customerId = (int)Session["CustomerId"];
+
+            var booking = db.Bookings.FirstOrDefault(b =>
+                b.BookingId == bookingId &&
+                b.CustomerId == customerId);
+
+            if (booking == null)
+            {
+                return Json(new { success = false, message = "Booking could not be found." });
+            }
+
+            if (!string.Equals(booking.Status, "Setup Completed", StringComparison.OrdinalIgnoreCase))
+            {
+                return Json(new
+                {
+                    success = false,
+                    message = "The booking can only be completed after staff have finished the venue setup."
+                });
+            }
+
+            booking.Status = "Completed";
+            db.SaveChanges();
+
+            return Json(new { success = true, status = booking.Status, message = "Booking marked as completed." });
+        }
+
         public JsonResult TestDatabase()
         {
             int bookingCount = db.Bookings.Count();
@@ -2149,6 +2184,22 @@ namespace WebApplication1.Controllers
                 task.Status = "Completed";
                 task.CompletionReason = null;
                 task.CompletedAt = DateTime.Now;
+
+                // Completing the decoration task means the venue setup is ready.
+                // Keep the booking itself open until the customer confirms arrival/completion.
+                if (task.BookingId.HasValue)
+                {
+                    var relatedBooking = db.Bookings
+                        .FirstOrDefault(b => b.BookingId == task.BookingId.Value);
+
+                    if (relatedBooking != null &&
+                        !string.Equals(relatedBooking.Status, "Declined", StringComparison.OrdinalIgnoreCase) &&
+                        !string.Equals(relatedBooking.Status, "Cancelled", StringComparison.OrdinalIgnoreCase) &&
+                        !string.Equals(relatedBooking.Status, "Completed", StringComparison.OrdinalIgnoreCase))
+                    {
+                        relatedBooking.Status = "Setup Completed";
+                    }
+                }
             }
             else if (status == "Unable")
             {
