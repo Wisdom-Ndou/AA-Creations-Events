@@ -2688,7 +2688,7 @@ namespace WebApplication1.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         public ActionResult RegisterStaff(
-            [Bind(Include = "staff_FName,staff_LName,staff_Email,staff_Passw,staff_Phone,staff_Type,staff_City")]
+            [Bind(Include = "staff_FName,staff_LName,staff_Email,staff_Passw,staff_Phone,staff_Type")]
             Staff staff)
         {
             if (Session["AdminId"] == null ||
@@ -2697,6 +2697,10 @@ namespace WebApplication1.Controllers
             {
                 return RedirectToAction("Login", "Cust");
             }
+
+            // City is derived from the selected team below, so it is intentionally
+            // not posted by the form and must not fail model validation here.
+            ModelState.Remove("staff_City");
 
             if (!ModelState.IsValid)
             {
