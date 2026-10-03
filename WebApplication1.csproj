@@ -306,6 +306,7 @@
     <Content Include="Content\bootstrap.rtl.min.css" />
     <Content Include="Content\contactus.css" />
     <Content Include="Content\CustomerRegister.css" />
+    <Content Include="Content\StaffPortal.css" />
     <Content Include="Content\Login Style.css" />
     <Content Include="Content\Manage Account styles.css" />
     <Content Include="Content\sstyle.css" />
@@ -345,6 +346,8 @@
     <Content Include="Database\TermsAcceptance.sql" />
     <Content Include="Views\Cust\Login.cshtml" />
     <Content Include="Views\Cust\RegisterStaff.cshtml" />
+    <Content Include="Views\Cust\StaffManagement.cshtml" />
+    <Content Include="Views\Cust\EditStaff.cshtml" />
     <Content Include="Content\bootstrap.rtl.min.css.map" />
     <Content Include="Content\bootstrap.rtl.css.map" />
     <Content Include="Content\bootstrap.min.css.map" />
