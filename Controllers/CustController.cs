@@ -2623,7 +2623,7 @@ namespace WebApplication1.Controllers
 
             if (string.IsNullOrWhiteSpace(model.staff_FName) || string.IsNullOrWhiteSpace(model.staff_LName) ||
                 string.IsNullOrWhiteSpace(model.staff_Email) || string.IsNullOrWhiteSpace(model.staff_Phone) ||
-                string.IsNullOrWhiteSpace(model.staff_Type) || string.IsNullOrWhiteSpace(model.staff_City))
+                string.IsNullOrWhiteSpace(model.staff_Type))
             {
                 ModelState.AddModelError("", "Please complete all staff details.");
                 return View(model);
@@ -2703,25 +2703,22 @@ namespace WebApplication1.Controllers
                 return View(staff);
             }
 
-            string canonicalCity = NormalizeCity(staff.staff_City);
-            if (canonicalCity == "durban")
+            // Team is the source of truth for assignment on registration too.
+            if (staff.staff_Type == "Team Dbn")
             {
                 staff.staff_City = "Durban";
-                staff.staff_Type = "Team Dbn";
             }
-            else if (canonicalCity == "pietermaritzburg")
+            else if (staff.staff_Type == "Team Peter")
             {
                 staff.staff_City = "Pietermaritzburg";
-                staff.staff_Type = "Team Peter";
             }
-            else if (canonicalCity == "mandeni")
+            else if (staff.staff_Type == "Team Mdn")
             {
                 staff.staff_City = "Mandeni";
-                staff.staff_Type = "Team Mdn";
             }
             else
             {
-                ModelState.AddModelError("staff_City", "Select Durban, Pietermaritzburg or Mandeni.");
+                ModelState.AddModelError("staff_Type", "Select a valid staff team.");
                 return View(staff);
             }
 
