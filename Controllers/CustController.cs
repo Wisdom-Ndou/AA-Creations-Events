@@ -113,6 +113,8 @@ namespace WebApplication1.Controllers
                     return View();
                 }
 
+                ClearRoleSessions();
+
                 // Store authenticated customer information
                 Session["CustomerId"] =
                     customer.Cust_ID;
@@ -210,6 +212,8 @@ namespace WebApplication1.Controllers
                 // ==========================================
                 // ADMIN AUTHENTICATED
                 // ==========================================
+
+                ClearRoleSessions();
 
                 Session["AdminId"] =
                     admin.admin_ID;
@@ -377,54 +381,113 @@ namespace WebApplication1.Controllers
         [HttpGet]
         public ActionResult Customerregister()
         {
+            var currentTerms = GetCurrentTerms();
+            ViewBag.CurrentTerms = currentTerms;
+            ViewBag.TermsVersion = currentTerms == null ? null : currentTerms.Version;
+            return View();
+        }
+
+        [HttpGet]
+        public ActionResult TermsAndConditions()
+        {
+            ViewBag.CurrentTerms = GetCurrentTerms();
             return View();
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Customerregister(Customer obj)
+        public ActionResult Customerregister(
+            Customer obj,
+            bool termsAccepted,
+            string termsVersion,
+            string cookiePreference)
         {
-            // Password policy validation
+            var currentTerms = GetCurrentTerms();
+            ViewBag.CurrentTerms = currentTerms;
+            ViewBag.TermsVersion = currentTerms == null ? null : currentTerms.Version;
+
+            if (currentTerms == null)
+            {
+                ModelState.AddModelError("", "The Terms & Conditions are currently unavailable. Please try again later.");
+                return View(obj);
+            }
+
+            if (!termsAccepted)
+            {
+                ModelState.AddModelError("", "You must agree to the Terms & Conditions before creating an account.");
+                return View(obj);
+            }
+
+            if (!string.Equals(termsVersion, currentTerms.Version, StringComparison.OrdinalIgnoreCase))
+            {
+                ModelState.AddModelError("", "The Terms & Conditions have been updated. Please review and accept the latest version.");
+                return View(obj);
+            }
+
+            if (cookiePreference != "necessary" && cookiePreference != "all")
+            {
+                cookiePreference = "necessary";
+            }
+
             if (string.IsNullOrWhiteSpace(obj.Cust_Passw) ||
                 obj.Cust_Passw.Length < 6 ||
                 obj.Cust_Passw.Length > 15 ||
                 !obj.Cust_Passw.Any(char.IsLetter) ||
                 !obj.Cust_Passw.Any(char.IsDigit))
             {
-                ModelState.AddModelError(
-                    "Cust_Passw",
-                    "Password must be 6 to 15 characters long and contain at least one letter and one number."
-                );
-
+                ModelState.AddModelError("Cust_Passw",
+                    "Password must be 6 to 15 characters long and contain at least one letter and one number.");
                 return View(obj);
             }
 
-            // Check whether email is already registered
-            if (db.Customers.Any(c => c.Cust_Email == obj.Cust_Email))
+            if (db.Customers.Any(x => x.Cust_Email == obj.Cust_Email))
             {
-                ModelState.AddModelError(
-                    "Cust_Email",
-                    "An account with this email address already exists."
-                );
-
+                ModelState.AddModelError("Cust_Email", "An account with this email address already exists.");
                 return View(obj);
             }
 
-            // Hash password
-            obj.Cust_Passw = Crypto.HashPassword(obj.Cust_Passw);
+            using (var transaction = db.Database.BeginTransaction())
+            {
+                try
+                {
+                    obj.Cust_Passw = Crypto.HashPassword(obj.Cust_Passw);
+                    obj.CreatedAt = DateTime.Now;
 
-            // Ensure CreatedAt is a valid SQL datetime value
-            obj.CreatedAt = DateTime.Now;
+                    db.Customers.Add(obj);
+                    db.SaveChanges();
 
-            // Persist
-            db.Customers.Add(obj);
-            db.SaveChanges();
+                    db.CustomerAgreements.Add(new CustomerAgreement
+                    {
+                        CustomerId = obj.Cust_ID,
+                        TermsAccepted = true,
+                        TermsVersion = currentTerms.Version,
+                        AcceptedAt = DateTime.Now,
+                        CookiePreference = cookiePreference
+                    });
+
+                    db.SaveChanges();
+                    transaction.Commit();
+                }
+                catch
+                {
+                    transaction.Rollback();
+                    throw;
+                }
+            }
 
             TempData["RegistrationSuccess"] =
                 "Your registration was successful. You can now sign in and start booking.";
 
-            // Redirect back to registration (existing behavior) or to Login if preferred
             return RedirectToAction("Customerregister", "Cust");
+        }
+
+        private TermsAndConditions GetCurrentTerms()
+        {
+            return db.TermsAndConditions
+                .Where(t => t.IsActive)
+                .OrderByDescending(t => t.EffectiveDate)
+                .ThenByDescending(t => t.Terms_ID)
+                .FirstOrDefault();
         }
 
 
@@ -444,7 +507,26 @@ namespace WebApplication1.Controllers
             bool? termsAccepted,
             string adminAccessCode)
         {
-            // existing validation omitted for brevity...
+            string configuredAccessCode = ConfigurationManager.AppSettings["AdminAccessCode"];
+
+            if (string.IsNullOrWhiteSpace(firstName) ||
+                string.IsNullOrWhiteSpace(lastName) ||
+                string.IsNullOrWhiteSpace(email) ||
+                string.IsNullOrWhiteSpace(password) ||
+                password != confirm ||
+                string.IsNullOrWhiteSpace(adminAccessCode) ||
+                string.IsNullOrWhiteSpace(configuredAccessCode) ||
+                !string.Equals(adminAccessCode.Trim(), configuredAccessCode.Trim(), StringComparison.Ordinal))
+            {
+                ModelState.AddModelError("", "Please provide valid admin registration details and authorization code.");
+                return View();
+            }
+
+            if (db.Admins.Any(a => a.admin_Email == email.Trim()))
+            {
+                ModelState.AddModelError("", "An administrator with this email address already exists.");
+                return View();
+            }
 
             var admin = new Admin
             {
@@ -1450,8 +1532,12 @@ namespace WebApplication1.Controllers
                         {
                             // Choose the least-loaded staff member assigned
                             // to the booking's city.
+                            string bookingCity = NormalizeCity(booking.City);
+
                             var assignedStaff = db.Staffs
-                                .Where(s => s.staff_City == booking.City)
+                                .Where(s => s.staff_City != null)
+                                .ToList()
+                                .Where(s => NormalizeCity(s.staff_City) == bookingCity)
                                 .Select(s => new
                                 {
                                     Staff = s,
@@ -1593,7 +1679,7 @@ namespace WebApplication1.Controllers
                 .Where(b =>
                     b.EventDate >= today &&
                     b.Status != null &&
-                    b.Status.ToLower() == "confirmed")
+                    b.Status.ToLower() == "approved")
                 .OrderBy(b => b.EventDate)
                 .ToList();
 
@@ -1605,7 +1691,7 @@ namespace WebApplication1.Controllers
             var cancelledBookings = allBookings
                 .Where(b =>
                     b.Status != null &&
-                    b.Status.ToLower() == "cancelled")
+                    b.Status.ToLower() == "declined")
                 .OrderByDescending(b => b.CreatedAt)
                 .ToList();
 
@@ -1922,20 +2008,62 @@ namespace WebApplication1.Controllers
             }
 
             int staffId = (int)Session["StaffId"];
+            DateTime today = DateTime.Today;
+            DateTime tomorrow = today.AddDays(1);
+            DateTime weekEnd = today.AddDays(7);
 
-            var tasks = db.StaffTasks
+            var staff = db.Staffs.FirstOrDefault(s => s.staff_ID == staffId);
+            if (staff == null)
+            {
+                ClearRoleSessions();
+                return RedirectToAction("StaffLogin", "Cust");
+            }
+
+            var allTasks = db.StaffTasks
                 .Where(t => t.StaffId == staffId)
                 .Include("Booking")
                 .OrderBy(t => t.DueDate)
                 .ThenByDescending(t => t.CreatedAt)
                 .ToList();
 
-            ViewBag.StaffFirstName = Session["StaffFirstName"];
-            ViewBag.PendingCount = tasks.Count(t => t.Status == "Pending");
-            ViewBag.CompletedCount = tasks.Count(t => t.Status == "Completed");
-            ViewBag.UnsuccessfulCount = tasks.Count(t => t.Status == "Unable");
+            var todayTasks = allTasks
+                .Where(t => t.Status == "Pending" && t.DueDate >= today && t.DueDate < tomorrow)
+                .ToList();
 
-            return View(tasks.Take(5).ToList());
+            var upcomingEvents = allTasks
+                .Where(t => t.Booking != null &&
+                            t.Booking.EventDate >= today &&
+                            t.Booking.EventDate < weekEnd &&
+                            t.Booking.Status == "Approved")
+                .GroupBy(t => t.BookingId)
+                .Select(g => g.First().Booking)
+                .OrderBy(b => b.EventDate)
+                .Select(b => new StaffEventDashboardItem
+                {
+                    BookingId = b.BookingId,
+                    Occasion = b.Occasion,
+                    EventDate = b.EventDate,
+                    EventTime = b.EventTime,
+                    Address = b.Address,
+                    City = b.City,
+                    Status = b.Status
+                })
+                .ToList();
+
+            var model = new StaffDashboardViewModel
+            {
+                StaffMember = staff,
+                TeamCity = staff.staff_City,
+                TodayTasks = todayTasks.Count,
+                HighPriorityTasks = allTasks.Count(t => t.Status == "Pending" && t.Priority == "High"),
+                EventsThisWeek = upcomingEvents.Count,
+                OpenComplaints = db.StaffComplaints.Count(x => x.StaffId == staffId && x.Status == "Open"),
+                HoursLogged = null,
+                TasksDueToday = todayTasks,
+                UpcomingEvents = upcomingEvents
+            };
+
+            return View(model);
         }
 
         public ActionResult StaffTasks()
@@ -2110,6 +2238,24 @@ namespace WebApplication1.Controllers
                    (bool)Session["StaffAuthenticated"];
         }
 
+        private void ClearRoleSessions()
+        {
+            Session.Remove("CustomerId");
+            Session.Remove("CustomerEmail");
+            Session.Remove("CustomerFirstName");
+            Session.Remove("CustomerAuthenticated");
+
+            Session.Remove("StaffId");
+            Session.Remove("StaffEmail");
+            Session.Remove("StaffFirstName");
+            Session.Remove("StaffAuthenticated");
+
+            Session.Remove("AdminId");
+            Session.Remove("AdminEmail");
+            Session.Remove("AdminFirstName");
+            Session.Remove("AdminAuthenticated");
+        }
+
         [HttpGet]
         public ActionResult StaffLogin()
         {
@@ -2155,6 +2301,8 @@ namespace WebApplication1.Controllers
                 ModelState.AddModelError("", "Invalid email address or password.");
                 return View();
             }
+
+            ClearRoleSessions();
 
             Session["StaffId"] = staff.staff_ID;
             Session["StaffEmail"] = staff.staff_Email;
@@ -2227,6 +2375,27 @@ namespace WebApplication1.Controllers
 
             return RedirectToAction("AdminDashboard", "Cust");
         }
+        private string NormalizeCity(string city)
+        {
+            if (string.IsNullOrWhiteSpace(city))
+            {
+                return string.Empty;
+            }
+
+            string value = city.Trim().ToLowerInvariant();
+
+            if (value == "dbn" || value == "durban" || value.Contains("ethekwini"))
+                return "durban";
+
+            if (value == "pmb" || value == "pietermaritzburg" || value.Contains("msunduzi"))
+                return "pietermaritzburg";
+
+            if (value == "mthatha" || value == "umtata")
+                return "mthatha";
+
+            return value;
+        }
+
     }
 
 
