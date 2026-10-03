@@ -4,27 +4,18 @@
     var staffTasks = ViewBag.StaffTasks as IEnumerable<WebApplication1.Models.StaffTask>;
 }
 
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Staff Complaints</title>
-    <link rel="stylesheet" href="~/Content/StaffPortal.css" />
-
-</head>
-<body>
+<link rel="stylesheet" href="~/Content/StaffPortal.css" />
 <main class="staff-page">
     <div style="display:flex;justify-content:space-between;align-items:center">
-        <div><h1>Staff Complaints</h1><p class="muted">Report customer or event issues to the admin.</p></div>
+        <div><h1>Staff Complaints</h1><p class="staff-muted">Report customer or event issues to the admin.</p></div>
         <a href="@Url.Action("StaffDashboard","Cust")">← Dashboard</a>
     </div>
 
     @if (TempData["ComplaintError"] != null) { <div class="alert">@TempData["ComplaintError"]</div> }
     @if (TempData["ComplaintSuccess"] != null) { <div class="alert success">@TempData["ComplaintSuccess"]</div> }
 
-    <div class="grid">
-        <section class="card">
+    <div class="staff-grid">
+        <section class="staff-panel">
             <h2>Log a Complaint</h2>
             @using (Html.BeginForm("CreateStaffComplaint", "Cust", FormMethod.Post))
             {
@@ -63,11 +54,11 @@
             }
         </section>
 
-        <section class="card">
+        <section class="staff-panel">
             <h2>My Complaints</h2>
             @if (!Model.Any())
             {
-                <p class="muted">No complaints submitted yet.</p>
+                <p class="staff-muted">No complaints submitted yet.</p>
             }
             else
             {
@@ -75,15 +66,15 @@
                 {
                     <article class="complaint">
                         <strong>@complaint.Title</strong>
-                        <p class="muted">@complaint.Description</p>
-                        <p class="muted">
+                        <p class="staff-muted">@complaint.Description</p>
+                        <p class="staff-muted">
                             Priority: @complaint.Priority |
                             Status: @complaint.Status |
                             Submitted: @complaint.CreatedAt.ToString("dd MMM yyyy HH:mm")
                         </p>
                         @if (complaint.Booking != null)
                         {
-                            <p class="muted">Booking #@complaint.BookingId: @complaint.Booking.FirstName @complaint.Booking.LastName</p>
+                            <p class="staff-muted">Booking #@complaint.BookingId: @complaint.Booking.FirstName @complaint.Booking.LastName</p>
                         }
                         @if (!string.IsNullOrWhiteSpace(complaint.AdminResponse))
                         {
@@ -95,5 +86,3 @@
         </section>
     </div>
 </main>
-</body>
-</html>
