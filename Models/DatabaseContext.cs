@@ -34,7 +34,7 @@ namespace WebApplication1.Models
 
         public DbSet<StaffTask> StaffTasks { get; set; }
 
-        public DbSet<StaffComplaint> StaffComplaints { get; set; }
+        public DbSet<StaffComplaint> StaffComplaints { get; set; }\n\n        public DbSet<CustomerAgreement> CustomerAgreements { get; set; }\n\n        public DbSet<TermsAndConditions> TermsAndConditions { get; set; }
         
 
     }
