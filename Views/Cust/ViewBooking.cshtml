@@ -1,4 +1,6 @@
-﻿@model IEnumerable<WebApplication1.Models.Booking>
+﻿@using System.Collections.Generic
+@using System.Linq
+@model IEnumerable<WebApplication1.Models.Booking>
 @{
     var assignedBookingIds = ViewBag.AssignedBookingIds as List<int> ?? new List<int>();
 }
