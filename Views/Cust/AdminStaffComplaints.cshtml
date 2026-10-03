@@ -4,6 +4,11 @@
     ViewBag.Title = "Staff Complaints";
 }
 <main style="max-width:1100px;margin:40px auto;padding:0 20px;">
+@if (TempData["ComplaintAdminError"] != null)
+{
+    <div class="alert">@TempData["ComplaintAdminError"]</div>
+}
+
     <h1>Staff Complaints</h1>
     @if (TempData["ComplaintAdminSuccess"] != null) { <p>@TempData["ComplaintAdminSuccess"]</p> }
 
