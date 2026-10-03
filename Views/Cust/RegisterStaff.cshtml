@@ -335,7 +335,7 @@
                     <span class="team-description">
                         Team Dbn = Durban |
                         Team Peter = Pietermaritzburg |
-                        Team Mdn = Mandeni
+                        Team Mdn = Mthatha
                     </span>
 
                     @Html.ValidationMessageFor(
@@ -354,14 +354,12 @@
                         "City"
                     )
 
-                    @Html.TextBoxFor(
-                        model => model.staff_City,
-                        new
-                        {
-                            @class = "form-control",
-                            placeholder = "e.g. Durban"
-                        }
-                    )
+                    <select name="staff_City" class="form-control" required>
+                        <option value="">-- Select City --</option>
+                        <option value="Durban">Durban</option>
+                        <option value="Pietermaritzburg">Pietermaritzburg</option>
+                        <option value="Mthatha">Mthatha</option>
+                    </select>
 
                     @Html.ValidationMessageFor(
                         model => model.staff_City
@@ -384,7 +382,7 @@
                 </button>
 
 
-                <a href="@Url.Action("StaffInformation", "Cust")"
+                <a href="@Url.Action("AdminDashboard", "Cust")"
                    class="cancel-btn">
 
                     Cancel
