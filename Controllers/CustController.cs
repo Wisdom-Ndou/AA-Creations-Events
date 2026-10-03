@@ -768,6 +768,17 @@ namespace WebApplication1.Controllers
                     .Include("BookingAddOns.AddOn")
                     .OrderByDescending(b => b.EventDate)
                     .ToList();
+
+                var bookingIds = bookings.Select(b => b.BookingId).ToList();
+                ViewBag.AssignedBookingIds = db.StaffTasks
+                    .Where(t => t.BookingId.HasValue && bookingIds.Contains(t.BookingId.Value))
+                    .Select(t => t.BookingId.Value)
+                    .Distinct()
+                    .ToList();
+            }
+            else
+            {
+                ViewBag.AssignedBookingIds = new List<int>();
             }
 
             return View(bookings);
