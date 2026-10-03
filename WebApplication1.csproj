@@ -229,6 +229,14 @@
     <Compile Include="Migrations\202609231430406_InitialCreate1.Designer.cs">
       <DependentUpon>202609231430406_InitialCreate1.cs</DependentUpon>
     </Compile>
+    <Compile Include="Migrations\202610031340385_DiagnoseStaffCity.cs" />
+    <Compile Include="Migrations\202610031340385_DiagnoseStaffCity.Designer.cs">
+      <DependentUpon>202610031340385_DiagnoseStaffCity.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\202610031358590_CheckModelSync.cs" />
+    <Compile Include="Migrations\202610031358590_CheckModelSync.Designer.cs">
+      <DependentUpon>202610031358590_CheckModelSync.cs</DependentUpon>
+    </Compile>
     <Compile Include="Migrations\Configuration.cs" />
     <Compile Include="Models\AddOn.cs" />
     <Compile Include="Models\Admin.cs" />
@@ -420,6 +428,12 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Migrations\202609231430406_InitialCreate1.resx">
       <DependentUpon>202609231430406_InitialCreate1.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\202610031340385_DiagnoseStaffCity.resx">
+      <DependentUpon>202610031340385_DiagnoseStaffCity.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\202610031358590_CheckModelSync.resx">
+      <DependentUpon>202610031358590_CheckModelSync.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <PropertyGroup>
