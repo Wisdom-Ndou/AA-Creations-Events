@@ -858,18 +858,6 @@ namespace WebApplication1.Controllers
             return Json(new { success = true, status = booking.Status, message = "Booking marked as completed." });
         }
 
-        public JsonResult TestDatabase()
-        {
-            int bookingCount = db.Bookings.Count();
-
-            return Json(new
-            {
-                success = true,
-                bookingCount = bookingCount,
-                message = "Database connection is working."
-            }, JsonRequestBehavior.AllowGet);
-        }
-
         [HttpGet]
         public ActionResult ManageAccount()
         {
@@ -2343,7 +2331,7 @@ namespace WebApplication1.Controllers
 
             if (string.IsNullOrWhiteSpace(adminResponse))
             {
-                TempData["ComplaintAdminSuccess"] = "A response is required.";
+                TempData["ComplaintAdminError"] = "A response is required.";
                 return RedirectToAction("AdminStaffComplaints");
             }
 
