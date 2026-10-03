@@ -1,37 +1,18 @@
-@{
-    ViewBag.Title = "Staff Login";
-}
-
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Staff Login</title>
-    <style>
-        body { margin:0; min-height:100vh; display:grid; place-items:center; font-family:Segoe UI,Arial,sans-serif; background:#111; color:#fff; }
-        .card { width:min(420px,90vw); padding:32px; border:1px solid #333; border-radius:18px; background:#1b1b1b; }
-        h1 { margin-top:0; } label { display:block; margin:16px 0 6px; } input { width:100%; box-sizing:border-box; padding:12px; border-radius:8px; border:1px solid #444; background:#111; color:#fff; }
-        button { width:100%; margin-top:20px; padding:12px; border:0; border-radius:8px; font-weight:700; cursor:pointer; }
-        .error { color:#ff7a9c; margin-top:12px; }
-        a { color:#ff5f91; }
-    </style>
-</head>
-<body>
-    <main class="card">
-        <h1>Staff Login</h1>
-        <p>Sign in to view your assigned event tasks.</p>
+@{ ViewBag.Title = "Staff Login"; }
+<link rel="stylesheet" href="~/Content/StaffPortal.css" />
+<div class="staff-login-page">
+    <main class="staff-login-card">
+        <div class="staff-eyebrow">AA Creations & Events · Staff Portal</div>
+        <h1>Staff Sign In</h1>
+        <p>Access your assigned events, tasks and staff support tools.</p>
         @using (Html.BeginForm("StaffLogin", "Cust", FormMethod.Post))
         {
             @Html.AntiForgeryToken()
-            @Html.ValidationSummary(true, "", new { @class = "error" })
-            <label for="email">Email</label>
-            <input id="email" name="email" type="email" required />
-            <label for="password">Password</label>
-            <input id="password" name="password" type="password" required />
-            <button type="submit">Sign In</button>
+            @Html.ValidationSummary(true, "", new { @class = "staff-error" })
+            <div class="staff-field"><label for="email">Email Address</label><input id="email" name="email" type="email" autocomplete="email" required /></div>
+            <div class="staff-field"><label for="password">Password</label><input id="password" name="password" type="password" autocomplete="current-password" required /></div>
+            <button type="submit" class="staff-submit">Sign In to Staff Portal</button>
         }
-        <p><a href="@Url.Action("Login", "Cust")">← Back to login</a></p>
+        <p style="margin-top:20px"><a class="staff-link" href="@Url.Action("Login","Cust")">← Back to main sign in</a></p>
     </main>
-</body>
-</html>
+</div>
