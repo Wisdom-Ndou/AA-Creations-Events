@@ -145,7 +145,7 @@
                     totalPrice = b.TotalPrice,
                     createdAt = b.CreatedAt,
                     status = b.Status,
-                    staffAssigned = b.Status == "Approved" && b.BookingId > 0
+                    staffAssigned = b.BookingAddOns != null && b.BookingId > 0
                 })
             )
         );
