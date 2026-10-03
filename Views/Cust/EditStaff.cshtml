@@ -16,9 +16,8 @@
 </div>
 <div class="form-group">
 <label>City</label>
-@Html.DropDownListFor(m => m.staff_City,
-    new SelectList(new[] { "Durban", "Pietermaritzburg", "Mandeni" }, Model.staff_City),
-    new { @class = "form-control" })
+<input class="form-control" type="text" value="@Model.staff_City" readonly />
+<small>City is assigned automatically from the selected team when you save.</small>
 </div>
 <div class="form-group"><label>New Password (optional)</label><input class="form-control" type="password" name="staff_Passw" placeholder="Leave blank to keep current password"/></div></div>
 <p style="margin-top:20px"><button class="approve-btn" type="submit">Save Changes</button> <a class="panel-link" href="@Url.Action("StaffManagement","Cust")">Cancel</a></p>}</section></main>
