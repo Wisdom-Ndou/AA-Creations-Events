@@ -245,6 +245,7 @@
     <Compile Include="Models\Package.cs" />
     <Compile Include="Models\Staff.cs" />
     <Compile Include="Models\StaffTask.cs" />
+    <Compile Include="Models\StaffComplaint.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Services\OtpDeliveryService.cs" />
   </ItemGroup>
