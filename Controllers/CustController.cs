@@ -261,20 +261,25 @@ namespace WebApplication1.Controllers
                 return View();
             }
 
+            string normalizedEmail = email.Trim();
+
             var customer = db.Customers
-                .FirstOrDefault(c => c.Cust_Email == email);
-
-            if (customer == null)
-            {
-                ViewBag.ErrorMessage =
-                    "No account was found with that email address.";
-
-                return View();
-            }
+                .FirstOrDefault(c => c.Cust_Email == normalizedEmail);
 
             // Start a fresh Forgot Password OTP flow.
             Session.Remove("OtpVerified");
             Session.Remove("OtpPurpose");
+            Session.Remove("ExpectedOtpPurpose");
+            Session.Remove("OtpCustomerId");
+
+            if (customer == null)
+            {
+                // Do not reveal whether a customer account exists for an email address.
+                TempData["ForgotPasswordNotice"] =
+                    "If an account exists for that email address, password recovery can continue by email.";
+
+                return RedirectToAction("ForgotPassword", "Cust");
+            }
 
             Session["OtpCustomerId"] = customer.Cust_ID;
             return RedirectToAction(
