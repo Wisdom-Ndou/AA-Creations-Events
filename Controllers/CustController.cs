@@ -1438,7 +1438,7 @@ namespace WebApplication1.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public JsonResult UpdateBookingStatus(int bookingId, string status)
+        public ActionResult UpdateBookingStatus(int bookingId, string status)
         {
             // Check admin authentication
             if (Session["AdminId"] == null ||
@@ -1613,6 +1613,15 @@ namespace WebApplication1.Controllers
                         message = "An error occurred while creating the staff task: " + ex.Message
                     });
                 }
+            }
+
+            if (!Request.IsAjaxRequest())
+            {
+                TempData["AdminSuccess"] = newStatus == "Approved"
+                    ? "Booking approved and staff task assigned successfully."
+                    : "Booking status updated successfully.";
+
+                return RedirectToAction("AdminDashboard", "Cust");
             }
 
             return Json(new
