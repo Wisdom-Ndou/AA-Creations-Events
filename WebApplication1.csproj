@@ -213,6 +213,42 @@
     <Compile Include="Migrations\202608311931192_AddOtpVerification.Designer.cs">
       <DependentUpon>202608311931192_AddOtpVerification.cs</DependentUpon>
     </Compile>
+    <Compile Include="Migrations\202609221110335_AddAlternativeContactDetails.cs" />
+    <Compile Include="Migrations\202609221110335_AddAlternativeContactDetails.Designer.cs">
+      <DependentUpon>202609221110335_AddAlternativeContactDetails.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\202609221129245_AddAlternativeContactDetails1.cs" />
+    <Compile Include="Migrations\202609221129245_AddAlternativeContactDetails1.Designer.cs">
+      <DependentUpon>202609221129245_AddAlternativeContactDetails1.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\202609231507031_AddCustomerAgreement.cs" />
+    <Compile Include="Migrations\202609231507031_AddCustomerAgreement.Designer.cs">
+      <DependentUpon>202609231507031_AddCustomerAgreement.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\202610011735060_SyncModelChanges.cs" />
+    <Compile Include="Migrations\202610011735060_SyncModelChanges.Designer.cs">
+      <DependentUpon>202610011735060_SyncModelChanges.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\202610021100064_AddTermsAndConditions.cs" />
+    <Compile Include="Migrations\202610021100064_AddTermsAndConditions.Designer.cs">
+      <DependentUpon>202610021100064_AddTermsAndConditions.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\202610021319097_UpdateTermsAndConditions.cs" />
+    <Compile Include="Migrations\202610021319097_UpdateTermsAndConditions.Designer.cs">
+      <DependentUpon>202610021319097_UpdateTermsAndConditions.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\202610021325122_UpdateTermsAndConditions1.cs" />
+    <Compile Include="Migrations\202610021325122_UpdateTermsAndConditions1.Designer.cs">
+      <DependentUpon>202610021325122_UpdateTermsAndConditions1.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\202610022253515_UpdateTermsAndConditions2.cs" />
+    <Compile Include="Migrations\202610022253515_UpdateTermsAndConditions2.Designer.cs">
+      <DependentUpon>202610022253515_UpdateTermsAndConditions2.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\202610030307262_SyncModelWithDatabase.cs" />
+    <Compile Include="Migrations\202610030307262_SyncModelWithDatabase.Designer.cs">
+      <DependentUpon>202610030307262_SyncModelWithDatabase.cs</DependentUpon>
+    </Compile>
     <Compile Include="Migrations\Configuration.cs" />
     <Compile Include="Models\AddOn.cs" />
     <Compile Include="Models\Admin.cs" />
@@ -222,9 +258,11 @@
     <Compile Include="Models\ChangePasswordViewModel.cs" />
     <Compile Include="Models\CreateBookingRequest.cs" />
     <Compile Include="Models\Customer.cs" />
+    <Compile Include="Models\CustomerAgreement.cs" />
     <Compile Include="Models\DatabaseContext.cs" />
     <Compile Include="Models\OtpVerification.cs" />
     <Compile Include="Models\Package.cs" />
+    <Compile Include="Models\Terms&amp;Conditions.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Services\OtpDeliveryService.cs" />
   </ItemGroup>
@@ -281,6 +319,7 @@
     <Content Include="Scripts\Login script.js" />
     <Content Include="Scripts\modernizr-2.8.3.js" />
     <Content Include="Scripts\ViewBooking.js" />
+    <Content Include="TERMS_AND_CONDITIONS_FIX.md" />
     <Content Include="Web.config" />
     <Content Include="Web.Debug.config">
       <DependentUpon>Web.config</DependentUpon>
@@ -310,6 +349,7 @@
     <Content Include="Views\Cust\ForgotPassword.cshtml" />
     <Content Include="Views\Cust\ForgotPasswordMethod.cshtml" />
     <Content Include="Views\Cust\AdminDashboard.cshtml" />
+    <Content Include="Views\Cust\TermsAndConditions.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />
@@ -375,6 +415,33 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Migrations\202608311931192_AddOtpVerification.resx">
       <DependentUpon>202608311931192_AddOtpVerification.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\202609221110335_AddAlternativeContactDetails.resx">
+      <DependentUpon>202609221110335_AddAlternativeContactDetails.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\202609221129245_AddAlternativeContactDetails1.resx">
+      <DependentUpon>202609221129245_AddAlternativeContactDetails1.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\202609231507031_AddCustomerAgreement.resx">
+      <DependentUpon>202609231507031_AddCustomerAgreement.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\202610011735060_SyncModelChanges.resx">
+      <DependentUpon>202610011735060_SyncModelChanges.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\202610021100064_AddTermsAndConditions.resx">
+      <DependentUpon>202610021100064_AddTermsAndConditions.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\202610021319097_UpdateTermsAndConditions.resx">
+      <DependentUpon>202610021319097_UpdateTermsAndConditions.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\202610021325122_UpdateTermsAndConditions1.resx">
+      <DependentUpon>202610021325122_UpdateTermsAndConditions1.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\202610022253515_UpdateTermsAndConditions2.resx">
+      <DependentUpon>202610022253515_UpdateTermsAndConditions2.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\202610030307262_SyncModelWithDatabase.resx">
+      <DependentUpon>202610030307262_SyncModelWithDatabase.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <PropertyGroup>

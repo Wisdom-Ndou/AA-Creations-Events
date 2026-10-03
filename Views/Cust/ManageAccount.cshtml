@@ -129,6 +129,142 @@
         </div>
     }
 
+    @if (TempData["AlternativeContactSuccess"] != null)
+    {
+        <div class="account-success">
+            @TempData["AlternativeContactSuccess"]
+        </div>
+    }
+
+    @using (Html.BeginForm("SaveAlternativeContact", "Cust", FormMethod.Post))
+    {
+        @Html.AntiForgeryToken()
+
+        <div class="account-card">
+
+            <h2>Alternative Contact Information</h2>
+
+            <p>
+                Add another contact person who can be reached if necessary.
+            </p>
+
+            <div class="account-grid">
+
+                <div class="account-field">
+                    @Html.LabelFor(
+                        m => m.AlternativeContactName,
+                        "Contact Name"
+                    )
+
+                    @Html.TextBoxFor(
+                        m => m.AlternativeContactName,
+                        new
+                        {
+                            @class = "account-input",
+                            placeholder = "Full name"
+                        }
+                    )
+
+                    @Html.ValidationMessageFor(
+                        m => m.AlternativeContactName,
+                        "",
+                        new { @class = "account-error" }
+                    )
+                </div>
+
+                <div class="account-field">
+                    @Html.LabelFor(
+                        m => m.AlternativeContactRelationship,
+                        "Relationship"
+                    )
+
+                    @Html.TextBoxFor(
+                        m => m.AlternativeContactRelationship,
+                        new
+                        {
+                            @class = "account-input",
+                            placeholder = "e.g. Parent, Sibling, Friend"
+                        }
+                    )
+
+                    @Html.ValidationMessageFor(
+                        m => m.AlternativeContactRelationship,
+                        "",
+                        new { @class = "account-error" }
+                    )
+                </div>
+
+                <div class="account-field">
+                    @Html.LabelFor(
+                        m => m.AlternativeContactPhone,
+                        "Phone / WhatsApp"
+                    )
+
+                    <div class="phone-input-wrapper">
+
+                        <span class="phone-prefix">+27</span>
+
+                        @Html.TextBoxFor(
+                            m => m.AlternativeContactPhone,
+                            new
+                            {
+                                @class = "account-input phone-number-input",
+                                type = "tel",
+                                inputmode = "numeric",
+                                maxlength = "9",
+                                placeholder = "723456789"
+                            }
+                        )
+
+                    </div>
+
+                    @Html.ValidationMessageFor(
+                        m => m.AlternativeContactPhone,
+                        "",
+                        new { @class = "account-error" }
+                    )
+
+                    <small class="phone-help">
+                        Enter 9 digits (do not include the leading 0).
+                    </small>
+                </div>
+
+                <div class="account-field">
+                    @Html.LabelFor(
+                        m => m.AlternativeContactEmail,
+                        "Email Address"
+                    )
+
+                    @Html.TextBoxFor(
+                        m => m.AlternativeContactEmail,
+                        new
+                        {
+                            @class = "account-input",
+                            type = "email",
+                            placeholder = "Email Address"
+                        }
+                    )
+
+                    @Html.ValidationMessageFor(
+                        m => m.AlternativeContactEmail,
+                        "",
+                        new { @class = "account-error" }
+                    )
+                </div>
+
+            </div>
+
+            <div class="account-actions">
+
+                <button type="submit" class="save-account-btn">
+                    Save Changes
+                </button>
+
+            </div>
+
+        </div>
+    }
+
     <div class="account-card">
 
         <h2>OTP Verification Test</h2>

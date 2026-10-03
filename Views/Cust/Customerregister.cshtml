@@ -1,8 +1,13 @@
-﻿@{
+﻿@model WebApplication1.Models.Customer
+@using System;
+@using System.Linq;
+@using System.Web;
+@using System.Web.Mvc;
+@using WebApplication1.Models;
+
+@{
     ViewBag.Title = "Customerregister";
 }
-
-<h2>Customerregister</h2>
 
 <!DOCTYPE html>
 <html lang="en">
@@ -19,6 +24,92 @@
     <link rel="stylesheet" href="~/Content/Customer register styles.css" />
 </head>
 <body>
+
+    @* Show agreement modal only when registration has NOT succeeded *@
+    @if (TempData["RegistrationSuccess"] == null)
+    {
+        @{
+            var currentTerms = ViewBag.CurrentTerms as WebApplication1.Models.TermsAndConditions;
+        }
+        <div id="registrationAgreement" class="aa-agreement-overlay">
+
+           <div class="aa-agreement-modal"
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="agreementTitle"> 
+
+              <button type="button"
+                     class="aa-agreement-close" 
+                     id="cancelAgreementTop" 
+                     aria-label="Cancel account registration">
+                  &times; 
+              </button>
+
+              <h2 id="agreementTitle">
+                Before You Create Your Account 
+              </h2>
+              <p class="aa-agreement-introduction">
+                Please review and accept the Terms & Conditions before continuing with account creation. 
+              </p> 
+
+              <div class="aa-agreement-scroll">
+                  @if (currentTerms != null)
+                  {
+                      <h3>Terms & Conditions</h3>
+                      <p><strong>Version:</strong> @currentTerms.Version | <strong>Effective:</strong> @currentTerms.EffectiveDate.ToString("dd MMMM yyyy")</p>
+                      @Html.Raw(currentTerms.Content)
+                      <p>
+                          <a href="@Url.Action("TermsAndConditions", "Cust")" target="_blank" rel="noopener noreferrer">
+                              View Complete Terms & Conditions
+                          </a>
+                      </p>
+                  }
+                  else
+                  {
+                      <p class="aa-agreement-error-notice">
+                          <strong>Terms & Conditions unavailable.</strong> Please try again later or contact support.
+                      </p>
+                  }
+              </div>
+
+             <div class="aa-cookie-preference">
+               <h3>Cookie Preferences</h3> 
+               <p>Choose how you would like cookies to be used on this website.</p>
+
+               <label class="aa-cookie-choice">
+                  <input type="radio" name="agreementCookiePreference" value="necessary" checked />
+                  <span>
+                     <strong>Necessary Cookies Only</strong>
+                     <small>Allows cookies required for essential website functionality, security and authentication.</small>
+                  </span>
+               </label>
+
+               <label class="aa-cookie-choice">
+                   <input type="radio" name="agreementCookiePreference" value="all" />
+                   <span>
+                      <strong>Accept All Cookies</strong>
+                      <small>Allows necessary cookies and additional cookies used to improve the website experience and understand website usage.</small>
+                   </span>
+               </label>
+             </div>
+
+             <label class="aa-agreement-checkbox">
+                <input type="checkbox" id="termsAgreementCheckbox" /> 
+                <span>I have read and agree to the Terms & Conditions.</span> 
+             </label>
+
+             <p id="agreementError" class="aa-agreement-error" hidden>
+                Please agree to the Terms & Conditions before continuing.
+             </p>
+
+             <div class="aa-agreement-actions">
+                <button type="button" id="cancelAgreement" class="aa-agreement-cancel">Cancel</button>
+                <button type="button" id="agreeAndContinue" class="aa-agreement-continue">Agree &amp; Continue</button>
+             </div>
+
+           </div>
+        </div>
+    }
 
     <div class="page">
 
@@ -41,8 +132,7 @@
 
         <!-- ============ RIGHT: FORM PANEL ============ -->
         <main class="form-panel">
-            <div class="form-wrap"
-                 @(TempData["RegistrationSuccess"] != null ? "hidden" : "")>
+            <div class="form-wrap" @(TempData["RegistrationSuccess"] != null ? "hidden=\"hidden\"" : "")>
 
                 <h2 class="form-title">Customer Registration</h2>
                 <p class="form-subtitle">Fill in your details to get started</p>
@@ -50,6 +140,17 @@
                 @using (Html.BeginForm("Customerregister", "Cust", FormMethod.Post, new { id = "registerForm" }))
                 {
                     @Html.AntiForgeryToken()
+                    <input type="hidden" id="termsAccepted" name="termsAccepted" value="false" />
+
+                    <input type="hidden
+                           id="termsVersion"
+                           name="termsVersion"
+                           value="@(ViewBag.TermsVersion ?? "1.0")" />
+
+                    <input type="hidden"
+                           id="cookiePreference"
+                           name="cookiePreference"
+                           value="necessary" />
 
                     <!-- ===== Step 0: Personal ===== -->
                     <div class="step-panel" id="panel0">
@@ -65,8 +166,6 @@
                                 <p class="error-text" id="lastNameError" aria-live="polite" hidden>Only letters allowed</p>
                             </div>
                         </div>
-
-
                     </div>
 
                     <!-- ===== Step 1: Contact ===== -->
@@ -120,7 +219,6 @@
                                        aria-invalid="false" />
                                 <button type="button" class="toggle-pass" id="togglePass">Show</button>
                             </div>
-                            <!-- Strength bar -->
                             <div class="strength-bar" id="strengthBar">
                                 <div class="strength-seg" id="seg1"></div>
                                 <div class="strength-seg" id="seg2"></div>
@@ -150,11 +248,6 @@
 
                     </div>
 
-                    <div class="nav-row">
-
-
-                    </div>
-
                     <div class="note-box">
                         <p class="note-title">Why we need your contact details</p>
                         <p class="note-body">
@@ -167,9 +260,7 @@
             </div>
 
             <!-- ============ SUCCESS STATE ============ -->
-            <div class="success-page"
-                 id="successPage"
-                 @(TempData["RegistrationSuccess"] != null ? "" : "hidden")>
+            <div class="success-page" id="successPage" @(TempData["RegistrationSuccess"] != null ? "" : "hidden")>
                 <div class="success-content" role="status" aria-live="polite">
                     <div class="success-icon">✓</div>
                     <h2 id="successTitle">Registration successful</h2>

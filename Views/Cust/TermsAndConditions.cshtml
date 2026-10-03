@@ -1,0 +1,145 @@
+﻿
+@{
+    ViewBag.Title = "Terms & Conditions";
+
+    var currentTerms =
+        ViewBag.CurrentTerms as WebApplication1.Models.TermsAndConditions;
+}
+
+@if (currentTerms != null)
+{
+    @Html.Raw(currentTerms.Content)
+}
+else
+{
+    <p>
+        The Terms & Conditions are currently unavailable.
+        Please try again later.
+    </p>
+}
+
+@if (currentTerms != null)
+{
+    <div class="aa-terms-version">
+        <strong>Terms Version:</strong> @currentTerms.Version
+        <br />
+        <strong>Effective Date:</strong>
+        @currentTerms.EffectiveDate.ToString("dd MMMM yyyy")
+    </div>
+}
+
+<div class="aa-terms-page">
+    <div class="aa-terms-container">
+        <h1>Terms & Conditions</h1>
+
+        <p>
+            Welcome to AA Creations & Events. These Terms & Conditions describe the general rules for using website and online decorative events services.
+        </p>
+
+        <h2>1. Use of the Website</h2>
+
+        <p>
+            The website allows customers to view decorative services, browse our portfolio, submit booking requests, communicate with AA Creations & Events and manage relevant account information.
+        </p>
+        <p>
+            You agree to use the website lawfully and responsibly and not to interfere with its operation or attempt to obtain unauthorized access to its systems.
+        </p>
+
+        <h2>2. Customer Account </h2>
+
+        <p>
+            Customers creating an account agree to provide accurate and up-to-date information.
+        </p>
+
+        <h2>3. Decorative Services</h2>
+
+        <p>
+            The website provides information about decorative event services offered by AA Creations & Events.
+        </p>
+
+        <p>
+            Designs, colours, materials, availability and other service details may vary depending on the requirements of an individual event.
+        </p>
+
+        <h2>4. Booking Requests</h2>
+
+        <p>
+            Submitting a booking request does not automatically constitute a confirmed booking.
+        </p>
+
+        <p>
+            A booking is subject to availability, review and confirmation by AA Creations & Events.
+        </p>
+
+        <h2>5. Payments</h2>
+
+        <p>
+            Where payment or a deposit is required, the applicable payment instructions and conditions will be communicated to the customer during the relevant booking process.
+        </p>
+
+        <h2>6. Cancellations and Changes</h2>
+
+        <p>
+            Cancellation, amendment, deposit and refund arrangements may depend on the particular service or booking.
+        </p>
+
+        <p>
+            Customers should contact AA Creations & Events as soon as possible when they need to change or cancel a booking.
+        </p>
+
+        <h2>7. Website Content</h2>
+
+        <p>
+            Images, photographs, designs, text, logos and other content displayed on this website may belong to AA Creations & Events or their respective owners.
+        </p>
+
+        <p>
+            Website content should not be copied, reproduced, distributed or commercially reused without appropriate permission.
+        </p>
+
+        <h2>8. Website Availability</h2>
+        <p>
+            We aim to maintain the availability and functionality of the website. However, temporary interruptions may occur because of maintenance, technical problems or circumstances outside our control.
+        </p>
+
+        <h2>9. Customer Information</h2>
+
+        <p>
+            Information provided by customers may be processed for purposes including account administration, booking management, communications and delivery of requested services.
+        </p>
+
+        <h2>10. Cookies</h2>
+
+        <p>
+            The website may use cookies and similar technologies. Necessary cookies may be required for functions such as authentication, security and maintaining website sessions.
+        </p>
+
+        <p>
+            Where applicable, customers may choose whether to permit additional cookies used to improve the website experience and understand website usage.
+        </p>
+
+        <h2>11. Changes to These Terms</h2>
+
+        <p>
+            AA Creations & Events may update these Terms & Conditions when necessary. Customers may be required to review updated terms before continuing to use certain services.
+        </p>
+
+        <h2>12. Acceptance</h2>
+
+        <p>
+            By creating an account and selecting the agreement option, the customer confirms that they have reviewed and accepted these Terms & Conditions.
+        </p>
+
+        <div class="aa-terms-version">
+            <strong>Terms Version:</strong> 1.0
+            <br />
+            <strong>Last Updated:</strong> September 2026
+        </div>
+
+
+    </div>
+
+</div>
+
+
+

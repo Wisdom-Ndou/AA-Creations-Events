@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Web;
 using System.Web.Mvc;
@@ -248,13 +247,85 @@ namespace WebApplication1.Controllers
         [HttpGet]
         public ActionResult Customerregister()
         {
+            var currentTerms = db.TermsAndConditions
+                .Where(t => t.IsActive)
+                .OrderByDescending(t => t.EffectiveDate)
+                .FirstOrDefault();
+
+            ViewBag.CurrentTerms = currentTerms;
+            ViewBag.TermsVersion = currentTerms?.Version ?? "1.0";
+
+            return View();
+        }
+
+        [HttpGet]
+        public ActionResult TermsAndConditions()
+        {
+            var currentTerms = db.TermsAndConditions
+                .Where(t => t.IsActive)
+                .OrderByDescending(t => t.EffectiveDate)
+                .FirstOrDefault();
+
+            ViewBag.CurrentTerms = currentTerms;
+
             return View();
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Customerregister(Customer obj)
+        public ActionResult Customerregister(
+          Customer obj,
+          bool termsAccepted,
+          string termsVersion,
+          string cookiePreference)
         {
+            // Get the currently active Terms & Conditions from the database.
+            var currentTerms = db.TermsAndConditions
+                .Where(t => t.IsActive)
+                .OrderByDescending(t => t.EffectiveDate)
+                .FirstOrDefault();
+
+            // Make sure there is an active Terms & Conditions version.
+            if (currentTerms == null)
+            {
+                ModelState.AddModelError(
+                    "",
+                    "The Terms & Conditions are currently unavailable. Please try again later."
+                );
+
+                return View(obj);
+            }
+
+            // Customer must accept the Terms & Conditions.
+            if (!termsAccepted)
+            {
+                ModelState.AddModelError(
+                    "",
+                    "You must agree to the Terms & Conditions before creating an account."
+                );
+
+                return View(obj);
+            }
+
+            // Make sure the customer accepted the currently active version.
+            if (termsVersion != currentTerms.Version)
+            {
+                ModelState.AddModelError(
+                    "",
+                    "The Terms & Conditions version is no longer valid. Please review the latest terms."
+                );
+
+                return View(obj);
+            }
+
+            // Only accept recognised cookie preferences.
+            if (cookiePreference != "necessary" && cookiePreference != "all")
+            {
+                cookiePreference = "necessary";
+            }
+
+
+
             if (string.IsNullOrWhiteSpace(obj.Cust_Passw) ||
                 obj.Cust_Passw.Length < 6 ||
                 obj.Cust_Passw.Length > 15 ||
@@ -280,12 +351,50 @@ namespace WebApplication1.Controllers
                 return View(obj);
             }
 
+            using (var transaction = db.Database.BeginTransaction())
+
+            {
+                try
+                {
+                    //Hash the password before saving to the database
+                    obj.Cust_Passw = Crypto.HashPassword(obj.Cust_Passw);
+
+                    db.Customers.Add(obj);
+                    db.SaveChanges();
+
+                    // Record which Terms & Conditions version the customer accepted.
+                    obj.AcceptedTermsID = currentTerms.Terms_ID;
+                    obj.TermsAcceptedDate = DateTime.Now;
+
+                    db.Entry(obj).State = EntityState.Modified;
+                    db.SaveChanges();
+
+                    // Create agreement record using the new customer ID.
+                    var agreement = new CustomerAgreement
+                    {
+                        CustomerId = obj.Cust_ID,
+                        TermsAccepted = true,
+                        TermsVersion = currentTerms.Version,
+                        AcceptedAt = obj.TermsAcceptedDate.Value,
+                        CookiePreference = cookiePreference
+                    };
+
+                    // Save agreement.
+                    db.CustomerAgreements.Add(agreement);
+                    db.SaveChanges();
 
 
-            obj.Cust_Passw = Crypto.HashPassword(obj.Cust_Passw);
 
-            db.Customers.Add(obj);
-            db.SaveChanges();
+                    transaction.Commit();
+                }
+                catch
+                {
+                    transaction.Rollback();
+
+                    throw;
+                }
+
+            }
 
             TempData["RegistrationSuccess"] =
                 "Your registration was successful. You can now sign in and start booking.";
@@ -598,6 +707,66 @@ namespace WebApplication1.Controllers
             TempData["AccountSuccess"] =
                 "Your account details have been updated successfully.";
 
+            return RedirectToAction("ManageAccount");
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public ActionResult SaveAlternativeContact(Customer obj)
+        {
+            if (Session["CustomerId"] == null)
+            {
+                return RedirectToAction("Login", "Cust");
+            }
+
+            int customerId = (int)Session["CustomerId"];
+
+            var customer = db.Customers.FirstOrDefault(c => c.Cust_ID == customerId);
+            if (customer == null)
+            {
+                Session.Clear();
+                Session.Abandon();
+                return RedirectToAction("Login", "Cust");
+            }
+
+            // This form does not include the password; remove password validation for this request
+            ModelState.Remove("Cust_Passw");
+
+            // Validate alternative email if provided (optional: ensure it's not another customer's primary email)
+            if (!string.IsNullOrWhiteSpace(obj.AlternativeContactEmail))
+            {
+                if (db.Customers.Any(c => c.Cust_Email == obj.AlternativeContactEmail && c.Cust_ID != customerId))
+                {
+                    ModelState.AddModelError("AlternativeContactEmail", "That email is already used as a primary email by another account.");
+                }
+            }
+
+            // Validate alternative phone format only if provided
+            if (!string.IsNullOrWhiteSpace(obj.AlternativeContactPhone))
+            {
+                var phoneRegex = new System.Text.RegularExpressions.Regex(@"^[1-9][0-9]{8}$");
+                if (!phoneRegex.IsMatch(obj.AlternativeContactPhone))
+                {
+                    ModelState.AddModelError("AlternativeContactPhone", "Alternative phone must contain exactly 9 digits and cannot start with 0.");
+                }
+            }
+
+            if (!ModelState.IsValid)
+            {
+                // Return the ManageAccount view with the current customer so validation messages display
+                return View("ManageAccount", customer);
+            }
+
+            // Persist the alternative contact fields only
+            customer.AlternativeContactName = obj.AlternativeContactName;
+            customer.AlternativeContactRelationship = obj.AlternativeContactRelationship;
+            customer.AlternativeContactPhone = obj.AlternativeContactPhone;
+            customer.AlternativeContactEmail = obj.AlternativeContactEmail;
+
+            db.Entry(customer).State = EntityState.Modified;
+            db.SaveChanges();
+
+            TempData["AlternativeContactSuccess"] = "Alternative contact information saved successfully.";
             return RedirectToAction("ManageAccount");
         }
 

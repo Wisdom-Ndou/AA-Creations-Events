@@ -1,100 +1,454 @@
 ﻿// Customer Registration Page
 // Handles password validation, confirmation matching,
-// password strength indicator and form submission.
+// password strength indicator, Terms & Conditions agreement,
+// cookie preference and form submission.
 
 document.addEventListener("DOMContentLoaded", function () {
+
+    // ==================================================
+    // HELPER
+    // ==================================================
 
     function el(id) {
         return document.getElementById(id);
     }
 
+
+    // ==================================================
+    // FORM
+    // ==================================================
+
     var form = el("registerForm");
 
+
+    // ==================================================
+    // ACCOUNT AGREEMENT
+    // ==================================================
+
+    var agreementModal = el("registrationAgreement");
+
+    var agreeButton = el("agreeAndContinue");
+
+    var cancelButton = el("cancelAgreement");
+
+    var cancelTopButton = el("cancelAgreementTop");
+
+    var termsCheckbox = el("termsAgreementCheckbox");
+
+    var agreementError = el("agreementError");
+
+    var termsAcceptedInput = el("termsAccepted");
+
+    var cookiePreferenceInput = el("cookiePreference");
+
+
+    // ==================================================
+    // PREVENT FORM SUBMISSION BEFORE AGREEMENT
+    // ==================================================
+
+    if (form) {
+        form.addEventListener("submit", function (event) {
+            // Check if terms have been accepted via the form's hidden input
+            if (termsAcceptedInput && termsAcceptedInput.value !== "true") {
+                event.preventDefault();
+                event.stopPropagation();
+
+                // Show the agreement modal if it exists and is hidden
+                if (agreementModal && agreementModal.style.display === "none") {
+                    agreementModal.style.display = "block";
+                    agreementModal.setAttribute("aria-hidden", "false");
+
+                    // Focus on the agreement modal for accessibility
+                    var firstButton = agreementModal.querySelector("button");
+                    if (firstButton) {
+                        firstButton.focus();
+                    }
+                }
+
+                return false;
+            }
+
+            return true;
+        });
+    }
+
+
+    // ==================================================
+    // CLOSE AGREEMENT AND LEAVE
+    // ==================================================
+
+    function closeAgreementAndLeave() {
+
+        if (agreementModal) {
+
+            agreementModal.style.display = "none";
+
+            agreementModal.setAttribute(
+                "aria-hidden",
+                "true"
+            );
+        }
+
+        window.location.href = "/Cust/Index";
+    }
+
+
+    // ==================================================
+    // SHOW AGREEMENT ERROR
+    // ==================================================
+
+    function showAgreementError(show) {
+
+        if (!agreementError) {
+            return;
+        }
+
+        agreementError.hidden = !show;
+    }
+
+
+    // ==================================================
+    // ACCEPT AGREEMENT
+    // ==================================================
+
+    function acceptAgreement(event) {
+
+        // Prevent the button from performing any default action.
+        if (event) {
+
+            event.preventDefault();
+
+            event.stopPropagation();
+        }
+
+
+        // --------------------------------------------------
+        // REQUIRE TERMS CHECKBOX
+        // --------------------------------------------------
+
+        if (!termsCheckbox || !termsCheckbox.checked) {
+
+            showAgreementError(true);
+
+            if (termsCheckbox) {
+                termsCheckbox.focus();
+            }
+
+            return false;
+        }
+
+
+        // --------------------------------------------------
+        // HIDE AGREEMENT ERROR
+        // --------------------------------------------------
+
+        showAgreementError(false);
+
+
+        // --------------------------------------------------
+        // MARK TERMS AS ACCEPTED
+        // --------------------------------------------------
+
+        if (termsAcceptedInput) {
+
+            termsAcceptedInput.value = "true";
+        }
+
+
+        // --------------------------------------------------
+        // GET COOKIE PREFERENCE
+        // --------------------------------------------------
+
+        var selectedCookie = document.querySelector(
+            'input[name="agreementCookiePreference"]:checked'
+        );
+
+
+        var selectedPreference =
+            selectedCookie
+                ? selectedCookie.value
+                : "necessary";
+
+
+        // --------------------------------------------------
+        // SAVE COOKIE PREFERENCE TO FORM
+        // --------------------------------------------------
+
+        if (cookiePreferenceInput) {
+
+            cookiePreferenceInput.value =
+                selectedPreference;
+        }
+
+
+        // --------------------------------------------------
+        // CLOSE TERMS POPUP
+        // --------------------------------------------------
+
+        if (agreementModal) {
+
+            agreementModal.style.display = "none";
+
+            agreementModal.setAttribute(
+                "aria-hidden",
+                "true"
+            );
+        }
+
+
+        // --------------------------------------------------
+        // REMEMBER TERMS ACCEPTANCE
+        // --------------------------------------------------
+
+        try {
+
+            sessionStorage.setItem(
+                "aa_registration_terms_accepted",
+                "true"
+            );
+
+        }
+        catch (error) {
+
+            console.warn(
+                "Unable to save Terms acceptance.",
+                error
+            );
+
+        }
+
+
+        // --------------------------------------------------
+        // REMEMBER COOKIE PREFERENCE
+        // --------------------------------------------------
+
+        try {
+
+            localStorage.setItem(
+                "aa_cookie_preference",
+                selectedPreference
+            );
+
+        }
+        catch (error) {
+
+            console.warn(
+                "Unable to save cookie preference.",
+                error
+            );
+
+        }
+
+        // Focus on the first form field to guide user
+        var firstField = form.querySelector("input[type='text'], input[type='email'], input[type='tel'], input[type='password']");
+        if (firstField) {
+            firstField.focus();
+        }
+
+        return true;
+    }
+
+
+    // ==================================================
+    // AGREE & CONTINUE BUTTON
+    // ==================================================
+
+    if (agreeButton) {
+
+        agreeButton.addEventListener(
+            "click",
+            function (event) {
+
+                acceptAgreement(event);
+
+            }
+        );
+
+    }
+
+
+    // ==================================================
+    // CANCEL BUTTONS
+    // ==================================================
+
+    if (cancelButton) {
+
+        cancelButton.addEventListener(
+            "click",
+            function () {
+
+                closeAgreementAndLeave();
+
+            }
+        );
+
+    }
+
+
+    if (cancelTopButton) {
+
+        cancelTopButton.addEventListener(
+            "click",
+            function () {
+
+                closeAgreementAndLeave();
+
+            }
+        );
+
+    }
+
+
+    // ==================================================
+    // TERMS CHECKBOX
+    // ==================================================
+
+    if (termsCheckbox) {
+
+        termsCheckbox.addEventListener(
+            "change",
+            function () {
+
+                if (termsCheckbox.checked) {
+
+                    showAgreementError(false);
+
+                }
+
+            }
+        );
+
+    }
+
+
+
+    // ==================================================
+    // PASSWORD ELEMENTS
+    // ==================================================
+
     var passwordInput = el("password");
+
     var confirmInput = el("confirm");
 
     var passwordError = el("passwordError");
+
     var mismatchText = el("mismatchText");
 
     var togglePassBtn = el("togglePass");
 
+
+    // ==================================================
+    // PASSWORD STRENGTH ELEMENTS
+    // ==================================================
+
     var strengthSegs = [
+
         el("seg1"),
+
         el("seg2"),
+
         el("seg3"),
+
         el("seg4")
+
     ];
 
-    // Password must:
-    // - contain at least one letter
-    // - contain at least one number
-    // - be 6 to 15 characters long
-    var passwordRegex = /^(?=.*[A-Za-z])(?=.*\d).{6,15}$/;
+
+    // ==================================================
+    // PASSWORD RULE
+    // ==================================================
+
+    var passwordRegex =
+        /^(?=.*[A-Za-z])(?=.*\d).{6,15}$/;
 
 
-    // --------------------------------------------------
-    // HELPER: Set invalid state
-    // --------------------------------------------------
+    // ==================================================
+    // SET INVALID STATE
+    // ==================================================
 
     function setInvalid(input, invalid) {
 
-        if (!input) return;
+        if (!input) {
+            return;
+        }
 
         input.setAttribute(
             "aria-invalid",
             invalid ? "true" : "false"
         );
 
-        input.classList.toggle("mismatch", invalid);
+        input.classList.toggle(
+            "mismatch",
+            invalid
+        );
     }
 
 
-    // --------------------------------------------------
-    // HELPER: Show / hide error
-    // --------------------------------------------------
+    // ==================================================
+    // SHOW / HIDE ERROR
+    // ==================================================
 
     function showError(errorElement, show) {
 
-        if (!errorElement) return;
+        if (!errorElement) {
+            return;
+        }
 
         errorElement.hidden = !show;
     }
 
 
-    // --------------------------------------------------
+    // ==================================================
     // PASSWORD STRENGTH
-    // --------------------------------------------------
+    // ==================================================
 
     function updateStrengthBar() {
 
-        if (!passwordInput) return;
+        if (!passwordInput) {
+            return;
+        }
 
-        var value = passwordInput.value || "";
+
+        var value =
+            passwordInput.value || "";
+
 
         var score = 0;
+
 
         if (value.length >= 6) {
             score++;
         }
 
+
         if (/[A-Za-z]/.test(value)) {
             score++;
         }
 
+
         if (/\d/.test(value)) {
             score++;
         }
+
 
         if (value.length >= 10) {
             score++;
         }
 
 
-        for (var i = 0; i < strengthSegs.length; i++) {
+        for (
+            var i = 0;
+            i < strengthSegs.length;
+            i++
+        ) {
 
             var segment = strengthSegs[i];
 
-            if (!segment) continue;
+
+            if (!segment) {
+                continue;
+            }
+
 
             segment.classList.remove(
                 "weak",
@@ -106,13 +460,25 @@ document.addEventListener("DOMContentLoaded", function () {
             if (i < score) {
 
                 if (score <= 1) {
-                    segment.classList.add("weak");
+
+                    segment.classList.add(
+                        "weak"
+                    );
+
                 }
                 else if (score <= 2) {
-                    segment.classList.add("medium");
+
+                    segment.classList.add(
+                        "medium"
+                    );
+
                 }
                 else {
-                    segment.classList.add("strong");
+
+                    segment.classList.add(
+                        "strong"
+                    );
+
                 }
 
             }
@@ -122,9 +488,9 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
 
-    // --------------------------------------------------
+    // ==================================================
     // PASSWORD VALIDATION
-    // --------------------------------------------------
+    // ==================================================
 
     function validatePassword(showMessage) {
 
@@ -132,9 +498,13 @@ document.addEventListener("DOMContentLoaded", function () {
             return true;
         }
 
-        var value = passwordInput.value || "";
 
-        var valid = passwordRegex.test(value);
+        var value =
+            passwordInput.value || "";
+
+
+        var valid =
+            passwordRegex.test(value);
 
 
         if (showMessage) {
@@ -163,14 +533,14 @@ document.addEventListener("DOMContentLoaded", function () {
 
         updateStrengthBar();
 
-        return valid;
 
+        return valid;
     }
 
 
-    // --------------------------------------------------
+    // ==================================================
     // CONFIRM PASSWORD
-    // --------------------------------------------------
+    // ==================================================
 
     function checkPasswordsMatch(showMessage) {
 
@@ -178,8 +548,10 @@ document.addEventListener("DOMContentLoaded", function () {
             return true;
         }
 
+
         var password =
             passwordInput.value || "";
+
 
         var confirmation =
             confirmInput.value || "";
@@ -189,29 +561,15 @@ document.addEventListener("DOMContentLoaded", function () {
             validatePassword(showMessage);
 
 
-        // Only show mismatch when the confirmation
-        // has actually been entered.
         var mismatch =
             confirmation.length > 0 &&
             password !== confirmation;
 
 
-        if (showMessage) {
-
-            showError(
-                mismatchText,
-                mismatch
-            );
-
-        }
-        else {
-
-            showError(
-                mismatchText,
-                mismatch
-            );
-
-        }
+        showError(
+            mismatchText,
+            mismatch
+        );
 
 
         setInvalid(
@@ -221,13 +579,12 @@ document.addEventListener("DOMContentLoaded", function () {
 
 
         return passwordValid && !mismatch;
-
     }
 
 
-    // --------------------------------------------------
+    // ==================================================
     // PASSWORD INPUT
-    // --------------------------------------------------
+    // ==================================================
 
     if (passwordInput) {
 
@@ -237,10 +594,14 @@ document.addEventListener("DOMContentLoaded", function () {
 
                 validatePassword(true);
 
-                // Only check matching once confirmation
-                // has something inside it.
-                if (confirmInput.value.length > 0) {
+
+                if (
+                    confirmInput &&
+                    confirmInput.value.length > 0
+                ) {
+
                     checkPasswordsMatch(true);
+
                 }
 
             }
@@ -259,9 +620,9 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
 
-    // --------------------------------------------------
+    // ==================================================
     // CONFIRM PASSWORD INPUT
-    // --------------------------------------------------
+    // ==================================================
 
     if (confirmInput) {
 
@@ -287,9 +648,9 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
 
-    // --------------------------------------------------
+    // ==================================================
     // SHOW / HIDE PASSWORD
-    // --------------------------------------------------
+    // ==================================================
 
     if (togglePassBtn && passwordInput) {
 
@@ -302,11 +663,15 @@ document.addEventListener("DOMContentLoaded", function () {
 
 
                 passwordInput.type =
-                    hidden ? "text" : "password";
+                    hidden
+                        ? "text"
+                        : "password";
 
 
                 togglePassBtn.textContent =
-                    hidden ? "Hide" : "Show";
+                    hidden
+                        ? "Hide"
+                        : "Show";
 
             }
         );
@@ -314,9 +679,9 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
 
-    // --------------------------------------------------
+    // ==================================================
     // FORM SUBMISSION
-    // --------------------------------------------------
+    // ==================================================
 
     if (form) {
 
@@ -324,45 +689,138 @@ document.addEventListener("DOMContentLoaded", function () {
             "submit",
             function (event) {
 
-                // Validate password
+
+                // ------------------------------------------
+                // REQUIRE TERMS ACCEPTANCE
+                // ------------------------------------------
+
+                if (
+                    !termsAcceptedInput ||
+                    termsAcceptedInput.value !== "true"
+                ) {
+
+                    event.preventDefault();
+
+                    showAgreementError(true);
+
+                    return false;
+                }
+
+
+                // ------------------------------------------
+                // VALIDATE PASSWORD
+                // ------------------------------------------
+
                 var passwordValid =
                     validatePassword(true);
 
 
-                // Validate confirmation
+                // ------------------------------------------
+                // VALIDATE CONFIRM PASSWORD
+                // ------------------------------------------
+
                 var passwordsMatch =
                     checkPasswordsMatch(true);
 
 
-                if (!passwordValid || !passwordsMatch) {
+                // ------------------------------------------
+                // STOP IF VALIDATION FAILS
+                // ------------------------------------------
+
+                if (
+                    !passwordValid ||
+                    !passwordsMatch
+                ) {
 
                     event.preventDefault();
 
-                    if (!passwordValid) {
+
+                    if (
+                        !passwordValid &&
+                        passwordInput
+                    ) {
 
                         passwordInput.focus();
 
                     }
-                    else {
+                    else if (confirmInput) {
 
                         confirmInput.focus();
 
                     }
 
-                    return false;
 
+                    return false;
                 }
 
 
-                // IMPORTANT:
-                // Do NOT call event.preventDefault()
-                // here.
+                // ------------------------------------------
+                // EVERYTHING IS VALID
                 //
-                // MVC will receive the POST request.
+                // DO NOT CALL preventDefault()
+                //
+                // MVC WILL RECEIVE THE POST REQUEST.
+                // ------------------------------------------
 
             }
         );
 
     }
 
+
+    // ==================================================
+    // INITIAL TERMS POPUP
+    // ==================================================
+
+    if (agreementModal) {
+
+        var alreadyAccepted = false;
+
+
+        try {
+
+            alreadyAccepted =
+                sessionStorage.getItem(
+                    "aa_registration_terms_accepted"
+                ) === "true";
+
+        }
+        catch (error) {
+
+            console.warn(
+                "Unable to read Terms acceptance.",
+                error
+            );
+
+        }
+
+
+        if (!alreadyAccepted) {
+
+            agreementModal.style.display =
+                "flex";
+
+
+            agreementModal.setAttribute(
+                "aria-hidden",
+                "false"
+            );
+
+        }
+        else {
+
+            agreementModal.style.display =
+                "none";
+
+
+            agreementModal.setAttribute(
+                "aria-hidden",
+                "true"
+            );
+
+        }
+
+    }
+
+});
 });
