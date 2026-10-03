@@ -417,10 +417,31 @@ namespace WebApplication1.Controllers
             db.Customers.Add(obj);
             db.SaveChanges();
 
-            TempData["RegistrationSuccess"] =
-                "Your registration was successful. You can now sign in and start booking.";
+            // ==========================================
+            // SEND REGISTRATION CONFIRMATION EMAIL
+            // ==========================================
 
-            // Redirect back to registration (existing behavior) or to Login if preferred
+            var emailService = new OtpDeliveryService();
+
+            bool emailSent = emailService.SendRegistrationEmail(
+                obj.Cust_Email,
+                obj.Cust_FName
+            );
+
+            // Registration remains successful even if the email
+            // could not be delivered.
+            if (emailSent)
+            {
+                TempData["RegistrationSuccess"] =
+                    "Your registration was successful. A confirmation email has been sent to you.";
+            }
+            else
+            {
+                TempData["RegistrationSuccess"] =
+                    "Your registration was successful. You can now sign in and start booking.";
+            }
+
+            // Redirect back to registration
             return RedirectToAction("Customerregister", "Cust");
         }
 
@@ -626,6 +647,23 @@ namespace WebApplication1.Controllers
                         throw;
                     }
                 }
+
+                // ==========================================
+                // SEND BOOKING CONFIRMATION EMAIL
+                // ==========================================
+
+                var emailService = new OtpDeliveryService();
+
+                bool emailSent = emailService.SendBookingConfirmationEmail(
+                    booking.Email,
+                    booking.FirstName,
+                    booking.BookingId,
+                    booking.Occasion,
+                    booking.EventDate,
+                    booking.EventTime,
+                    booking.City,
+                    booking.TotalPrice
+                );
 
                 return Json(new
                 {
