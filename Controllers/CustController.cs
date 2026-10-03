@@ -628,7 +628,7 @@ namespace WebApplication1.Controllers
 
             try
             {
-                var allowedCities = new[] { "Durban", "Pietermaritzburg", "Mthatha" };
+                var allowedCities = new[] { "Durban", "Pietermaritzburg", "Mandeni" };
                 var requestedCity = (request.City ?? "").Trim();
 
                 if (!allowedCities.Any(city =>
@@ -2591,7 +2591,7 @@ namespace WebApplication1.Controllers
 
             // Keep the existing password unless the admin deliberately supplies a replacement.
             if (!string.IsNullOrWhiteSpace(model.staff_Passw))
-                staff.staff_Passw = model.staff_Passw;
+                staff.staff_Passw = Crypto.HashPassword(model.staff_Passw);
 
             db.SaveChanges();
             TempData["StaffManagementSuccess"] = "Staff details updated.";
@@ -2640,9 +2640,9 @@ namespace WebApplication1.Controllers
                 staff.staff_City = "Pietermaritzburg";
                 staff.staff_Type = "Team Peter";
             }
-            else if (canonicalCity == "mthatha")
+            else if (canonicalCity == "mandeni")
             {
-                staff.staff_City = "Mthatha";
+                staff.staff_City = "Mandeni";
                 staff.staff_Type = "Team Mdn";
             }
             else
@@ -2687,8 +2687,8 @@ namespace WebApplication1.Controllers
             if (value == "pmb" || value == "pietermaritzburg" || value.Contains("msunduzi"))
                 return "pietermaritzburg";
 
-            if (value == "mthatha" || value == "umtata")
-                return "mthatha";
+            if (value == "mandeni" || value == "umtata")
+                return "mandeni";
 
             return value;
         }
