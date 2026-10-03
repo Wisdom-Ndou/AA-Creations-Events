@@ -536,6 +536,22 @@ namespace WebApplication1.Controllers
 
             try
             {
+                var allowedCities = new[] { "Durban", "Pietermaritzburg", "Mthatha" };
+                var requestedCity = (request.City ?? "").Trim();
+
+                if (!allowedCities.Any(city =>
+                    city.Equals(requestedCity, StringComparison.OrdinalIgnoreCase)))
+                {
+                    return Json(new
+                    {
+                        success = false,
+                        message = "Please select Durban, Pietermaritzburg or Mthatha."
+                    });
+                }
+
+                request.City = allowedCities.First(city =>
+                    city.Equals(requestedCity, StringComparison.OrdinalIgnoreCase));
+
                 // Find the package in the database
                 var package = db.Packages
                     .FirstOrDefault(p => p.PackageId == request.PackageId);
@@ -609,14 +625,37 @@ namespace WebApplication1.Controllers
                     });
                 }
 
-                // Save everything as one transaction
+                // Save the booking and its staff task together.
                 using (var transaction = db.Database.BeginTransaction())
                 {
                     try
                     {
                         db.Bookings.Add(booking);
-
                         db.SaveChanges();
+
+                        var assignedStaff = db.Staffs
+                            .Where(s => s.staff_City == booking.City)
+                            .OrderBy(s => s.staff_ID)
+                            .FirstOrDefault();
+
+                        if (assignedStaff != null)
+                        {
+                            db.StaffTasks.Add(new StaffTask
+                            {
+                                StaffId = assignedStaff.staff_ID,
+                                BookingId = booking.BookingId,
+                                TaskName = "Decorate event for " + booking.FirstName + " " + booking.LastName,
+                                Description = "Complete the event decoration setup at " +
+                                              booking.Address + ", " + booking.City +
+                                              " for the " + booking.Occasion + ".",
+                                DueDate = booking.EventDate,
+                                Priority = "High",
+                                Status = "Pending",
+                                CreatedAt = DateTime.Now
+                            });
+
+                            db.SaveChanges();
+                        }
 
                         transaction.Commit();
                     }
@@ -1815,27 +1854,263 @@ namespace WebApplication1.Controllers
 
         public ActionResult StaffDashboard()
         {
-            return View();
+            if (!IsStaffAuthenticated())
+            {
+                return RedirectToAction("StaffLogin", "Cust");
+            }
+
+            int staffId = (int)Session["StaffId"];
+
+            var tasks = db.StaffTasks
+                .Where(t => t.StaffId == staffId)
+                .Include("Booking")
+                .OrderBy(t => t.DueDate)
+                .ThenByDescending(t => t.CreatedAt)
+                .ToList();
+
+            ViewBag.StaffFirstName = Session["StaffFirstName"];
+            ViewBag.PendingCount = tasks.Count(t => t.Status == "Pending");
+            ViewBag.CompletedCount = tasks.Count(t => t.Status == "Completed");
+            ViewBag.UnsuccessfulCount = tasks.Count(t => t.Status == "Unable");
+
+            return View(tasks.Take(5).ToList());
         }
 
         public ActionResult StaffTasks()
         {
-            return View();
+            if (!IsStaffAuthenticated())
+            {
+                return RedirectToAction("StaffLogin", "Cust");
+            }
+
+            int staffId = (int)Session["StaffId"];
+
+            var tasks = db.StaffTasks
+                .Where(t => t.StaffId == staffId)
+                .Include("Booking")
+                .OrderBy(t => t.Status == "Pending" ? 0 : 1)
+                .ThenBy(t => t.DueDate)
+                .ToList();
+
+            return View(tasks);
         }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public ActionResult UpdateStaffTask(int taskId, string status, string completionReason)
+        {
+            if (!IsStaffAuthenticated())
+            {
+                return RedirectToAction("StaffLogin", "Cust");
+            }
+
+            int staffId = (int)Session["StaffId"];
+
+            var task = db.StaffTasks
+                .FirstOrDefault(t => t.TaskId == taskId && t.StaffId == staffId);
+
+            if (task == null)
+            {
+                TempData["StaffTaskError"] = "The task could not be found.";
+                return RedirectToAction("StaffTasks", "Cust");
+            }
+
+            if (status == "Completed")
+            {
+                task.Status = "Completed";
+                task.CompletionReason = null;
+                task.CompletedAt = DateTime.Now;
+            }
+            else if (status == "Unable")
+            {
+                if (string.IsNullOrWhiteSpace(completionReason))
+                {
+                    TempData["StaffTaskError"] = "Please provide a reason when a task cannot be completed.";
+                    return RedirectToAction("StaffTasks", "Cust");
+                }
+
+                task.Status = "Unable";
+                task.CompletionReason = completionReason.Trim();
+                task.CompletedAt = DateTime.Now;
+            }
+            else
+            {
+                TempData["StaffTaskError"] = "Invalid task status.";
+                return RedirectToAction("StaffTasks", "Cust");
+            }
+
+            db.SaveChanges();
+
+            TempData["StaffTaskSuccess"] = "Task status updated successfully.";
+            return RedirectToAction("StaffTasks", "Cust");
+        }
+
         public ActionResult StaffComplaints()
         {
-           
+            if (!IsStaffAuthenticated())
+            {
+                return RedirectToAction("StaffLogin", "Cust");
+            }
 
-                return View();
-            
+            int staffId = (int)Session["StaffId"];
+
+            var complaints = db.StaffComplaints
+                .Where(c => c.StaffId == staffId)
+                .Include("Booking")
+                .OrderByDescending(c => c.CreatedAt)
+                .ToList();
+
+            ViewBag.StaffTasks = db.StaffTasks
+                .Where(t => t.StaffId == staffId && t.BookingId != null)
+                .Include("Booking")
+                .OrderByDescending(t => t.CreatedAt)
+                .ToList();
+
+            return View(complaints);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public ActionResult CreateStaffComplaint(
+            string title,
+            string description,
+            string priority,
+            int? bookingId)
+        {
+            if (!IsStaffAuthenticated())
+            {
+                return RedirectToAction("StaffLogin", "Cust");
+            }
+
+            if (string.IsNullOrWhiteSpace(title) ||
+                string.IsNullOrWhiteSpace(description))
+            {
+                TempData["ComplaintError"] = "A title and description are required.";
+                return RedirectToAction("StaffComplaints", "Cust");
+            }
+
+            if (priority != "Low" && priority != "Medium" && priority != "High")
+            {
+                priority = "Medium";
+            }
+
+            int staffId = (int)Session["StaffId"];
+
+            if (bookingId.HasValue &&
+                !db.StaffTasks.Any(t =>
+                    t.StaffId == staffId &&
+                    t.BookingId == bookingId.Value))
+            {
+                TempData["ComplaintError"] = "You can only link a complaint to one of your assigned bookings.";
+                return RedirectToAction("StaffComplaints", "Cust");
+            }
+
+            db.StaffComplaints.Add(new StaffComplaint
+            {
+                StaffId = staffId,
+                BookingId = bookingId,
+                Title = title.Trim(),
+                Description = description.Trim(),
+                Priority = priority,
+                Status = "Open",
+                CreatedAt = DateTime.Now
+            });
+
+            db.SaveChanges();
+
+            TempData["ComplaintSuccess"] = "Complaint submitted successfully.";
+            return RedirectToAction("StaffComplaints", "Cust");
         }
 
         public ActionResult StaffProfile()
         {
+            if (!IsStaffAuthenticated())
+            {
+                return RedirectToAction("StaffLogin", "Cust");
+            }
+
+            int staffId = (int)Session["StaffId"];
+            var staff = db.Staffs.FirstOrDefault(s => s.staff_ID == staffId);
+
+            if (staff == null)
+            {
+                return RedirectToAction("StaffLogin", "Cust");
+            }
+
+            return View(staff);
+        }
+
+        private bool IsStaffAuthenticated()
+        {
+            return Session["StaffId"] != null &&
+                   Session["StaffAuthenticated"] != null &&
+                   (bool)Session["StaffAuthenticated"];
+        }
+
+        [HttpGet]
+        public ActionResult StaffLogin()
+        {
+            if (IsStaffAuthenticated())
+            {
+                return RedirectToAction("StaffDashboard", "Cust");
+            }
+
             return View();
         }
 
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public ActionResult StaffLogin(string email, string password)
+        {
+            if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(password))
+            {
+                ModelState.AddModelError("", "Please enter your email address and password.");
+                return View();
+            }
 
+            var staff = db.Staffs.FirstOrDefault(s => s.staff_Email == email.Trim());
+
+            if (staff == null)
+            {
+                ModelState.AddModelError("", "Invalid email address or password.");
+                return View();
+            }
+
+            bool passwordValid = false;
+
+            try
+            {
+                passwordValid = Crypto.VerifyHashedPassword(staff.staff_Passw, password);
+            }
+            catch
+            {
+                passwordValid = false;
+            }
+
+            if (!passwordValid)
+            {
+                ModelState.AddModelError("", "Invalid email address or password.");
+                return View();
+            }
+
+            Session["StaffId"] = staff.staff_ID;
+            Session["StaffEmail"] = staff.staff_Email;
+            Session["StaffFirstName"] = staff.staff_FName;
+            Session["StaffAuthenticated"] = true;
+
+            return RedirectToAction("StaffDashboard", "Cust");
+        }
+
+        [HttpGet]
+        public ActionResult StaffLogout()
+        {
+            Session.Remove("StaffId");
+            Session.Remove("StaffEmail");
+            Session.Remove("StaffFirstName");
+            Session.Remove("StaffAuthenticated");
+
+            return RedirectToAction("Login", "Cust");
+        }
     }
 
 
