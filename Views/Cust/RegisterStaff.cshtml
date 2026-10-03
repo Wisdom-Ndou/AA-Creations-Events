@@ -310,33 +310,15 @@
                         "Staff Team"
                     )
 
-                    <select name="staff_Type"
-                            class="form-control"
-                            required>
-
-                        <option value="">
-                            -- Select Staff Team --
-                        </option>
-
-                        <option value="Team Dbn">
-                            Team Dbn
-                        </option>
-
-                        <option value="Team Peter">
-                            Team Peter
-                        </option>
-
-                        <option value="Team Mdn">
-                            Team Mdn
-                        </option>
-
-                    </select>
-
-                    <span class="team-description">
-                        Team Dbn = Durban |
-                        Team Peter = Pietermaritzburg |
-                        Team Mdn = Mandeni
-                    </span>
+                    @Html.DropDownListFor(
+                        model => model.staff_Type,
+                        new SelectList(
+                            new[] { "Team Dbn", "Team Peter", "Team Mdn" },
+                            Model.staff_Type
+                        ),
+                        "-- Select Staff Team --",
+                        new { @class = "form-control", required = "required" }
+                    )
 
                     @Html.ValidationMessageFor(
                         model => model.staff_Type
@@ -354,12 +336,15 @@
                         "City"
                     )
 
-                    <select name="staff_City" class="form-control" required>
-                        <option value="">-- Select City --</option>
-                        <option value="Durban">Durban</option>
-                        <option value="Pietermaritzburg">Pietermaritzburg</option>
-                        <option value="Mandeni">Mandeni</option>
-                    </select>
+                    @Html.DropDownListFor(
+                        model => model.staff_City,
+                        new SelectList(
+                            new[] { "Durban", "Pietermaritzburg", "Mandeni" },
+                            Model.staff_City
+                        ),
+                        "-- Select City --",
+                        new { @class = "form-control", required = "required" }
+                    )
 
                     @Html.ValidationMessageFor(
                         model => model.staff_City
