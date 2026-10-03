@@ -1393,6 +1393,15 @@ namespace WebApplication1.Controllers
                     .Sum() ?? 0m;
 
             // ---------------------------------------------------------
+            // STAFF AVAILABILITY
+            // A staff member is busy while they have at least one pending task.
+            // ---------------------------------------------------------
+            int totalStaff = db.Staffs.Count();
+            int busyStaff = db.Staffs.Count(s =>
+                db.StaffTasks.Any(t => t.StaffId == s.staff_ID && t.Status == "Pending"));
+            int availableStaff = totalStaff - busyStaff;
+
+            // ---------------------------------------------------------
             // RECENT BOOKINGS
             // ---------------------------------------------------------
             var recentBookings = db.Bookings
@@ -1463,6 +1472,10 @@ namespace WebApplication1.Controllers
                 RegisteredCustomers = registeredCustomers,
 
                 ConfirmedRevenue = confirmedRevenue,
+
+                TotalStaff = totalStaff,
+                AvailableStaff = availableStaff,
+                BusyStaff = busyStaff,
 
                 RecentBookings = recentBookings,
 
