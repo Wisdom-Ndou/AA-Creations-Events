@@ -262,6 +262,7 @@
     <Compile Include="Migrations\202610032100554_SyncTermsAcceptanceSchema.Designer.cs">
       <DependentUpon>202610032100554_SyncTermsAcceptanceSchema.cs</DependentUpon>
     </Compile>
+    <Compile Include="Migrations\202610040030000_AddExpenditures.cs" />
     <Compile Include="Migrations\Configuration.cs" />
     <Compile Include="Models\AddOn.cs" />
     <Compile Include="Models\Admin.cs" />
@@ -275,6 +276,8 @@
     <Compile Include="Models\Customer.cs" />
     <Compile Include="Models\CustomerAgreement.cs" />
     <Compile Include="Models\DatabaseContext.cs" />
+    <Compile Include="Models\Expenditure.cs" />
+    <Compile Include="Models\FinancialOverviewViewModel.cs" />
     <Compile Include="Models\OtpVerification.cs" />
     <Compile Include="Models\Package.cs" />
     <Compile Include="Models\Staff.cs" />
@@ -347,6 +350,7 @@
     <Content Include="Views\Cust\Login.cshtml" />
     <Content Include="Views\Cust\RegisterStaff.cshtml" />
     <Content Include="Views\Cust\StaffManagement.cshtml" />
+    <Content Include="Views\Cust\FinancialOverview.cshtml" />
     <Content Include="Views\Cust\EditStaff.cshtml" />
     <Content Include="Content\bootstrap.rtl.min.css.map" />
     <Content Include="Content\bootstrap.rtl.css.map" />
