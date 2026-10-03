@@ -6,6 +6,7 @@
 @using WebApplication1.Models
 
 @{
+    Layout = null;
     ViewBag.Title = "Customerregister";
 
     var currentTerms =
@@ -34,7 +35,7 @@
           rel="stylesheet" />
 
     <link rel="stylesheet"
-          href="~/Content/Customer register styles.css" />
+          href="@Url.Content("~/Content/CustomerRegister.css")" />
 </head>
 
 <body>
@@ -690,7 +691,7 @@
     </div>
 
 
-    <script src="~/Scripts/Customer register script.js"></script>
+    <script src="@Url.Content("~/Scripts/CustomerRegister.js")"></script>
 
 </body>
 </html>

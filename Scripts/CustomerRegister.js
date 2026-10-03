@@ -41,7 +41,7 @@ document.addEventListener("DOMContentLoaded", function () {
     // CLOSE AGREEMENT AND LEAVE
     // ==================================================
 
-    function closeAgreementAndLeave(event) {
+    function closeAgreement(event) {
 
         if (event) {
             event.preventDefault();
@@ -52,9 +52,18 @@ document.addEventListener("DOMContentLoaded", function () {
             termsAcceptedInput.value = "false";
         }
 
-        // Customer chose not to accept the Terms,
-        // so leave the registration page.
-        window.location.href = "/Cust/Login";
+        if (termsCheckbox) {
+            termsCheckbox.checked = false;
+        }
+
+        showAgreementError(false);
+
+        if (agreementModal) {
+            agreementModal.style.display = "none";
+            agreementModal.setAttribute("aria-hidden", "true");
+        }
+
+        document.body.style.overflow = "";
     }
 
 
@@ -189,7 +198,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
         cancelButton.addEventListener(
             "click",
-            closeAgreementAndLeave
+            closeAgreement
         );
     }
 
@@ -202,7 +211,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
         cancelTopButton.addEventListener(
             "click",
-            closeAgreementAndLeave
+            closeAgreement
         );
     }
 
@@ -682,15 +691,22 @@ document.addEventListener("DOMContentLoaded", function () {
     // Every registration attempt represents a new account.
     // Browser storage must never satisfy another customer's acceptance.
     if (agreementModal) {
+
         if (termsAcceptedInput) {
             termsAcceptedInput.value = "false";
+        }
+
+        if (termsCheckbox) {
+            termsCheckbox.checked = false;
         }
 
         agreementModal.style.display = "flex";
         agreementModal.setAttribute("aria-hidden", "false");
 
-        if (agreeButton) {
-            agreeButton.focus();
+        document.body.style.overflow = "hidden";
+
+        if (termsCheckbox) {
+            termsCheckbox.focus();
         }
     }
 

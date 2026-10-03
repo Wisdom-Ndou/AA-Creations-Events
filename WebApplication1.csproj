@@ -258,6 +258,10 @@
     <Compile Include="Migrations\202610031340385_DiagnoseStaffCity.Designer.cs">
       <DependentUpon>202610031340385_DiagnoseStaffCity.cs</DependentUpon>
     </Compile>
+    <Compile Include="Migrations\202610032100554_SyncTermsAcceptanceSchema.cs" />
+    <Compile Include="Migrations\202610032100554_SyncTermsAcceptanceSchema.Designer.cs">
+      <DependentUpon>202610032100554_SyncTermsAcceptanceSchema.cs</DependentUpon>
+    </Compile>
     <Compile Include="Migrations\Configuration.cs" />
     <Compile Include="Models\AddOn.cs" />
     <Compile Include="Models\Admin.cs" />
@@ -301,7 +305,7 @@
     <Content Include="Content\bootstrap.rtl.css" />
     <Content Include="Content\bootstrap.rtl.min.css" />
     <Content Include="Content\contactus.css" />
-    <Content Include="Content\Customer register styles.css" />
+    <Content Include="Content\CustomerRegister.css" />
     <Content Include="Content\Login Style.css" />
     <Content Include="Content\Manage Account styles.css" />
     <Content Include="Content\sstyle.css" />
@@ -321,7 +325,7 @@
     <Content Include="Scripts\bootstrap.min.js" />
     <Content Include="Scripts\Common.js" />
     <Content Include="Scripts\contactus.js" />
-    <Content Include="Scripts\Customer register script.js" />
+    <Content Include="Scripts\CustomerRegister.js" />
     <None Include="Scripts\jquery-3.7.1.intellisense.js" />
     <Content Include="Scripts\jquery-3.7.1.js" />
     <Content Include="Scripts\jquery-3.7.1.min.js" />
@@ -454,6 +458,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Migrations\202610031340385_DiagnoseStaffCity.resx">
       <DependentUpon>202610031340385_DiagnoseStaffCity.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\202610032100554_SyncTermsAcceptanceSchema.resx">
+      <DependentUpon>202610032100554_SyncTermsAcceptanceSchema.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <PropertyGroup>
