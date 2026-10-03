@@ -275,7 +275,6 @@ namespace WebApplication1.Controllers
             // Start a fresh Forgot Password OTP flow.
             Session.Remove("OtpVerified");
             Session.Remove("OtpPurpose");
-            Session.Remove("TestOtp");
 
             Session["OtpCustomerId"] = customer.Cust_ID;
             return RedirectToAction(
@@ -342,22 +341,10 @@ namespace WebApplication1.Controllers
 
             var deliveryService = new OtpDeliveryService();
 
-            bool sent;
-
-            if (deliveryMethod == "Email")
-            {
-                sent = deliveryService.SendOtpByEmail(
-                    customer.Cust_Email,
-                    otp
-                );
-            }
-            else
-            {
-                sent = deliveryService.SendOtpByPhone(
-                    customer.Cust_Phone,
-                    otp
-                );
-            }
+            bool sent = deliveryService.SendOtpByEmail(
+                customer.Cust_Email,
+                otp
+            );
 
             if (!sent)
             {
@@ -1038,22 +1025,10 @@ namespace WebApplication1.Controllers
 
             var deliveryService = new OtpDeliveryService();
 
-            bool sent;
-
-            if (deliveryMethod == "Email")
-            {
-                sent = deliveryService.SendOtpByEmail(
-                    customer.Cust_Email,
-                    otp
-                );
-            }
-            else
-            {
-                sent = deliveryService.SendOtpByPhone(
-                    customer.Cust_Phone,
-                    otp
-                );
-            }
+            bool sent = deliveryService.SendOtpByEmail(
+                customer.Cust_Email,
+                otp
+            );
 
             if (!sent)
             {
@@ -1351,7 +1326,6 @@ namespace WebApplication1.Controllers
             Session.Remove("OtpVerified");
             Session.Remove("OtpPurpose");
             Session.Remove("OtpCustomerId");
-            Session.Remove("TestOtp");
 
             TempData["AccountSuccess"] =
                 "Your password has been changed successfully.";
