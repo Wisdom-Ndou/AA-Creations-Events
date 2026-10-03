@@ -1142,6 +1142,10 @@ namespace WebApplication1.Controllers
 
             if (verification.FailedAttempts >= 5)
             {
+                verification.IsUsed = true;
+                db.SaveChanges();
+                Session.Remove("ExpectedOtpPurpose");
+
                 ModelState.AddModelError(
                     "",
                     "Too many incorrect attempts. Please request a new code."
@@ -1159,11 +1163,19 @@ namespace WebApplication1.Controllers
             {
                 verification.FailedAttempts++;
 
+                if (verification.FailedAttempts >= 5)
+                {
+                    verification.IsUsed = true;
+                    Session.Remove("ExpectedOtpPurpose");
+                }
+
                 db.SaveChanges();
 
                 ModelState.AddModelError(
                     "",
-                    "Incorrect verification code."
+                    verification.FailedAttempts >= 5
+                        ? "Too many incorrect attempts. Please request a new code."
+                        : "Incorrect verification code."
                 );
 
                 return View();
