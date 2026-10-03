@@ -371,6 +371,7 @@ et40\System.Web.Optimization.dll</HintPath>
     <Content Include="Views\Cust\ForgotPassword.cshtml" />
     <Content Include="Views\Cust\ForgotPasswordMethod.cshtml" />
     <Content Include="Views\Cust\AdminDashboard.cshtml" />
+    <Content Include="Views\Cust\AdminStaffComplaints.cshtml" />
     <Content Include="Views\Cust\AllBookings.cshtml" />
     <Content Include="Views\Cust\UpcomingEvents.cshtml" />
     <Content Include="Views\Cust\PendingApprovals.cshtml" />
