@@ -2687,7 +2687,7 @@ namespace WebApplication1.Controllers
             if (value == "pmb" || value == "pietermaritzburg" || value.Contains("msunduzi"))
                 return "pietermaritzburg";
 
-            if (value == "mandeni" || value == "umtata")
+            if (value == "mandeni" || value.Contains("mandeni local municipality"))
                 return "mandeni";
 
             return value;
