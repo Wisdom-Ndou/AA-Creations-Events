@@ -622,7 +622,7 @@ namespace WebApplication1.Controllers
                     return Json(new
                     {
                         success = false,
-                        message = "Please select Durban, Pietermaritzburg or Mthatha."
+                        message = "Please select Durban, Pietermaritzburg or Mandeni."
                     });
                 }
 
