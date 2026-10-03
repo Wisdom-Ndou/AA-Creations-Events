@@ -38,6 +38,11 @@ namespace WebApplication1.Models
         [StringLength(20)]
         public string Status { get; set; }
 
+        [StringLength(1000)]
+        public string CompletionReason { get; set; }
+
+        public DateTime? CompletedAt { get; set; }
+
         public DateTime CreatedAt { get; set; }
     }
 }
