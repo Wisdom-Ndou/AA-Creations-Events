@@ -39,6 +39,8 @@ namespace WebApplication1.Models
         public DbSet<CustomerAgreement> CustomerAgreements { get; set; }
 
         public DbSet<TermsAndConditions> TermsAndConditions { get; set; }
+
+        public DbSet<Expenditure> Expenditures { get; set; }
         
 
     }
