@@ -1,4 +1,193 @@
 ﻿/* =========================================================
+    AA CREATIONS & EVENTS ACCOUNT AGREEMENT MODAL
+    ========================================================= */
+
+.aa-agreement-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 99999;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 20px;
+
+    background: rgba(0, 0, 0, 0.68);
+}
+
+.aa-agreement-modal {
+    position: relative;
+
+    width: 100%;
+    max-width: 760px;
+    max-height: 92vh;
+
+    overflow-y: auto;
+
+    background: #ffffff;
+    border-radius: 16px;
+
+    padding: 32px;
+
+    box-shadow: 0 25px 70px rgba(0, 0, 0, 0.35);
+}
+
+    .aa-agreement-modal h2 {
+        margin-top: 0;
+        margin-bottom: 10px;
+    }
+
+.aa-agreement-introduction {
+    color: #555;
+    line-height: 1.6;
+}
+
+.aa-agreement-close {
+    position: absolute;
+    top: 12px;
+    right: 16px;
+    width: 40px;
+    height: 40px;
+    border: none;
+    background: transparent;
+    font-size: 30px;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.aa-agreement-scroll {
+    max-height: 300px;
+    overflow-y: auto;
+    margin-top: 20px;
+    padding: 20px;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    background: #fafafa;
+}
+
+    .aa-agreement-scroll h3 {
+        margin-top: 0;
+    }
+
+    .aa-agreement-scroll h4 {
+        margin-top: 20px;
+        margin-bottom: 6px;
+    }
+
+    .aa-agreement-scroll p {
+        line-height: 1.6;
+    }
+
+    .aa-agreement-scroll a {
+        text-decoration: underline;
+    }
+
+.aa-cookie-preference {
+    margin-top: 22px;
+    padding-top: 20px;
+    border-top: 1px solid #ddd;
+}
+
+    .aa-cookie-preference h3 {
+        margin-top: 0;
+    }
+
+.aa-cookie-choice {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    margin-top: 10px;
+    padding: 14px;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    cursor: pointer;
+}
+
+    .aa-cookie-choice input {
+        margin-top: 4px;
+    }
+
+    .aa-cookie-choice span {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+    }
+
+    .aa-cookie-choice small {
+        color: #666;
+        line-height: 1.4;
+    }
+
+.aa-agreement-checkbox {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin-top: 22px;
+    cursor: pointer;
+}
+
+    .aa-agreement-checkbox input {
+        margin-top: 4px;
+    }
+
+.aa-agreement-error {
+    margin-top: 10px;
+    color: #b00020;
+    font-size: 14px;
+}
+
+.aa-agreement-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-top: 24px;
+}
+
+    .aa-agreement-actions button {
+        padding: 12px 22px;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: 600;
+    }
+
+.aa-agreement-cancel {
+    border: 1px solid #ccc;
+    background: #eee;
+    color: #222;
+}
+
+.aa-agreement-continue {
+    border: none;
+    background: #222;
+    color: #fff;
+}
+
+@media (max-width: 600px) {
+    .aa-agreement-overlay {
+        padding: 10px;
+    }
+
+    .aa-agreement-modal {
+        max-height: 95vh;
+        padding: 24px 18px;
+    }
+
+    .aa-agreement-actions {
+        flex-direction: column;
+    }
+
+        .aa-agreement-actions button {
+            width: 100%;
+        }
+}
+
+
+
+
+
+
+/* =========================================================
    AA Creations & Events — Customer Registration (3-step wizard)
    Translated from the React/TSX (Tailwind + inline style) source
    ========================================================= */
