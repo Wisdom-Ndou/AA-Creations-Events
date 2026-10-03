@@ -335,6 +335,18 @@ namespace WebApplication1.Controllers
                 FailedAttempts = 0
             };
 
+            // Only the newest unused code for this purpose should remain valid.
+            var previousOtps = db.OtpVerifications
+                .Where(o => o.CustomerId == customer.Cust_ID &&
+                            o.Purpose == "ForgotPassword" &&
+                            !o.IsUsed)
+                .ToList();
+
+            foreach (var previousOtp in previousOtps)
+            {
+                previousOtp.IsUsed = true;
+            }
+
             db.OtpVerifications.Add(otpVerification);
             db.SaveChanges();
             Session["ExpectedOtpPurpose"] = "ForgotPassword";
@@ -348,6 +360,11 @@ namespace WebApplication1.Controllers
 
             if (!sent)
             {
+                // A code that was never delivered must never remain usable.
+                otpVerification.IsUsed = true;
+                db.SaveChanges();
+                Session.Remove("ExpectedOtpPurpose");
+
                 TempData["OtpError"] =
                     "We could not send the verification code.";
 
@@ -1019,6 +1036,18 @@ namespace WebApplication1.Controllers
                 FailedAttempts = 0
             };
 
+            // Only the newest unused code for this purpose should remain valid.
+            var previousOtps = db.OtpVerifications
+                .Where(o => o.CustomerId == customer.Cust_ID &&
+                            o.Purpose == purpose &&
+                            !o.IsUsed)
+                .ToList();
+
+            foreach (var previousOtp in previousOtps)
+            {
+                previousOtp.IsUsed = true;
+            }
+
             db.OtpVerifications.Add(otpVerification);
             db.SaveChanges();
             Session["ExpectedOtpPurpose"] = purpose;
@@ -1032,6 +1061,11 @@ namespace WebApplication1.Controllers
 
             if (!sent)
             {
+                // A code that was never delivered must never remain usable.
+                otpVerification.IsUsed = true;
+                db.SaveChanges();
+                Session.Remove("ExpectedOtpPurpose");
+
                 TempData["OtpError"] =
                     "We could not send the verification code.";
 
