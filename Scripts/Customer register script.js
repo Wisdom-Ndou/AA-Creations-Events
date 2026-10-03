@@ -26,70 +26,35 @@ document.addEventListener("DOMContentLoaded", function () {
     // ==================================================
 
     var agreementModal = el("registrationAgreement");
-
     var agreeButton = el("agreeAndContinue");
-
     var cancelButton = el("cancelAgreement");
-
     var cancelTopButton = el("cancelAgreementTop");
-
     var termsCheckbox = el("termsAgreementCheckbox");
-
     var agreementError = el("agreementError");
 
     var termsAcceptedInput = el("termsAccepted");
-
+    var termsVersionInput = el("termsVersion");
     var cookiePreferenceInput = el("cookiePreference");
-
-
-    // ==================================================
-    // PREVENT FORM SUBMISSION BEFORE AGREEMENT
-    // ==================================================
-
-    if (form) {
-        form.addEventListener("submit", function (event) {
-            // Check if terms have been accepted via the form's hidden input
-            if (termsAcceptedInput && termsAcceptedInput.value !== "true") {
-                event.preventDefault();
-                event.stopPropagation();
-
-                // Show the agreement modal if it exists and is hidden
-                if (agreementModal && agreementModal.style.display === "none") {
-                    agreementModal.style.display = "block";
-                    agreementModal.setAttribute("aria-hidden", "false");
-
-                    // Focus on the agreement modal for accessibility
-                    var firstButton = agreementModal.querySelector("button");
-                    if (firstButton) {
-                        firstButton.focus();
-                    }
-                }
-
-                return false;
-            }
-
-            return true;
-        });
-    }
 
 
     // ==================================================
     // CLOSE AGREEMENT AND LEAVE
     // ==================================================
 
-    function closeAgreementAndLeave() {
+    function closeAgreementAndLeave(event) {
 
-        if (agreementModal) {
-
-            agreementModal.style.display = "none";
-
-            agreementModal.setAttribute(
-                "aria-hidden",
-                "true"
-            );
+        if (event) {
+            event.preventDefault();
+            event.stopPropagation();
         }
 
-        window.location.href = "/Cust/Index";
+        if (termsAcceptedInput) {
+            termsAcceptedInput.value = "false";
+        }
+
+        // Customer chose not to accept the Terms,
+        // so leave the registration page.
+        window.location.href = "/Cust/Login";
     }
 
 
@@ -113,19 +78,13 @@ document.addEventListener("DOMContentLoaded", function () {
 
     function acceptAgreement(event) {
 
-        // Prevent the button from performing any default action.
         if (event) {
-
             event.preventDefault();
-
             event.stopPropagation();
         }
 
 
-        // --------------------------------------------------
-        // REQUIRE TERMS CHECKBOX
-        // --------------------------------------------------
-
+        // Require Terms checkbox.
         if (!termsCheckbox || !termsCheckbox.checked) {
 
             showAgreementError(true);
@@ -138,31 +97,27 @@ document.addEventListener("DOMContentLoaded", function () {
         }
 
 
-        // --------------------------------------------------
-        // HIDE AGREEMENT ERROR
-        // --------------------------------------------------
+        // Make sure there is a current Terms version.
+        var acceptedVersion =
+            termsVersionInput
+                ? termsVersionInput.value
+                : "";
+
+        if (!acceptedVersion) {
+
+            showAgreementError(true);
+
+            return false;
+        }
+
 
         showAgreementError(false);
 
 
-        // --------------------------------------------------
-        // MARK TERMS AS ACCEPTED
-        // --------------------------------------------------
-
-        if (termsAcceptedInput) {
-
-            termsAcceptedInput.value = "true";
-        }
-
-
-        // --------------------------------------------------
-        // GET COOKIE PREFERENCE
-        // --------------------------------------------------
-
+        // Get selected cookie preference.
         var selectedCookie = document.querySelector(
             'input[name="agreementCookiePreference"]:checked'
         );
-
 
         var selectedPreference =
             selectedCookie
@@ -170,59 +125,24 @@ document.addEventListener("DOMContentLoaded", function () {
                 : "necessary";
 
 
-        // --------------------------------------------------
-        // SAVE COOKIE PREFERENCE TO FORM
-        // --------------------------------------------------
+        // Update hidden form values.
+        if (termsAcceptedInput) {
+            termsAcceptedInput.value = "true";
+        }
 
         if (cookiePreferenceInput) {
-
             cookiePreferenceInput.value =
                 selectedPreference;
         }
 
 
-        // --------------------------------------------------
-        // CLOSE TERMS POPUP
-        // --------------------------------------------------
-
-        if (agreementModal) {
-
-            agreementModal.style.display = "none";
-
-            agreementModal.setAttribute(
-                "aria-hidden",
-                "true"
-            );
-        }
-
-
-        // --------------------------------------------------
-        // REMEMBER TERMS ACCEPTANCE
-        // --------------------------------------------------
-
+        // Remember exact Terms version accepted.
         try {
 
-            sessionStorage.setItem(
-                "aa_registration_terms_accepted",
-                "true"
+            localStorage.setItem(
+                "aa_registration_terms_accepted_version",
+                acceptedVersion
             );
-
-        }
-        catch (error) {
-
-            console.warn(
-                "Unable to save Terms acceptance.",
-                error
-            );
-
-        }
-
-
-        // --------------------------------------------------
-        // REMEMBER COOKIE PREFERENCE
-        // --------------------------------------------------
-
-        try {
 
             localStorage.setItem(
                 "aa_cookie_preference",
@@ -233,16 +153,36 @@ document.addEventListener("DOMContentLoaded", function () {
         catch (error) {
 
             console.warn(
-                "Unable to save cookie preference.",
+                "Unable to save agreement preferences.",
                 error
             );
-
         }
 
-        // Focus on the first form field to guide user
-        var firstField = form.querySelector("input[type='text'], input[type='email'], input[type='tel'], input[type='password']");
-        if (firstField) {
-            firstField.focus();
+
+        // Close the Terms modal.
+        if (agreementModal) {
+
+            agreementModal.style.display = "none";
+
+            agreementModal.setAttribute(
+                "aria-hidden",
+                "true"
+            );
+
+            document.body.style.overflow = "";
+        }
+
+
+        // Move customer to first registration field.
+        if (form) {
+
+            var firstField = form.querySelector(
+                "input[type='text'], input[type='email'], input[type='tel'], input[type='password']"
+            );
+
+            if (firstField) {
+                firstField.focus();
+            }
         }
 
         return true;
@@ -257,45 +197,34 @@ document.addEventListener("DOMContentLoaded", function () {
 
         agreeButton.addEventListener(
             "click",
-            function (event) {
-
-                acceptAgreement(event);
-
-            }
+            acceptAgreement
         );
-
     }
 
 
     // ==================================================
-    // CANCEL BUTTONS
+    // CANCEL BUTTON
     // ==================================================
 
     if (cancelButton) {
 
         cancelButton.addEventListener(
             "click",
-            function () {
-
-                closeAgreementAndLeave();
-
-            }
+            closeAgreementAndLeave
         );
-
     }
 
+
+    // ==================================================
+    // TOP X BUTTON
+    // ==================================================
 
     if (cancelTopButton) {
 
         cancelTopButton.addEventListener(
             "click",
-            function () {
-
-                closeAgreementAndLeave();
-
-            }
+            closeAgreementAndLeave
         );
-
     }
 
 
@@ -310,14 +239,11 @@ document.addEventListener("DOMContentLoaded", function () {
             function () {
 
                 if (termsCheckbox.checked) {
-
                     showAgreementError(false);
-
                 }
 
             }
         );
-
     }
 
 
@@ -689,9 +615,8 @@ document.addEventListener("DOMContentLoaded", function () {
             "submit",
             function (event) {
 
-
                 // ------------------------------------------
-                // REQUIRE TERMS ACCEPTANCE
+                // REQUIRE CURRENT TERMS ACCEPTANCE
                 // ------------------------------------------
 
                 if (
@@ -702,6 +627,20 @@ document.addEventListener("DOMContentLoaded", function () {
                     event.preventDefault();
 
                     showAgreementError(true);
+
+                    if (agreementModal) {
+
+                        agreementModal.style.display = "flex";
+
+                        agreementModal.setAttribute(
+                            "aria-hidden",
+                            "false"
+                        );
+                    }
+
+                    if (termsCheckbox) {
+                        termsCheckbox.focus();
+                    }
 
                     return false;
                 }
@@ -734,7 +673,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
                     event.preventDefault();
 
-
                     if (
                         !passwordValid &&
                         passwordInput
@@ -749,24 +687,15 @@ document.addEventListener("DOMContentLoaded", function () {
 
                     }
 
-
                     return false;
                 }
 
-
-                // ------------------------------------------
-                // EVERYTHING IS VALID
-                //
-                // DO NOT CALL preventDefault()
-                //
-                // MVC WILL RECEIVE THE POST REQUEST.
-                // ------------------------------------------
+                // Otherwise allow MVC to submit.
 
             }
         );
 
     }
-
 
     // ==================================================
     // INITIAL TERMS POPUP
@@ -774,15 +703,19 @@ document.addEventListener("DOMContentLoaded", function () {
 
     if (agreementModal) {
 
-        var alreadyAccepted = false;
+        var currentTermsVersion =
+            termsVersionInput
+                ? termsVersionInput.value
+                : "";
 
+        var acceptedTermsVersion = null;
 
         try {
 
-            alreadyAccepted =
-                sessionStorage.getItem(
-                    "aa_registration_terms_accepted"
-                ) === "true";
+            acceptedTermsVersion =
+                localStorage.getItem(
+                    "aa_registration_terms_accepted_version"
+                );
 
         }
         catch (error) {
@@ -795,23 +728,20 @@ document.addEventListener("DOMContentLoaded", function () {
         }
 
 
-        if (!alreadyAccepted) {
+        // --------------------------------------------------
+        // USER HAS ACCEPTED THIS EXACT VERSION
+        // --------------------------------------------------
 
-            agreementModal.style.display =
-                "flex";
+        if (
+            currentTermsVersion &&
+            acceptedTermsVersion === currentTermsVersion
+        ) {
 
+            if (termsAcceptedInput) {
+                termsAcceptedInput.value = "true";
+            }
 
-            agreementModal.setAttribute(
-                "aria-hidden",
-                "false"
-            );
-
-        }
-        else {
-
-            agreementModal.style.display =
-                "none";
-
+            agreementModal.style.display = "none";
 
             agreementModal.setAttribute(
                 "aria-hidden",
@@ -820,7 +750,29 @@ document.addEventListener("DOMContentLoaded", function () {
 
         }
 
+        // --------------------------------------------------
+        // USER HAS NOT ACCEPTED THIS VERSION
+        // --------------------------------------------------
+
+        else {
+
+            if (termsAcceptedInput) {
+                termsAcceptedInput.value = "false";
+            }
+
+            agreementModal.style.display = "flex";
+
+            agreementModal.setAttribute(
+                "aria-hidden",
+                "false"
+            );
+
+            if (agreeButton) {
+                agreeButton.focus();
+            }
+
+        }
+
     }
 
-});
 });

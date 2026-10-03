@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Web;
 using System.Web.Mvc;
@@ -250,10 +251,11 @@ namespace WebApplication1.Controllers
             var currentTerms = db.TermsAndConditions
                 .Where(t => t.IsActive)
                 .OrderByDescending(t => t.EffectiveDate)
+                .ThenByDescending(t => t.Terms_ID)
                 .FirstOrDefault();
 
             ViewBag.CurrentTerms = currentTerms;
-            ViewBag.TermsVersion = currentTerms?.Version ?? "1.0";
+            ViewBag.TermsVersion = currentTerms?.Version;
 
             return View();
         }
@@ -264,6 +266,7 @@ namespace WebApplication1.Controllers
             var currentTerms = db.TermsAndConditions
                 .Where(t => t.IsActive)
                 .OrderByDescending(t => t.EffectiveDate)
+                .ThenByDescending(t => t.Terms_ID)
                 .FirstOrDefault();
 
             ViewBag.CurrentTerms = currentTerms;
@@ -274,18 +277,23 @@ namespace WebApplication1.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         public ActionResult Customerregister(
-          Customer obj,
-          bool termsAccepted,
-          string termsVersion,
-          string cookiePreference)
+            Customer obj,
+            bool termsAccepted,
+            string termsVersion,
+            string cookiePreference)
         {
-            // Get the currently active Terms & Conditions from the database.
+            // Get the latest active Terms & Conditions.
             var currentTerms = db.TermsAndConditions
                 .Where(t => t.IsActive)
                 .OrderByDescending(t => t.EffectiveDate)
+                .ThenByDescending(t => t.Terms_ID)
                 .FirstOrDefault();
 
-            // Make sure there is an active Terms & Conditions version.
+            // Required whenever this action returns the registration View.
+            ViewBag.CurrentTerms = currentTerms;
+            ViewBag.TermsVersion = currentTerms?.Version;
+
+            // There must be an active Terms version.
             if (currentTerms == null)
             {
                 ModelState.AddModelError(
@@ -296,7 +304,7 @@ namespace WebApplication1.Controllers
                 return View(obj);
             }
 
-            // Customer must accept the Terms & Conditions.
+            // Customer must accept the Terms.
             if (!termsAccepted)
             {
                 ModelState.AddModelError(
@@ -307,25 +315,28 @@ namespace WebApplication1.Controllers
                 return View(obj);
             }
 
-            // Make sure the customer accepted the currently active version.
-            if (termsVersion != currentTerms.Version)
+            // Make sure the submitted version is still the current version.
+            if (!string.Equals(
+                    termsVersion,
+                    currentTerms.Version,
+                    StringComparison.OrdinalIgnoreCase))
             {
                 ModelState.AddModelError(
                     "",
-                    "The Terms & Conditions version is no longer valid. Please review the latest terms."
+                    "The Terms & Conditions have been updated. Please review and accept the latest version."
                 );
 
                 return View(obj);
             }
 
             // Only accept recognised cookie preferences.
-            if (cookiePreference != "necessary" && cookiePreference != "all")
+            if (cookiePreference != "necessary" &&
+                cookiePreference != "all")
             {
                 cookiePreference = "necessary";
             }
 
-
-
+            // Validate password.
             if (string.IsNullOrWhiteSpace(obj.Cust_Passw) ||
                 obj.Cust_Passw.Length < 6 ||
                 obj.Cust_Passw.Length > 15 ||
@@ -340,8 +351,9 @@ namespace WebApplication1.Controllers
                 return View(obj);
             }
 
-            // Check whether email is already registered
-            if (db.Customers.Any(c => c.Cust_Email == obj.Cust_Email))
+            // Check whether email is already registered.
+            if (db.Customers.Any(c =>
+                c.Cust_Email == obj.Cust_Email))
             {
                 ModelState.AddModelError(
                     "Cust_Email",
@@ -352,54 +364,61 @@ namespace WebApplication1.Controllers
             }
 
             using (var transaction = db.Database.BeginTransaction())
-
             {
                 try
                 {
-                    //Hash the password before saving to the database
-                    obj.Cust_Passw = Crypto.HashPassword(obj.Cust_Passw);
+                    // Hash password.
+                    obj.Cust_Passw =
+                        Crypto.HashPassword(obj.Cust_Passw);
 
+                    // Record Terms acceptance on customer.
+                    obj.AcceptedTermsID =
+                        currentTerms.Terms_ID;
+
+                    obj.TermsAcceptedDate =
+                        DateTime.Now;
+
+                    // Save customer.
                     db.Customers.Add(obj);
                     db.SaveChanges();
 
-                    // Record which Terms & Conditions version the customer accepted.
-                    obj.AcceptedTermsID = currentTerms.Terms_ID;
-                    obj.TermsAcceptedDate = DateTime.Now;
+                    // Record detailed agreement.
+                    var agreement =
+                        new CustomerAgreement
+                        {
+                            CustomerId = obj.Cust_ID,
 
-                    db.Entry(obj).State = EntityState.Modified;
-                    db.SaveChanges();
+                            TermsAccepted = true,
 
-                    // Create agreement record using the new customer ID.
-                    var agreement = new CustomerAgreement
-                    {
-                        CustomerId = obj.Cust_ID,
-                        TermsAccepted = true,
-                        TermsVersion = currentTerms.Version,
-                        AcceptedAt = obj.TermsAcceptedDate.Value,
-                        CookiePreference = cookiePreference
-                    };
+                            TermsVersion =
+                                currentTerms.Version,
 
-                    // Save agreement.
+                            AcceptedAt =
+                                obj.TermsAcceptedDate.Value,
+
+                            CookiePreference =
+                                cookiePreference
+                        };
+
                     db.CustomerAgreements.Add(agreement);
                     db.SaveChanges();
-
-
 
                     transaction.Commit();
                 }
                 catch
                 {
                     transaction.Rollback();
-
                     throw;
                 }
-
             }
 
             TempData["RegistrationSuccess"] =
                 "Your registration was successful. You can now sign in and start booking.";
 
-            return RedirectToAction("Customerregister", "Cust");
+            return RedirectToAction(
+                "Customerregister",
+                "Cust"
+            );
         }
 
         public ActionResult Adminregister(Customer obj)
