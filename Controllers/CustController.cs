@@ -786,6 +786,40 @@ namespace WebApplication1.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        public JsonResult CancelCustomerBooking(int bookingId)
+        {
+            if (Session["CustomerId"] == null)
+                return Json(new { success = false, requiresLogin = true, message = "Please sign in first." });
+
+            int customerId = (int)Session["CustomerId"];
+            var booking = db.Bookings.FirstOrDefault(b => b.BookingId == bookingId && b.CustomerId == customerId);
+
+            if (booking == null)
+                return Json(new { success = false, message = "Booking could not be found." });
+
+            string current = booking.Status ?? "Pending";
+            if (current == "Setup Completed" || current == "Completed" || current == "Declined" || current == "Cancelled")
+                return Json(new { success = false, message = "This booking can no longer be cancelled online." });
+
+            booking.Status = "Cancelled";
+
+            var pendingTasks = db.StaffTasks
+                .Where(t => t.BookingId == bookingId && t.Status == "Pending")
+                .ToList();
+
+            foreach (var task in pendingTasks)
+            {
+                task.Status = "Cancelled";
+                task.CompletionReason = "Booking cancelled by customer.";
+                task.CompletedAt = DateTime.Now;
+            }
+
+            db.SaveChanges();
+            return Json(new { success = true, status = booking.Status, message = "Booking cancelled." });
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
         public JsonResult CompleteCustomerBooking(int bookingId)
         {
             if (Session["CustomerId"] == null)
