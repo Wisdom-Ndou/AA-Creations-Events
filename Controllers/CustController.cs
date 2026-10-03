@@ -2145,6 +2145,58 @@ namespace WebApplication1.Controllers
             return RedirectToAction("StaffTasks", "Cust");
         }
 
+        [HttpGet]
+        public ActionResult AdminStaffComplaints()
+        {
+            if (Session["AdminId"] == null ||
+                Session["AdminAuthenticated"] == null ||
+                !(bool)Session["AdminAuthenticated"])
+            {
+                return RedirectToAction("Login", "Cust");
+            }
+
+            var complaints = db.StaffComplaints
+                .Include("Staff")
+                .Include("Booking")
+                .OrderBy(cmp => cmp.Status == "Open" ? 0 : 1)
+                .ThenByDescending(cmp => cmp.CreatedAt)
+                .ToList();
+
+            return View(complaints);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public ActionResult RespondToStaffComplaint(int complaintId, string adminResponse, string status)
+        {
+            if (Session["AdminId"] == null ||
+                Session["AdminAuthenticated"] == null ||
+                !(bool)Session["AdminAuthenticated"])
+            {
+                return RedirectToAction("Login", "Cust");
+            }
+
+            var complaint = db.StaffComplaints.FirstOrDefault(cmp => cmp.ComplaintId == complaintId);
+            if (complaint == null)
+            {
+                return HttpNotFound();
+            }
+
+            if (string.IsNullOrWhiteSpace(adminResponse))
+            {
+                TempData["ComplaintAdminSuccess"] = "A response is required.";
+                return RedirectToAction("AdminStaffComplaints");
+            }
+
+            complaint.AdminResponse = adminResponse.Trim();
+            complaint.Status = status == "Resolved" ? "Resolved" : "Open";
+            complaint.ResolvedAt = complaint.Status == "Resolved" ? (DateTime?)DateTime.Now : null;
+            db.SaveChanges();
+
+            TempData["ComplaintAdminSuccess"] = "Complaint updated successfully.";
+            return RedirectToAction("AdminStaffComplaints");
+        }
+
         public ActionResult StaffComplaints()
         {
             if (!IsStaffAuthenticated())
