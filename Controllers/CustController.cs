@@ -1826,7 +1826,15 @@ namespace WebApplication1.Controllers
                 return RedirectToAction("Login", "Cust");
             }
 
-            return View();
+            // Use the same persisted booking status that drives the dashboard count.
+            // Older/null statuses are treated as pending for compatibility.
+            var pendingBookings = db.Bookings
+                .Where(b => string.IsNullOrEmpty(b.Status) || b.Status == "Pending")
+                .OrderBy(b => b.EventDate)
+                .ThenBy(b => b.CreatedAt)
+                .ToList();
+
+            return View(pendingBookings);
         }
 
 
