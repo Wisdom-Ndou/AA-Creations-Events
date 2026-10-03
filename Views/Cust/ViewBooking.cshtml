@@ -14,7 +14,9 @@
 <body data-page="bookings">
 
     <main class="bookings-page" id="bookingsApp"
-          data-logged-in="@(Session["CustomerEmail"] != null ? "true" : "false")">
+          data-logged-in="@(Session["CustomerEmail"] != null ? "true" : "false")"
+          data-complete-url="@Url.Action("CompleteCustomerBooking", "Cust")">
+        @Html.AntiForgeryToken()
 
         <!-- Login Overlay -->
         <div id="bookingsLoginOverlay" class="booking-login-overlay">
@@ -142,7 +144,8 @@
                     }),
                     totalPrice = b.TotalPrice,
                     createdAt = b.CreatedAt,
-                    status = b.Status
+                    status = b.Status,
+                    staffAssigned = b.Status == "Approved" && b.BookingId > 0
                 })
             )
         );
