@@ -14,6 +14,180 @@
     <title>My Bookings | AA Creations & Events</title>
 
     <link rel="stylesheet" href="~/Content/sstyle.css">
+
+    <style>
+        /* Critical cancellation-popup styles kept here so the dialog never
+           falls back into normal page flow if the external CSS is cached. */
+        #cancelBookingModal {
+            position: fixed;
+            inset: 0;
+            z-index: 9999;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+            background: rgba(13, 0, 8, .76);
+            backdrop-filter: blur(5px);
+        }
+
+        #cancelBookingModal.is-open {
+            display: flex;
+        }
+
+        #cancelBookingModal .cancel-modal {
+            position: relative;
+            width: min(100%, 560px);
+            max-height: calc(100vh - 48px);
+            overflow-y: auto;
+            padding: 30px;
+            border: 1px solid #ead6e3;
+            border-radius: 24px;
+            background: #fffafd;
+            box-shadow: 0 30px 90px rgba(44,0,22,.34);
+        }
+
+        #cancelBookingModal .cancel-modal-close {
+            position: absolute;
+            top: 16px;
+            right: 18px;
+            width: 34px;
+            height: 34px;
+            display: grid;
+            place-items: center;
+            border: 0;
+            border-radius: 50%;
+            color: #7a3a5c;
+            background: #f6eaf0;
+            font-size: 22px;
+            cursor: pointer;
+        }
+
+        #cancelBookingModal .cancel-modal-close:hover {
+            color: #fff;
+            background: #c51562;
+        }
+
+        #cancelBookingModal .cancel-modal-icon {
+            width: 48px;
+            height: 48px;
+            margin-bottom: 14px;
+            display: grid;
+            place-items: center;
+            border-radius: 50%;
+            color: #fff;
+            background: linear-gradient(135deg,#c51562,#e91e8c);
+            font-size: 22px;
+            font-weight: 800;
+        }
+
+        #cancelBookingModal h2 {
+            margin: 0 0 10px;
+            color: #2c1622;
+            font-size: 28px;
+        }
+
+        #cancelBookingModal .cancel-modal-copy {
+            margin: 0 0 18px;
+            color: #725d68;
+            font-size: 14px;
+            line-height: 1.65;
+        }
+
+        #cancelBookingModal .cancel-booking-summary {
+            margin-bottom: 18px;
+            padding: 14px 16px;
+            border: 1px solid #ead6e3;
+            border-radius: 14px;
+            background: #fff2f7;
+            color: #4a2036;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+
+        #cancelBookingModal .cancel-reason-label {
+            display: block;
+            margin-bottom: 7px;
+            color: #6f4057;
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: .08em;
+            text-transform: uppercase;
+        }
+
+        #cancelBookingModal .cancel-reason-input {
+            width: 100%;
+            max-width: none;
+            min-height: 130px;
+            resize: vertical;
+            box-sizing: border-box;
+            padding: 14px 16px;
+            border: 1px solid #dcb9ca;
+            border-radius: 14px;
+            outline: none;
+            color: #2c1622;
+            background: #fff;
+            font: inherit;
+            line-height: 1.55;
+        }
+
+        #cancelBookingModal .cancel-reason-input:focus {
+            border-color: #c51562;
+            box-shadow: 0 0 0 3px rgba(197,21,98,.12);
+        }
+
+        #cancelBookingModal .cancel-reason-input.invalid {
+            border-color: #c73b54;
+        }
+
+        #cancelBookingModal .cancel-reason-footer {
+            min-height: 20px;
+            margin-top: 6px;
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+            color: #9c7a89;
+            font-size: 11px;
+        }
+
+        #cancelBookingModal .cancel-reason-error {
+            color: #b22547;
+            font-weight: 700;
+        }
+
+        #cancelBookingModal .cancel-modal-actions {
+            margin-top: 22px;
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+
+        #cancelBookingModal .cancel-confirm-btn {
+            color: #fff;
+            background: linear-gradient(135deg,#a81446,#d91e68);
+        }
+
+        body.cancel-modal-open {
+            overflow: hidden;
+        }
+
+        @@media (max-width: 560px) {
+            #cancelBookingModal {
+                padding: 14px;
+            }
+
+            #cancelBookingModal .cancel-modal {
+                padding: 24px 20px 20px;
+            }
+
+            #cancelBookingModal .cancel-modal-actions {
+                flex-direction: column-reverse;
+            }
+
+            #cancelBookingModal .cancel-modal-actions .btn {
+                width: 100%;
+            }
+        }
+    </style>
 </head>
 
 <body data-page="bookings">
