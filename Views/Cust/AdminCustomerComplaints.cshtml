@@ -1,0 +1,31 @@
+@using System
+@using System.Linq
+@model IEnumerable<WebApplication1.Models.CustomerComplaint>
+@{ ViewBag.Title = "Customer Complaints"; }
+<link rel="stylesheet" href="~/Content/AdminDashboard.css" />
+<style>
+.complaint-list{display:grid;gap:16px}.complaint-card{background:#151515;border:1px solid #333;border-radius:14px;padding:18px}.complaint-top{display:flex;justify-content:space-between;gap:16px}.complaint-card textarea,.complaint-card select{width:100%;box-sizing:border-box;background:#202020;color:#fff;border:1px solid #444;border-radius:9px;padding:10px;margin-top:8px}.complaint-card textarea{min-height:90px}.complaint-meta{color:#aaa;font-size:.85rem}.complaint-status{color:#ff5e91;font-weight:700}.complaint-actions{display:grid;grid-template-columns:1fr 180px;gap:10px;margin-top:12px}@media(max-width:650px){.complaint-top,.complaint-actions{display:block}.complaint-card select{margin-top:10px}}
+</style>
+<section class="page-head"><div class="badge">Admin Support</div><h1>Customer <em>Complaints</em></h1><p>Review booking-linked complaints and keep customers updated.</p></section>
+<main class="main">
+@if(TempData["CustomerComplaintAdminError"]!=null){<section class="panel">@TempData["CustomerComplaintAdminError"]</section>}
+@if(TempData["CustomerComplaintAdminSuccess"]!=null){<section class="panel">@TempData["CustomerComplaintAdminSuccess"]</section>}
+<section class="panel"><div class="panel-head"><div><h2>Complaint Queue</h2><p>@Model.Count() complaint(s)</p></div></div>
+<div class="complaint-list">
+@if(!Model.Any()){<p>No customer complaints have been submitted.</p>}
+else{
+foreach(var item in Model){
+<article class="complaint-card">
+<div class="complaint-top"><div><strong>@item.Subject</strong><div class="complaint-meta">#BK-@item.BookingId · @(item.Customer == null ? "Customer" : item.Customer.Cust_FName + " " + item.Customer.Cust_LName) · @item.Category · @item.CreatedAt.ToString("dd MMM yyyy HH:mm")</div></div><span class="complaint-status">@item.Status</span></div>
+<p>@item.Description</p>
+@using(Html.BeginForm("RespondToCustomerComplaint","Cust",FormMethod.Post)){
+@Html.AntiForgeryToken()<input type="hidden" name="complaintId" value="@item.ComplaintId" />
+<div class="complaint-actions"><textarea name="adminResponse" placeholder="Write a clear response to the customer…" required>@item.AdminResponse</textarea>
+<select name="status"><option @(item.Status=="Under Review"?"selected":"")>Under Review</option><option @(item.Status=="Resolved"?"selected":"")>Resolved</option><option @(item.Status=="Closed"?"selected":"")>Closed</option></select></div>
+<button type="submit" class="approve-btn" style="margin-top:10px;padding:9px 14px">Save Response</button>
+}
+</article>
+}}
+</div></section>
+<a href="@Url.Action("AdminDashboard","Cust")" class="quick-action" style="max-width:260px">← Back to Admin Dashboard</a>
+</main>
