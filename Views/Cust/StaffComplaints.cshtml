@@ -1,539 +1,719 @@
-﻿@{
-    ViewBag.Title = "Staff Complaints";
+﻿@using WebApplication1.Models
+
+@{
+    ViewBag.Title = "Report Event Issue";
+
+    List<StaffComplaint> myComplaints =
+        ViewBag.MyComplaints as List<StaffComplaint>;
 }
 
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<style>
 
-    <title>@ViewBag.Title</title>
-
-    <style>
-        body {
-            background: linear-gradient(135deg, #ff2a6d 0%, #d9005c 100%);
-            min-height: 100vh;
-            margin: 0;
-            font-family: 'Segoe UI', Roboto, Arial, sans-serif;
-        }
-
-        .complaints-page {
-            max-width: 1200px;
+        .complaint-page {
+            max-width: 850px;
             margin: 0 auto;
-            padding: 3rem 2rem;
+            padding: 45px 25px 70px;
         }
 
-        .page-header {
-            text-align: center;
-            margin-bottom: 2.5rem;
+        .complaint-header {
+            margin-bottom: 30px;
         }
 
-        .badge {
+        .staff-badge {
             display: inline-block;
-            background: #111;
-            color: #ff2a6d;
-            padding: 0.35rem 1rem;
-            border-radius: 999px;
-            font-size: 0.8rem;
-            font-weight: bold;
+            padding: 7px 15px;
+            border-radius: 20px;
+            background: #f4e8e2;
+            color: #8a5b4b;
+            font-size: 12px;
+            font-weight: 700;
             text-transform: uppercase;
-            margin-bottom: 1rem;
+            letter-spacing: 1px;
+            margin-bottom: 15px;
         }
 
-        .page-header h1 {
-            margin: 0;
-            color: #111;
-            font-size: 2.5rem;
-            font-weight: 800;
+        .complaint-header h1 {
+            margin: 0 0 10px;
+            font-size: 38px;
+            color: #222;
         }
 
-            .page-header h1 span {
-                color: #fff;
+            .complaint-header h1 em {
+                color: #b27b68;
                 font-style: italic;
-                text-shadow: 2px 2px 0 #111;
             }
 
-        .page-header p {
-            color: #111;
-            margin-top: 0.7rem;
+        .complaint-header p {
+            margin: 0;
+            color: #777;
+            font-size: 14px;
         }
 
-        .complaint-layout {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 1.5rem;
+        .team-info {
+            margin-top: 8px;
+            color: #999;
+            font-size: 13px;
         }
 
-        .panel {
-            background: #111;
-            border: 1px solid #333;
-            border-radius: 16px;
-            padding: 1.5rem;
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+        .back-navigation {
+            margin-bottom: 25px;
         }
 
-            .panel h2 {
-                color: #fff;
-                margin-top: 0;
-                margin-bottom: 1.3rem;
-                font-size: 1.3rem;
+        .back-btn {
+            display: inline-block;
+            padding: 10px 17px;
+            background: #222;
+            color: white;
+            text-decoration: none;
+            border-radius: 7px;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+            .back-btn:hover {
+                background: #444;
+                color: white;
+                text-decoration: none;
             }
+
+        .complaint-message {
+            padding: 14px 18px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .success-message {
+            background: #e7f6ec;
+            color: #237a42;
+            border: 1px solid #c7e8d2;
+        }
+
+        .error-message {
+            background: #fde8e8;
+            color: #b42318;
+            border: 1px solid #f5c2c2;
+        }
+
+        .complaint-card {
+            background: #fff;
+            border: 1px solid #eee;
+            border-radius: 14px;
+            padding: 28px;
+            box-shadow: 0 5px 20px rgba(0,0,0,.04);
+        }
+
+            .complaint-card h2 {
+                margin: 0 0 6px;
+                color: #222;
+                font-size: 21px;
+            }
+
+        .form-description {
+            margin: 0 0 25px;
+            color: #888;
+            font-size: 13px;
+        }
 
         .form-group {
-            margin-bottom: 1.1rem;
+            margin-bottom: 20px;
         }
 
             .form-group label {
                 display: block;
-                color: #fff;
-                font-size: 0.85rem;
-                font-weight: 600;
-                margin-bottom: 0.4rem;
+                margin-bottom: 7px;
+                color: #444;
+                font-size: 13px;
+                font-weight: 700;
             }
 
-        .form-control {
+        .form-control-custom {
             width: 100%;
             box-sizing: border-box;
-            padding: 0.8rem;
-            border: 1px solid #444;
-            border-radius: 8px;
-            background: #1e1e2e;
-            color: #fff;
-            font-family: inherit;
-            outline: none;
+            padding: 11px 12px;
+            border: 1px solid #ddd;
+            border-radius: 7px;
+            background: #fff;
+            color: #333;
+            font-size: 14px;
         }
 
-            .form-control:focus {
-                border-color: #ff2a6d;
-                box-shadow: 0 0 0 2px rgba(255, 42, 109, 0.15);
+            .form-control-custom:focus {
+                outline: none;
+                border-color: #b27b68;
             }
 
-        textarea.form-control {
-            min-height: 130px;
+        textarea.form-control-custom {
+            min-height: 140px;
             resize: vertical;
         }
 
-        select.form-control {
-            cursor: pointer;
+        .field-help {
+            margin-top: 5px;
+            color: #999;
+            font-size: 11px;
         }
 
-        .submit-btn {
-            width: 100%;
+        .form-actions {
+            margin-top: 25px;
+            padding-top: 22px;
+            border-top: 1px solid #eee;
+        }
+
+        .report-btn {
+            padding: 12px 22px;
             border: none;
-            background: #ff2a6d;
-            color: #111;
-            padding: 0.85rem 1.2rem;
-            border-radius: 8px;
-            font-weight: 800;
+            border-radius: 7px;
+            background: #b27b68;
+            color: white;
+            font-size: 14px;
+            font-weight: 700;
             cursor: pointer;
-            margin-top: 0.5rem;
         }
 
-            .submit-btn:hover {
-                background: #fff;
-                color: #d9005c;
+            .report-btn:hover {
+                background: #966452;
             }
 
-        .complaint-list {
-            display: flex;
-            flex-direction: column;
-            gap: 1rem;
+        @@media (max-width: 700px) {
+
+            .complaint-header h1 {
+                font-size: 32px;
+            }
+
+            .complaint-card {
+                padding: 22px;
+            }
         }
 
-        .complaint-card {
-            background: #1a1a1a;
+        /* ==========================================
+       MY REPORTED ISSUES
+    ========================================== */
+
+        .my-issues-section {
+            margin-top: 35px;
+            background: #111;
             border: 1px solid #333;
-            border-radius: 12px;
-            padding: 1rem;
+            border-radius: 14px;
+            overflow: hidden;
         }
 
-            .complaint-card:hover {
-                border-color: #ff2a6d;
-            }
-
-        .complaint-header {
+        .my-issues-header {
+            padding: 22px 25px;
+            border-bottom: 1px solid #333;
             display: flex;
             justify-content: space-between;
-            align-items: flex-start;
-            gap: 1rem;
+            align-items: center;
+            gap: 20px;
         }
 
-        .complaint-card h3 {
+            .my-issues-header h2 {
+                margin: 0 0 5px;
+                color: #fff;
+                font-size: 20px;
+            }
+
+            .my-issues-header p {
+                margin: 0;
+                color: #aaa;
+                font-size: 13px;
+            }
+
+        .issue-count {
+            background: #ff0066;
             color: #fff;
-            margin: 0 0 0.4rem 0;
-            font-size: 1rem;
-        }
-
-        .complaint-card p {
-            color: #a0a0b0;
-            font-size: 0.85rem;
-            margin: 0.35rem 0;
-            line-height: 1.5;
-        }
-
-        .status {
-            display: inline-block;
-            padding: 0.3rem 0.7rem;
-            border-radius: 999px;
-            font-size: 0.7rem;
-            font-weight: bold;
+            padding: 7px 13px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 700;
             white-space: nowrap;
         }
 
-            .status.open {
-                color: #facc15;
-                border: 1px solid #facc15;
-                background: rgba(250, 204, 21, 0.12);
-            }
-
-            .status.resolved {
-                color: #4ade80;
-                border: 1px solid #4ade80;
-                background: rgba(74, 222, 128, 0.12);
-            }
-
-        .priority {
-            display: inline-block;
-            padding: 0.25rem 0.6rem;
-            border-radius: 999px;
-            font-size: 0.7rem;
-            font-weight: bold;
-            margin-top: 0.5rem;
+        .issues-table-wrapper {
+            width: 100%;
+            overflow-x: auto;
         }
 
-            .priority.high {
-                color: #f87171;
-                border: 1px solid #f87171;
+        .issues-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+            .issues-table th {
+                padding: 14px 16px;
+                text-align: left;
+                color: #aaa;
+                font-size: 11px;
+                text-transform: uppercase;
+                letter-spacing: .5px;
+                border-bottom: 1px solid #333;
             }
 
-            .priority.medium {
-                color: #facc15;
-                border: 1px solid #facc15;
+            .issues-table td {
+                padding: 17px 16px;
+                color: #eee;
+                font-size: 13px;
+                vertical-align: top;
+                border-bottom: 1px solid #222;
             }
 
-            .priority.low {
-                color: #4ade80;
-                border: 1px solid #4ade80;
+            .issues-table tbody tr:last-child td {
+                border-bottom: none;
             }
 
-        .empty-message {
-            color: #a0a0b0;
+            .issues-table small {
+                color: #999;
+            }
+
+        .issue-badge {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        .issue-priority-high {
+            background: #40151a;
+            color: #ff6875;
+        }
+
+        .issue-priority-medium {
+            background: #3d3012;
+            color: #ffd15c;
+        }
+
+        .issue-priority-low {
+            background: #12351f;
+            color: #59e78a;
+        }
+
+        .issue-status-open {
+            background: #3d3012;
+            color: #ffd15c;
+        }
+
+        .issue-status-resolved {
+            background: #12351f;
+            color: #59e78a;
+        }
+
+        .awaiting-resolution {
+            color: #999;
+            font-style: italic;
+        }
+
+        .issues-empty {
+            padding: 40px 20px;
             text-align: center;
-            padding: 2rem 1rem;
-            border: 1px dashed #444;
-            border-radius: 10px;
+            color: #999;
         }
 
-        .back-link {
-            display: inline-block;
-            margin-top: 2rem;
-            color: #111;
-            font-weight: bold;
-            text-decoration: none;
-        }
-
-            .back-link:hover {
+            .issues-empty strong {
                 color: #fff;
             }
 
-        @@media (max-width: 800px) {
-            .complaint-layout {
-                grid-template-columns: 1fr;
+            .issues-empty p {
+                margin: 7px 0 0;
             }
 
-            .complaints-page {
-                padding: 2rem 1rem;
+        @@media (max-width: 750px) {
+
+            .my-issues-header {
+                flex-direction: column;
+                align-items: flex-start;
             }
         }
-    </style>
-</head>
+</style>
 
-<body>
 
-    <main class="complaints-page">
+<div class="complaint-page">
 
-        <header class="page-header">
+    <!-- ==========================================
+         HEADER
+         ========================================== -->
 
-            <div class="badge">
-                Staff Access
-            </div>
+    <section class="complaint-header">
 
-            <h1>
-                Staff <span>Complaints</span>
-            </h1>
+        <div class="staff-badge">
+            Staff Access
+        </div>
 
-            <p>
-                Report workplace issues and keep track of previously submitted complaints.
-            </p>
+        <h1>
+            Report <em>Event Issue</em>
+        </h1>
 
-        </header>
+        <p>
+            Report a problem relating to an approved event.
+        </p>
 
+        <div class="team-info">
+            @ViewBag.StaffName · @ViewBag.TeamCity Team
+        </div>
 
-        <section class="complaint-layout">
+    </section>
 
-            <!-- Submit Complaint -->
 
-            <div class="panel">
+    <!-- ==========================================
+         NAVIGATION
+         ========================================== -->
 
-                <h2>Log a Complaint</h2>
+    <div class="back-navigation">
 
-                <form id="complaintForm">
+        <a href="@Url.Action("StaffDashboard", "Cust")"
+           class="back-btn">
+            ← Back to Dashboard
+        </a>
 
-                    <div class="form-group">
+    </div>
 
-                        <label for="complaintTitle">
-                            Complaint Title
-                        </label>
 
-                        <input type="text"
-                               id="complaintTitle"
-                               class="form-control"
-                               placeholder="Enter the complaint title"
-                               required />
+    <!-- ==========================================
+         MESSAGES
+         ========================================== -->
 
-                    </div>
+    @if (TempData["ComplaintSuccess"] != null)
+    {
+        <div class="complaint-message success-message">
+            @TempData["ComplaintSuccess"]
+        </div>
+    }
 
+    @if (TempData["ComplaintError"] != null)
+    {
+        <div class="complaint-message error-message">
+            @TempData["ComplaintError"]
+        </div>
+    }
 
-                    <div class="form-group">
 
-                        <label for="complaintDescription">
-                            Description
-                        </label>
+    <!-- ==========================================
+         REPORT FORM
+         ========================================== -->
 
-                        <textarea id="complaintDescription"
-                                  class="form-control"
-                                  placeholder="Describe the issue..."
-                                  required></textarea>
+    <section class="complaint-card">
 
-                    </div>
+        <h2>Issue Details</h2>
 
+        <p class="form-description">
+            Select the event and provide information about
+            the problem you encountered.
+        </p>
 
-                    <div class="form-group">
 
-                        <label for="complaintPriority">
-                            Priority
-                        </label>
+        @using (Html.BeginForm(
+            "StaffComplaints",
+            "Cust",
+            FormMethod.Post))
+        {
+            @Html.AntiForgeryToken()
 
-                        <select id="complaintPriority"
-                                class="form-control">
 
-                            <option value="Low">
-                                Low
-                            </option>
+            <!-- EVENT -->
 
-                            <option value="Medium" selected>
-                                Medium
-                            </option>
+            <div class="form-group">
 
-                            <option value="High">
-                                High
-                            </option>
+                <label for="bookingId">
+                    Event
+                </label>
 
-                        </select>
-
-                    </div>
-
-
-                    <button type="submit"
-                            class="submit-btn">
-                        Submit Complaint
-                    </button>
-
-                </form>
-
-            </div>
-
-
-            <!-- Previous Complaints -->
-
-            <div class="panel">
-
-                <h2>My Complaints</h2>
-
-                <div class="complaint-list"
-                     id="complaintList">
-
-                    <article class="complaint-card">
-
-                        <div class="complaint-header">
-
-                            <div>
-
-                                <h3>
-                                    Equipment Issue
-                                </h3>
-
-                                <p>
-                                    Some event equipment requires maintenance before the next booking.
-                                </p>
-
-                            </div>
-
-                            <span class="status open">
-                                Open
-                            </span>
-
-                        </div>
-
-                        <span class="priority medium">
-                            Medium Priority
-                        </span>
-
-                        <p>
-                            Submitted: 01 October 2026
-                        </p>
-
-                    </article>
-
-
-                    <article class="complaint-card">
-
-                        <div class="complaint-header">
-
-                            <div>
-
-                                <h3>
-                                    Scheduling Conflict
-                                </h3>
-
-                                <p>
-                                    Two assigned responsibilities overlap on the same event date.
-                                </p>
-
-                            </div>
-
-                            <span class="status resolved">
-                                Resolved
-                            </span>
-
-                        </div>
-
-                        <span class="priority low">
-                            Low Priority
-                        </span>
-
-                        <p>
-                            Submitted: 28 September 2026
-                        </p>
-
-                    </article>
-
+                @Html.DropDownList(
+                    "bookingId",
+                    ViewBag.EventOptions as SelectList,
+                    "-- Select Event --",
+                    new
+                    {
+                        @class = "form-control-custom",
+                        required = "required"
+                    })
+
+                <div class="field-help">
+                    Only approved events belonging to your team are shown.
                 </div>
 
             </div>
 
+
+            <!-- SUBJECT -->
+
+            <div class="form-group">
+
+                <label for="subject">
+                    Issue Subject
+                </label>
+
+                <input type="text"
+                       id="subject"
+                       name="subject"
+                       maxlength="150"
+                       class="form-control-custom"
+                       placeholder="e.g. Missing decorations"
+                       required />
+
+            </div>
+
+
+            <!-- DESCRIPTION -->
+
+            <div class="form-group">
+
+                <label for="description">
+                    Description
+                </label>
+
+                <textarea id="description"
+                          name="description"
+                          maxlength="1000"
+                          class="form-control-custom"
+                          placeholder="Explain what happened and what assistance is required..."
+                          required></textarea>
+
+                <div class="field-help">
+                    Include enough information for the admin to understand the issue.
+                </div>
+
+            </div>
+
+
+            <!-- PRIORITY -->
+
+            <div class="form-group">
+
+                <label for="priority">
+                    Priority
+                </label>
+
+                <select id="priority"
+                        name="priority"
+                        class="form-control-custom"
+                        required>
+
+                    <option value="">
+                        -- Select Priority --
+                    </option>
+
+                    <option value="Low">
+                        Low
+                    </option>
+
+                    <option value="Medium">
+                        Medium
+                    </option>
+
+                    <option value="High">
+                        High
+                    </option>
+
+                </select>
+
+            </div>
+
+
+            <!-- SUBMIT -->
+
+            <div class="form-actions">
+
+                <button type="submit"
+                        class="report-btn">
+                    Report Issue
+                </button>
+
+            </div>
+        }
+
+
+        <!-- ==========================================
+             MY REPORTED ISSUES
+        =========================================== -->
+
+        <section class="my-issues-section">
+
+            <div class="my-issues-header">
+
+                <div>
+                    <h2>My Reported Issues</h2>
+
+                    <p>
+                        Track the status of issues you have reported.
+                    </p>
+                </div>
+
+                <span class="issue-count">
+                    @(myComplaints != null ? myComplaints.Count : 0) Reported
+                </span>
+
+            </div>
+
+
+            @if (myComplaints != null && myComplaints.Any())
+            {
+                <div class="issues-table-wrapper">
+
+                    <table class="issues-table">
+
+                        <thead>
+                            <tr>
+                                <th>Event</th>
+                                <th>Issue</th>
+                                <th>Priority</th>
+                                <th>Reported</th>
+                                <th>Status</th>
+                                <th>Resolved</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+
+                            @foreach (var complaint in myComplaints)
+                            {
+                                string priorityClass =
+                                    complaint.Priority == "High"
+                                        ? "issue-priority-high"
+                                        : complaint.Priority == "Medium"
+                                            ? "issue-priority-medium"
+                                            : "issue-priority-low";
+
+                                string statusClass =
+                                    complaint.Status == "Resolved"
+                                        ? "issue-status-resolved"
+                                        : "issue-status-open";
+
+                                <tr>
+
+                                    <!-- EVENT -->
+                                    <td>
+
+                                        @if (complaint.Booking != null)
+                                        {
+                                            <strong>
+                                                @complaint.Booking.Occasion
+                                            </strong>
+
+                                            <br />
+
+                                            <small>
+                                                Booking #@complaint.BookingId
+                                            </small>
+
+                                            <br />
+
+                                            <small>
+                                                @complaint.Booking.EventDate.ToString("dd MMM yyyy")
+                                            </small>
+                                        }
+                                        else
+                                        {
+                                            <span>
+                                                Booking #@complaint.BookingId
+                                            </span>
+                                        }
+
+                                    </td>
+
+
+                                    <!-- ISSUE -->
+                                    <td>
+
+                                        <strong>
+                                            @complaint.Subject
+                                        </strong>
+
+                                        <br />
+
+                                        <small>
+                                            @complaint.Description
+                                        </small>
+
+                                    </td>
+
+
+                                    <!-- PRIORITY -->
+                                    <td>
+
+                                        <span class="issue-badge @priorityClass">
+                                            @complaint.Priority
+                                        </span>
+
+                                    </td>
+
+
+                                    <!-- REPORTED -->
+                                    <td>
+
+                                        @complaint.CreatedAt.ToString("dd MMM yyyy")
+
+                                        <br />
+
+                                        <small>
+                                            @complaint.CreatedAt.ToString("hh:mm tt")
+                                        </small>
+
+                                    </td>
+
+
+                                    <!-- STATUS -->
+                                    <td>
+
+                                        <span class="issue-badge @statusClass">
+                                            @complaint.Status
+                                        </span>
+
+                                    </td>
+
+
+                                    <!-- RESOLVED -->
+                                    <td>
+
+                                        @if (complaint.ResolvedAt.HasValue)
+                                        {
+                                            <span>
+                                                @complaint.ResolvedAt.Value.ToString("dd MMM yyyy")
+                                            </span>
+
+                                            <br />
+
+                                            <small>
+                                                @complaint.ResolvedAt.Value.ToString("hh:mm tt")
+                                            </small>
+                                        }
+                                        else
+                                        {
+                                            <span class="awaiting-resolution">
+                                                Awaiting resolution
+                                            </span>
+                                        }
+
+                                    </td>
+
+                                </tr>
+                            }
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+            }
+            else
+            {
+                <div class="issues-empty">
+
+                    <strong>
+                        No issues reported yet.
+                    </strong>
+
+                    <p>
+                        Issues you report for events will appear here.
+                    </p>
+
+                </div>
+            }
+
         </section>
 
 
-        <a href="@Url.Action("StaffDashboard", "Cust")"
-           class="back-link">
-            ← Back to Dashboard
-        </a>
+    </section>
 
-    </main>
-
-
-    <script>
-
-        document.addEventListener("DOMContentLoaded", function () {
-
-            const complaintForm =
-                document.getElementById("complaintForm");
-
-            const complaintList =
-                document.getElementById("complaintList");
-
-
-            complaintForm.addEventListener("submit", function (event) {
-
-                event.preventDefault();
-
-
-                const title =
-                    document.getElementById("complaintTitle").value.trim();
-
-                const description =
-                    document.getElementById("complaintDescription").value.trim();
-
-                const priority =
-                    document.getElementById("complaintPriority").value;
-
-
-                if (!title || !description) {
-                    return;
-                }
-
-
-                const priorityClass =
-                    priority.toLowerCase();
-
-
-                const today =
-                    new Date().toLocaleDateString("en-GB", {
-                        day: "2-digit",
-                        month: "long",
-                        year: "numeric"
-                    });
-
-
-                const complaint =
-                    document.createElement("article");
-
-                complaint.className = "complaint-card";
-
-
-                complaint.innerHTML = `
-                    <div class="complaint-header">
-
-                        <div>
-
-                            <h3>${escapeHtml(title)}</h3>
-
-                            <p>${escapeHtml(description)}</p>
-
-                        </div>
-
-                        <span class="status open">
-                            Open
-                        </span>
-
-                    </div>
-
-                    <span class="priority ${priorityClass}">
-                        ${escapeHtml(priority)} Priority
-                    </span>
-
-                    <p>
-                        Submitted: ${today}
-                    </p>
-                `;
-
-
-                complaintList.prepend(complaint);
-
-
-                complaintForm.reset();
-
-
-                alert("Complaint submitted successfully.");
-
-            });
-
-
-            function escapeHtml(value) {
-
-                const div = document.createElement("div");
-
-                div.textContent = value;
-
-                return div.innerHTML;
-
-            }
-
-        });
-
-    </script>
-
-</body>
-</html>
+</div>

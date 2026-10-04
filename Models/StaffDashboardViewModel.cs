@@ -1,19 +1,29 @@
 ﻿using System;
 using System.Collections.Generic;
 
-
 namespace WebApplication1.Models
 {
     public class StaffDashboardViewModel
     {
-        // Logged-in staff member
+        // ==========================================
+        // LOGGED-IN STAFF MEMBER
+        // ==========================================
+
         public Staff StaffMember { get; set; }
 
-        // Staff's assigned team/city
+
+        // ==========================================
+        // STAFF TEAM / CITY
+        // ==========================================
+
         public string TeamCity { get; set; }
 
-        // Dashboard statistics
-        public int TasksDueToday { get; set; }
+
+        // ==========================================
+        // DASHBOARD STATISTICS
+        // ==========================================
+
+        public int TodayTasks { get; set; }
 
         public int HighPriorityTasks { get; set; }
 
@@ -23,24 +33,46 @@ namespace WebApplication1.Models
 
         public int EventsThisWeek { get; set; }
 
-        // Tasks displayed on dashboard
+
+        // ==========================================
+        // STAFF TASKS
+        // ==========================================
+
         public List<StaffTask> Tasks { get; set; }
 
-        // Events assigned to this staff member
-        public List<StaffEventDashboardItem> UpcomingEvents { get; set; }
 
-        // Announcements
+        // ==========================================
+        // UPCOMING EVENTS
+        // ==========================================
+
+        public List<StaffEventDashboardItem> Events { get; set; }
+
+
+        // ==========================================
+        // ANNOUNCEMENTS
+        // ==========================================
+
         public List<StaffAnnouncement> Announcements { get; set; }
+
+
+        // ==========================================
+        // CONSTRUCTOR
+        // ==========================================
 
         public StaffDashboardViewModel()
         {
             Tasks = new List<StaffTask>();
 
-            UpcomingEvents = new List<StaffEventDashboardItem>();
+            Events = new List<StaffEventDashboardItem>();
 
             Announcements = new List<StaffAnnouncement>();
         }
     }
+
+
+    // ==============================================
+    // STAFF EVENT DASHBOARD ITEM
+    // ==============================================
 
     public class StaffEventDashboardItem
     {
@@ -62,6 +94,11 @@ namespace WebApplication1.Models
 
         public string Status { get; set; }
     }
+
+
+    // ==============================================
+    // STAFF ANNOUNCEMENT
+    // ==============================================
 
     public class StaffAnnouncement
     {

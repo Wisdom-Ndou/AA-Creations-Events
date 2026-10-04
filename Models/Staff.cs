@@ -27,9 +27,9 @@ namespace WebApplication1.Models
 
         [Required(ErrorMessage = "Phone number is required")]
         [StringLength(10, MinimumLength = 10,
-     ErrorMessage = "Phone number must contain exactly 10 digits")]
-        [RegularExpression(@"^[1-9][0-9]{9}$",
-     ErrorMessage = "Phone number must contain exactly 10 digits and cannot start with 0")]
+    ErrorMessage = "Phone number must contain exactly 10 digits")]
+        [RegularExpression(@"^0[0-9]{9}$",
+    ErrorMessage = "Phone number must be 10 digits and start with 0")]
         public string staff_Phone { get; set; }
 
         [StringLength(50)]

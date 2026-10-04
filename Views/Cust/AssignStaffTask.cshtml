@@ -1,0 +1,814 @@
+﻿@using WebApplication1.Models
+
+@{
+    ViewBag.Title = "Assign Staff Task";
+
+    Booking booking = ViewBag.Booking as Booking;
+
+    List<StaffTask> existingTasks =
+        ViewBag.ExistingTasks as List<StaffTask>;
+}
+<style>
+
+    .assign-task-page {
+        max-width: 950px;
+        margin: 0 auto;
+        padding: 45px 25px 70px;
+    }
+
+    /* ==========================================
+       HEADER
+       ========================================== */
+
+    .assign-header {
+        margin-bottom: 30px;
+    }
+
+    .admin-badge {
+        display: inline-block;
+        padding: 7px 15px;
+        border-radius: 20px;
+        background: #f4e8e2;
+        color: #8a5b4b;
+        font-size: 12px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin-bottom: 15px;
+    }
+
+    .assign-header h1 {
+        margin: 0 0 10px;
+        font-size: 40px;
+        color: #222;
+    }
+
+        .assign-header h1 em {
+            color: #b27b68;
+            font-style: italic;
+        }
+
+    .assign-header p {
+        margin: 0;
+        color: #777;
+        font-size: 14px;
+    }
+
+    /* ==========================================
+       NAVIGATION
+       ========================================== */
+
+    .assign-navigation {
+        margin-bottom: 25px;
+    }
+
+    .back-btn {
+        display: inline-block;
+        padding: 10px 17px;
+        background: #222;
+        color: #fff;
+        border-radius: 7px;
+        text-decoration: none;
+        font-size: 13px;
+        font-weight: 600;
+    }
+
+        .back-btn:hover {
+            background: #444;
+            color: #fff;
+            text-decoration: none;
+        }
+
+    /* ==========================================
+       MESSAGES
+       ========================================== */
+
+    .task-message {
+        padding: 14px 18px;
+        margin-bottom: 20px;
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: 600;
+    }
+
+    .success-message {
+        background: #e7f6ec;
+        color: #237a42;
+        border: 1px solid #c7e8d2;
+    }
+
+    .error-message {
+        background: #fde8e8;
+        color: #b42318;
+        border: 1px solid #f5c2c2;
+    }
+
+    /* ==========================================
+       EVENT SUMMARY
+       ========================================== */
+
+    .event-summary {
+        background: #fff;
+        border: 1px solid #eee;
+        border-radius: 14px;
+        padding: 24px;
+        margin-bottom: 25px;
+        box-shadow: 0 5px 20px rgba(0,0,0,.04);
+    }
+
+    .event-summary-top {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 20px;
+        margin-bottom: 20px;
+    }
+
+    .event-summary h2 {
+        margin: 0 0 5px;
+        color: #222;
+        font-size: 22px;
+    }
+
+    .booking-number {
+        color: #999;
+        font-size: 12px;
+    }
+
+    .approved-badge {
+        background: #e7f6ec;
+        color: #237a42;
+        padding: 6px 11px;
+        border-radius: 20px;
+        font-size: 11px;
+        font-weight: 700;
+    }
+
+    .event-summary-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 20px;
+    }
+
+    .summary-label {
+        color: #999;
+        font-size: 11px;
+        text-transform: uppercase;
+        font-weight: 700;
+        margin-bottom: 5px;
+    }
+
+    .summary-value {
+        color: #333;
+        font-size: 14px;
+    }
+
+    /* ==========================================
+       FORM CARD
+       ========================================== */
+
+    .assignment-card {
+        background: #fff;
+        border: 1px solid #eee;
+        border-radius: 14px;
+        padding: 28px;
+        box-shadow: 0 5px 20px rgba(0,0,0,.04);
+    }
+
+        .assignment-card h2 {
+            margin: 0 0 5px;
+            color: #222;
+            font-size: 21px;
+        }
+
+    .form-description {
+        color: #888;
+        font-size: 13px;
+        margin: 0 0 25px;
+    }
+
+    .form-group {
+        margin-bottom: 20px;
+    }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 7px;
+            color: #444;
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+    .form-control-custom {
+        width: 100%;
+        box-sizing: border-box;
+        border: 1px solid #ddd;
+        border-radius: 7px;
+        padding: 11px 12px;
+        font-size: 14px;
+        color: #333;
+        background: #fff;
+    }
+
+        .form-control-custom:focus {
+            outline: none;
+            border-color: #b27b68;
+        }
+
+    textarea.form-control-custom {
+        min-height: 110px;
+        resize: vertical;
+    }
+
+    .field-help {
+        color: #999;
+        font-size: 11px;
+        margin-top: 5px;
+    }
+
+    /* ==========================================
+       FORM BUTTON
+       ========================================== */
+
+    .form-actions {
+        border-top: 1px solid #eee;
+        padding-top: 22px;
+        margin-top: 25px;
+    }
+
+    .assign-btn {
+        border: none;
+        background: #b27b68;
+        color: #fff;
+        padding: 12px 22px;
+        border-radius: 7px;
+        font-size: 14px;
+        font-weight: 700;
+        cursor: pointer;
+    }
+
+        .assign-btn:hover {
+            background: #966452;
+        }
+
+    /* ==========================================
+       RESPONSIVE
+       ========================================== */
+
+    @@media (max-width: 700px) {
+
+        .event-summary-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .assign-header h1 {
+            font-size: 33px;
+        }
+
+        .event-summary-top {
+            flex-direction: column;
+        }
+    }
+
+
+    /* ==========================================
+   EXISTING ASSIGNED TASKS
+   ========================================== */
+
+    .existing-tasks-card {
+        background: #fff;
+        border: 1px solid #eee;
+        border-radius: 14px;
+        margin-top: 25px;
+        overflow: hidden;
+        box-shadow: 0 5px 20px rgba(0,0,0,.04);
+    }
+
+    .existing-tasks-header {
+        padding: 22px 25px;
+        border-bottom: 1px solid #eee;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 20px;
+    }
+
+        .existing-tasks-header h2 {
+            margin: 0 0 5px;
+            color: #222;
+            font-size: 20px;
+        }
+
+        .existing-tasks-header p {
+            margin: 0;
+            color: #888;
+            font-size: 13px;
+        }
+
+    .task-count {
+        min-width: 38px;
+        height: 38px;
+        padding: 0 10px;
+        border-radius: 20px;
+        background: #f4e8e2;
+        color: #8a5b4b;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+    }
+
+    .assigned-table-wrapper {
+        overflow-x: auto;
+    }
+
+    .assigned-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+        .assigned-table th {
+            padding: 14px 16px;
+            background: #fafafa;
+            color: #777;
+            text-align: left;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: .5px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .assigned-table td {
+            padding: 17px 16px;
+            border-bottom: 1px solid #eee;
+            color: #444;
+            font-size: 13px;
+            vertical-align: middle;
+        }
+
+        .assigned-table tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .assigned-table small {
+            color: #888;
+        }
+
+    .task-priority,
+    .assigned-status {
+        display: inline-block;
+        padding: 5px 10px;
+        border-radius: 20px;
+        font-size: 11px;
+        font-weight: 700;
+        white-space: nowrap;
+    }
+
+    .priority-high {
+        background: #fde8e8;
+        color: #b42318;
+    }
+
+    .priority-medium {
+        background: #fff3d6;
+        color: #9a6700;
+    }
+
+    .priority-low {
+        background: #e7f6ec;
+        color: #237a42;
+    }
+
+    .status-pending {
+        background: #f3f3f3;
+        color: #666;
+    }
+
+    .status-progress {
+        background: #e8f1ff;
+        color: #2f65b9;
+    }
+
+    .status-completed {
+        background: #e7f6ec;
+        color: #237a42;
+    }
+
+    .no-assigned-tasks {
+        padding: 40px 25px;
+        text-align: center;
+    }
+
+        .no-assigned-tasks strong {
+            color: #333;
+        }
+
+        .no-assigned-tasks p {
+            color: #888;
+            margin: 7px 0 0;
+            font-size: 13px;
+        }
+
+
+</style>
+
+
+<div class="assign-task-page">
+
+    <!-- ==========================================
+         HEADER
+         ========================================== -->
+
+    <section class="assign-header">
+
+        <div class="admin-badge">
+            Admin
+        </div>
+
+        <h1>
+            Assign <em>Staff Task</em>
+        </h1>
+
+        <p>
+            Assign a task for this approved event to a staff member.
+        </p>
+
+    </section>
+
+
+    <!-- ==========================================
+         BACK BUTTON
+         ========================================== -->
+
+    <div class="assign-navigation">
+
+        <a href="@Url.Action("AllBookings", "Cust")"
+           class="back-btn">
+            ← Back to Bookings
+        </a>
+
+    </div>
+
+
+    <!-- ==========================================
+         SUCCESS / ERROR MESSAGES
+         ========================================== -->
+
+    @if (TempData["TaskSuccess"] != null)
+    {
+        <div class="task-message success-message">
+            @TempData["TaskSuccess"]
+        </div>
+    }
+
+    @if (TempData["TaskError"] != null)
+    {
+        <div class="task-message error-message">
+            @TempData["TaskError"]
+        </div>
+    }
+
+
+    <!-- ======================================
+      EXISTING ASSIGNED TASKS
+      ====================================== -->
+
+    <section class="existing-tasks-card">
+
+        <div class="existing-tasks-header">
+
+            <div>
+                <h2>Assigned Tasks</h2>
+
+                <p>
+                    Staff tasks already created for this event.
+                </p>
+            </div>
+
+            <div class="task-count">
+                @(existingTasks != null ? existingTasks.Count : 0)
+            </div>
+
+        </div>
+
+
+        @if (existingTasks != null && existingTasks.Any())
+        {
+            <div class="assigned-table-wrapper">
+
+                <table class="assigned-table">
+
+                    <thead>
+
+                        <tr>
+                            <th>Staff Member</th>
+                            <th>Task</th>
+                            <th>Due</th>
+                            <th>Priority</th>
+                            <th>Status</th>
+                        </tr>
+
+                    </thead>
+
+
+                    <tbody>
+
+                        @foreach (var task in existingTasks)
+                        {
+                            string priorityClass = "priority-low";
+
+                            if (task.Priority == "High")
+                            {
+                                priorityClass = "priority-high";
+                            }
+                            else if (task.Priority == "Medium")
+                            {
+                                priorityClass = "priority-medium";
+                            }
+
+
+                            string statusClass = "status-pending";
+
+                            if (task.Status == "Completed")
+                            {
+                                statusClass = "status-completed";
+                            }
+                            else if (task.Status == "In Progress")
+                            {
+                                statusClass = "status-progress";
+                            }
+
+
+                            <tr>
+
+                                <!-- STAFF -->
+
+                                <td>
+
+                                    @if (task.Staff != null)
+                                    {
+                                        <strong>
+                                            @task.Staff.staff_FName
+                                            @task.Staff.staff_LName
+                                        </strong>
+
+                                        <br />
+
+                                        <small>
+                                            @task.Staff.staff_Email
+                                        </small>
+                                    }
+                                    else
+                                    {
+                                        <span>
+                                            Staff #@task.StaffId
+                                        </span>
+                                    }
+
+                                </td>
+
+
+                                <!-- TASK -->
+
+                                <td>
+
+                                    <strong>
+                                        @task.TaskName
+                                    </strong>
+
+                                    @if (!string.IsNullOrWhiteSpace(task.Description))
+                                    {
+                                        <br />
+
+                                        <small>
+                                            @task.Description
+                                        </small>
+                                    }
+
+                                </td>
+
+
+                                <!-- DUE -->
+
+                                <td>
+
+                                    @task.DueDate.ToString("dd MMM yyyy")
+
+                                    <br />
+
+                                    <small>
+                                        @task.DueDate.ToString("hh:mm tt")
+                                    </small>
+
+                                </td>
+
+
+                                <!-- PRIORITY -->
+
+                                <td>
+
+                                    <span class="task-priority @priorityClass">
+                                        @task.Priority
+                                    </span>
+
+                                </td>
+
+
+                                <!-- STATUS -->
+
+                                <td>
+
+                                    <span class="assigned-status @statusClass">
+                                        @task.Status
+                                    </span>
+
+                                </td>
+
+                            </tr>
+                        }
+
+                    </tbody>
+
+                </table>
+
+            </div>
+        }
+        else
+        {
+            <div class="no-assigned-tasks">
+
+                <strong>No staff tasks assigned yet.</strong>
+
+                <p>
+                    Use the form above to assign the first task
+                    for this event.
+                </p>
+
+            </div>
+        }
+
+    </section>
+
+
+    <!-- ======================================
+         ASSIGNMENT FORM
+         ====================================== -->
+
+    <section class="assignment-card">
+
+        <h2>Create Task</h2>
+
+        <p class="form-description">
+            Only staff members belonging to the
+            @ViewBag.TeamCity team can be selected.
+        </p>
+
+
+        @using (Html.BeginForm(
+            "AssignStaffTask",
+            "Cust",
+            FormMethod.Post,
+            new { }))
+        {
+            @Html.AntiForgeryToken()
+
+
+            <!-- BOOKING ID -->
+
+            <input type="hidden"
+                   name="bookingId"
+                   value="@booking.BookingId" />
+
+
+            <!-- STAFF -->
+
+            <div class="form-group">
+
+                <label for="staffId">
+                    Staff Member
+                </label>
+
+                @Html.DropDownList(
+                    "staffId",
+                    ViewBag.StaffMembers as SelectList,
+                    "-- Select Staff Member --",
+                    new
+                    {
+                        @class = "form-control-custom",
+                        required = "required"
+                    })
+
+                <div class="field-help">
+                    Only staff from @ViewBag.TeamType are available.
+                </div>
+
+            </div>
+
+
+            <!-- TASK NAME -->
+
+            <div class="form-group">
+
+                <label for="taskName">
+                    Task Name
+                </label>
+
+                <input type="text"
+                       id="taskName"
+                       name="taskName"
+                       maxlength="200"
+                       class="form-control-custom"
+                       placeholder="e.g. Venue setup"
+                       required />
+
+            </div>
+
+
+            <!-- DESCRIPTION -->
+
+            <div class="form-group">
+
+                <label for="description">
+                    Description
+                </label>
+
+                <textarea id="description"
+                          name="description"
+                          maxlength="500"
+                          class="form-control-custom"
+                          placeholder="Describe what the staff member needs to do..."></textarea>
+
+            </div>
+
+
+            <!-- DUE DATE -->
+
+            <div class="form-group">
+
+                <label for="dueDate">
+                    Due Date & Time
+                </label>
+
+                <input type="datetime-local"
+                       id="dueDate"
+                       name="dueDate"
+                       class="form-control-custom"
+                       required />
+
+                <div class="field-help">
+                    Choose when this task should be completed.
+                </div>
+
+            </div>
+
+
+            <!-- PRIORITY -->
+
+            <div class="form-group">
+
+                <label for="priority">
+                    Priority
+                </label>
+
+                <select id="priority"
+                        name="priority"
+                        class="form-control-custom"
+                        required>
+
+                    <option value="">
+                        -- Select Priority --
+                    </option>
+
+                    <option value="Low">
+                        Low
+                    </option>
+
+                    <option value="Medium">
+                        Medium
+                    </option>
+
+                    <option value="High">
+                        High
+                    </option>
+
+                </select>
+
+            </div>
+
+
+            <!-- SUBMIT -->
+
+            <div class="form-actions">
+
+                <button type="submit"
+                        class="assign-btn">
+                    Assign Task
+                </button>
+
+            </div>
+        }
+
+    </section>
+    }
+
+</div>

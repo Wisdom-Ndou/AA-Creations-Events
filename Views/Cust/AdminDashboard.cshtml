@@ -41,14 +41,14 @@
 
 
         <!-- ==========================================
-         STATISTICS
-    =========================================== -->
+             STATISTICS
+        =========================================== -->
 
         <section class="stat-row dashboard-widgets">
 
             <!-- ==========================================
-             ALL BOOKINGS
-        =========================================== -->
+                 ALL BOOKINGS
+            =========================================== -->
 
             <a href="@Url.Action("AllBookings", "Cust")"
                class="stat-card dashboard-widget">
@@ -69,8 +69,8 @@
 
 
             <!-- ==========================================
-             UPCOMING EVENTS
-        =========================================== -->
+                 UPCOMING EVENTS
+            =========================================== -->
 
             <a href="@Url.Action("UpcomingEvents", "Cust")"
                class="stat-card dashboard-widget">
@@ -91,8 +91,8 @@
 
 
             <!-- ==========================================
-             CANCELLED BOOKINGS
-        =========================================== -->
+                 CANCELLED BOOKINGS
+            =========================================== -->
 
             <a href="@Url.Action("CancelledBookings", "Cust")"
                class="stat-card dashboard-widget">
@@ -113,8 +113,8 @@
 
 
             <!-- ==========================================
-             BUSINESS ANALYTICS
-        =========================================== -->
+                 BUSINESS ANALYTICS
+            =========================================== -->
 
             <a href="@Url.Action("BusinessAnalytics", "Cust")"
                class="stat-card dashboard-widget">
@@ -135,8 +135,8 @@
 
 
             <!-- ==========================================
-             PENDING APPROVALS
-        =========================================== -->
+                 PENDING APPROVALS
+            =========================================== -->
 
             <a href="@Url.Action("PendingApprovals", "Cust")"
                class="stat-card dashboard-widget">
@@ -162,8 +162,8 @@
 
 
         <!-- ==========================================
-         STAFF INFORMATION
-    =========================================== -->
+             STAFF INFORMATION
+        =========================================== -->
 
         <section class="panel staff-dashboard-panel">
 
@@ -265,15 +265,15 @@
 
 
         <!-- ==========================================
-         CONTENT GRID
-    =========================================== -->
+             CONTENT GRID
+        =========================================== -->
 
         <section class="content-grid">
 
 
             <!-- ======================================
-             BOOKINGS
-        ======================================= -->
+                 BOOKINGS
+            ======================================= -->
 
             <div class="panel">
 
@@ -509,15 +509,15 @@
 
 
             <!-- ======================================
-             SIDE COLUMN
-        ======================================= -->
+                 SIDE COLUMN
+            ======================================= -->
 
             <div class="stack">
 
 
                 <!-- ==================================
-                 RECENT ACTIVITY
-            =================================== -->
+                     RECENT ACTIVITY
+                =================================== -->
 
                 <div class="panel">
 
@@ -591,8 +591,8 @@
 
 
                 <!-- ==================================
-                 QUICK ACTIONS
-            =================================== -->
+                     QUICK ACTIONS
+                =================================== -->
 
                 <div class="panel">
 
@@ -619,6 +619,17 @@
 
                             <span>
                                 @Model.PendingBookings waiting
+                            </span>
+
+                        </a>
+
+                        <a href="@Url.Action("AdminComplaints", "Cust")"
+                           class="quick-action">
+
+                            Event Issues
+
+                            <span>
+                                Review staff reports
                             </span>
 
                         </a>
@@ -666,8 +677,8 @@
 
 
                 <!-- ==================================
-                 THIS WEEK'S LOAD
-            =================================== -->
+                     THIS WEEK'S LOAD
+                =================================== -->
 
                 <div class="panel">
 
@@ -775,12 +786,15 @@
 
 
 
-    <a class="footer-link"
-       href="@Url.Action("AdminLogout", "Cust")">
+    <div class="logout-area">
+        <a href="@Url.Action("AdminLogout", "Cust")"
+           class="logout-link">
 
-        Sign Out
+            Sign Out
 
-    </a>
+        </a>
+
+    </div>
 
 
     <script>

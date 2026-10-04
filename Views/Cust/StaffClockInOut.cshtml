@@ -1,0 +1,564 @@
+﻿@using WebApplication1.Models
+@using System.Collections.Generic
+
+@{
+    ViewBag.Title = "Clock In / Out";
+
+    StaffTimeEntry activeEntry =
+        ViewBag.ActiveEntry as StaffTimeEntry;
+
+    List<StaffTimeEntry> todayEntries =
+        ViewBag.TodayEntries as List<StaffTimeEntry>;
+
+    bool isClockedIn =
+        ViewBag.IsClockedIn != null &&
+        (bool)ViewBag.IsClockedIn;
+
+    double todayHours =
+        ViewBag.TodayHours != null
+            ? (double)ViewBag.TodayHours
+            : 0;
+}
+
+
+<div class="time-page">
+
+    <!-- ==========================================
+         HEADER
+    =========================================== -->
+
+    <div class="time-header">
+
+        <div>
+
+            <span class="staff-badge">
+                Staff Access
+            </span>
+
+            <h1>
+                Clock In / Out
+            </h1>
+
+            <p>
+                Record and track your working hours.
+            </p>
+
+        </div>
+
+        <a href="@Url.Action("StaffDashboard", "Cust")"
+           class="back-btn">
+            Back to Dashboard
+        </a>
+
+    </div>
+
+
+    <!-- ==========================================
+         MESSAGES
+    =========================================== -->
+
+    @if (TempData["TimeSuccess"] != null)
+    {
+        <div class="message success-message">
+            @TempData["TimeSuccess"]
+        </div>
+    }
+
+    @if (TempData["TimeError"] != null)
+    {
+        <div class="message error-message">
+            @TempData["TimeError"]
+        </div>
+    }
+
+
+    <!-- ==========================================
+         STAFF INFORMATION
+    =========================================== -->
+
+    <div class="staff-info">
+
+        <div>
+            <span>Staff Member</span>
+            <strong>@ViewBag.StaffName</strong>
+        </div>
+
+        <div>
+            <span>Team</span>
+            <strong>@ViewBag.StaffType</strong>
+        </div>
+
+        <div>
+            <span>Today's Hours</span>
+            <strong>@todayHours.ToString("0.00") hrs</strong>
+        </div>
+
+    </div>
+
+
+    <!-- ==========================================
+         CLOCK STATUS
+    =========================================== -->
+
+    <div class="clock-card">
+
+        @if (isClockedIn && activeEntry != null)
+        {
+            <div class="status-icon clocked-in">
+                ●
+            </div>
+
+            <h2>
+                You are currently clocked in
+            </h2>
+
+            <p>
+                Clocked in at
+                <strong>
+                    @activeEntry.ClockInTime.ToString("hh:mm tt")
+                </strong>
+            </p>
+
+            <p class="clock-date">
+                @activeEntry.ClockInTime.ToString("dddd, dd MMMM yyyy")
+            </p>
+
+
+            using (Html.BeginForm(
+                "StaffClockOut",
+                "Cust",
+                FormMethod.Post))
+            {
+                @Html.AntiForgeryToken()
+
+                <button type="submit"
+                        class="clock-btn clock-out-btn">
+                    Clock Out
+                </button>
+            }
+        }
+        else
+        {
+            <div class="status-icon clocked-out">
+                ●
+            </div>
+
+            <h2>
+                You are currently clocked out
+            </h2>
+
+            <p>
+                Start your work session by clocking in.
+            </p>
+
+
+            using (Html.BeginForm(
+                "StaffClockIn",
+                "Cust",
+                FormMethod.Post))
+            {
+                @Html.AntiForgeryToken()
+
+                <button type="submit"
+                        class="clock-btn clock-in-btn">
+                    Clock In
+                </button>
+            }
+        }
+
+    </div>
+
+
+    <!-- ==========================================
+         TODAY'S ACTIVITY
+    =========================================== -->
+
+    <section class="activity-section">
+
+        <div class="activity-header">
+
+            <div>
+                <h2>Today's Activity</h2>
+
+                <p>
+                    Your clock-in and clock-out history for today.
+                </p>
+            </div>
+
+        </div>
+
+
+        @if (todayEntries != null && todayEntries.Any())
+        {
+            <div class="table-wrapper">
+
+                <table class="time-table">
+
+                    <thead>
+                        <tr>
+                            <th>Clock In</th>
+                            <th>Clock Out</th>
+                            <th>Hours Worked</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+
+                        @foreach (var entry in todayEntries)
+                        {
+                            <tr>
+
+                                <td>
+                                    @entry.ClockInTime.ToString("hh:mm tt")
+                                </td>
+
+                                <td>
+
+                                    @if (entry.ClockOutTime.HasValue)
+                                    {
+                                        @entry.ClockOutTime.Value.ToString("hh:mm tt")
+                                    }
+                                    else
+                                    {
+                                        <span class="not-available">
+                                            —
+                                        </span>
+                                    }
+
+                                </td>
+
+                                <td>
+
+                                    @if (entry.HoursWorked.HasValue)
+                                    {
+                                        @entry.HoursWorked.Value.ToString("0.00")
+                                        <span> hrs</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="not-available">
+                                            In progress
+                                        </span>
+                                    }
+
+                                </td>
+
+                                <td>
+
+                                    @if (entry.ClockOutTime.HasValue)
+                                    {
+                                        <span class="status-badge completed">
+                                            Completed
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="status-badge active">
+                                            Active
+                                        </span>
+                                    }
+
+                                </td>
+
+                            </tr>
+                        }
+
+                    </tbody>
+
+                </table>
+
+            </div>
+        }
+        else
+        {
+            <div class="empty-state">
+
+                <strong>
+                    No time recorded today.
+                </strong>
+
+                <p>
+                    Clock in to begin recording your working hours.
+                </p>
+
+            </div>
+        }
+
+    </section>
+
+</div>
+
+
+<style>
+
+    body {
+        background: #080808;
+    }
+
+    .time-page {
+        max-width: 1100px;
+        margin: 40px auto;
+        padding: 0 20px 50px;
+        color: #fff;
+    }
+
+
+    /* HEADER */
+
+    .time-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 20px;
+        margin-bottom: 30px;
+    }
+
+        .time-header h1 {
+            margin: 10px 0 5px;
+            font-size: 30px;
+        }
+
+        .time-header p {
+            color: #999;
+            margin: 0;
+        }
+
+    .staff-badge {
+        display: inline-block;
+        background: #ff0066;
+        color: white;
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-size: 11px;
+        font-weight: 700;
+    }
+
+    .back-btn {
+        color: #fff;
+        text-decoration: none;
+        border: 1px solid #444;
+        padding: 10px 16px;
+        border-radius: 8px;
+    }
+
+        .back-btn:hover {
+            border-color: #ff0066;
+            color: #ff0066;
+        }
+
+
+    /* MESSAGES */
+
+    .message {
+        padding: 13px 16px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+    }
+
+    .success-message {
+        background: #12351f;
+        color: #59e78a;
+        border: 1px solid #235d38;
+    }
+
+    .error-message {
+        background: #40151a;
+        color: #ff6875;
+        border: 1px solid #6c252e;
+    }
+
+
+    /* STAFF INFO */
+
+    .staff-info {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 15px;
+        margin-bottom: 25px;
+    }
+
+        .staff-info div {
+            background: #111;
+            border: 1px solid #333;
+            border-radius: 12px;
+            padding: 18px;
+        }
+
+        .staff-info span {
+            display: block;
+            color: #999;
+            font-size: 12px;
+            margin-bottom: 6px;
+        }
+
+        .staff-info strong {
+            font-size: 16px;
+        }
+
+
+    /* CLOCK CARD */
+
+    .clock-card {
+        background: #111;
+        border: 1px solid #333;
+        border-radius: 14px;
+        text-align: center;
+        padding: 45px 20px;
+        margin-bottom: 30px;
+    }
+
+    .status-icon {
+        font-size: 30px;
+        margin-bottom: 10px;
+    }
+
+    .clocked-in {
+        color: #59e78a;
+    }
+
+    .clocked-out {
+        color: #999;
+    }
+
+    .clock-card h2 {
+        margin: 5px 0 10px;
+    }
+
+    .clock-card p {
+        color: #aaa;
+    }
+
+    .clock-card strong {
+        color: #fff;
+    }
+
+    .clock-date {
+        font-size: 13px;
+    }
+
+    .clock-btn {
+        margin-top: 18px;
+        border: none;
+        padding: 13px 35px;
+        border-radius: 8px;
+        color: #fff;
+        font-weight: 700;
+        cursor: pointer;
+        font-size: 14px;
+    }
+
+    .clock-in-btn {
+        background: #ff0066;
+    }
+
+        .clock-in-btn:hover {
+            opacity: .85;
+        }
+
+    .clock-out-btn {
+        background: #d52b3f;
+    }
+
+        .clock-out-btn:hover {
+            opacity: .85;
+        }
+
+
+    /* ACTIVITY */
+
+    .activity-section {
+        background: #111;
+        border: 1px solid #333;
+        border-radius: 14px;
+        overflow: hidden;
+    }
+
+    .activity-header {
+        padding: 22px 25px;
+        border-bottom: 1px solid #333;
+    }
+
+        .activity-header h2 {
+            margin: 0 0 5px;
+        }
+
+        .activity-header p {
+            color: #999;
+            margin: 0;
+            font-size: 13px;
+        }
+
+    .table-wrapper {
+        overflow-x: auto;
+    }
+
+    .time-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+        .time-table th {
+            color: #999;
+            text-align: left;
+            padding: 14px 18px;
+            border-bottom: 1px solid #333;
+            text-transform: uppercase;
+            font-size: 11px;
+        }
+
+        .time-table td {
+            padding: 17px 18px;
+            border-bottom: 1px solid #222;
+            color: #eee;
+            font-size: 13px;
+        }
+
+        .time-table tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+    .status-badge {
+        display: inline-block;
+        padding: 5px 10px;
+        border-radius: 20px;
+        font-size: 11px;
+        font-weight: 700;
+    }
+
+        .status-badge.active {
+            background: #12351f;
+            color: #59e78a;
+        }
+
+        .status-badge.completed {
+            background: #252525;
+            color: #ccc;
+        }
+
+    .not-available {
+        color: #777;
+    }
+
+    .empty-state {
+        padding: 40px 20px;
+        text-align: center;
+        color: #999;
+    }
+
+        .empty-state strong {
+            color: #fff;
+        }
+
+
+    @@media (max-width: 750px) {
+
+        .time-header {
+            flex-direction: column;
+        }
+
+        .staff-info {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>

@@ -72,7 +72,7 @@
                 </div>
 
                 <div class="value">
-                    @Model.TasksDueToday
+                    @Model.TodayTasks
                 </div>
 
                 <div class="delta up">
@@ -96,9 +96,9 @@
 
                 <div class="delta">
 
-                    @if (Model.UpcomingEvents.Any())
+                    @if (Model.Events.Any())
                     {
-                        var nextEvent = Model.UpcomingEvents.First();
+                        var nextEvent = Model.Events.First();
 
                         <span>
                             Next:
@@ -121,17 +121,13 @@
 
             <div class="stat-card">
 
-                <div class="label">
+                <span class="stat-label">
                     Hours Logged
-                </div>
+                </span>
 
-                <div class="value">
-                    @Model.HoursLogged.ToString("0")h
-                </div>
-
-                <div class="delta">
-                    Time tracking
-                </div>
+                <strong class="stat-value">
+                    @Model.HoursLogged.ToString("0.00")
+                </strong>
 
             </div>
 
@@ -243,7 +239,7 @@
 
                                             @if (task.BookingId.HasValue)
                                             {
-                                                var booking = Model.UpcomingEvents
+                                                var booking = Model.Events
                                                     .FirstOrDefault(b =>
                                                         b.BookingId == task.BookingId.Value);
 
@@ -404,24 +400,25 @@
 
                         <!-- TASKS -->
 
-                        <a href="@Url.Action("StaffTasks", "Cust")"
+                        <a href="@Url.Action("StaffEvents", "Cust")"
                            class="quick-action">
+                         
 
-                            <div>
+                        <div>
 
-                                <strong>
-                                    View To-Do List
-                                </strong>
-
-                                <span>
-                                    @Model.TasksDueToday pending today
-                                </span>
-
-                            </div>
+                            <strong>
+                                View To-Do List
+                            </strong>
 
                             <span>
-                                →
+                              Tasks pending 
                             </span>
+
+                        </div>
+
+                        <span>
+                            →
+                        </span>
 
                         </a>
 
@@ -462,7 +459,7 @@
                                 </strong>
 
                                 <span>
-                                    View account information
+                                    View profile
                                 </span>
 
                             </div>
@@ -474,10 +471,11 @@
                         </a>
 
 
+                       
                         <!-- CLOCK -->
 
-                        <button type="button"
-                                class="quick-action">
+                        <a href="@Url.Action("StaffClockInOut", "Cust")"
+                           class="quick-action">
 
                             <div>
 
@@ -495,16 +493,9 @@
                                 →
                             </span>
 
-                        </button>
+                        </a>
 
-
-                    </div>
-
-                </div>
-
-            </div>
-
-        </section>
+</section>
 
 
         <!-- ==========================================
@@ -532,7 +523,7 @@
 
             <div class="table-wrap">
 
-                @if (Model.UpcomingEvents.Any())
+                @if (Model.Events.Any())
                 {
 
                     <table>
@@ -572,7 +563,7 @@
 
                         <tbody>
 
-                            @foreach (var booking in Model.UpcomingEvents)
+                            @foreach (var booking in Model.Events)
                             {
 
                                 <tr>

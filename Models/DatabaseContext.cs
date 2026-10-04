@@ -33,7 +33,10 @@ namespace WebApplication1.Models
         public DbSet<Staff> Staffs { get; set; }
         public DbSet<Expense> Expenses { get; set; }
         public DbSet<StaffTask> StaffTasks { get; set; }
-        
+        public DbSet<StaffComplaint> StaffComplaints { get; set; }
+        public DbSet<StaffTimeEntry> StaffTimeEntries { get; set; }
+
+
 
     }
 

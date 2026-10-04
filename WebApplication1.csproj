@@ -237,6 +237,14 @@
     <Compile Include="Migrations\202610031042159_StaffPhone10.Designer.cs">
       <DependentUpon>202610031042159_StaffPhone10.cs</DependentUpon>
     </Compile>
+    <Compile Include="Migrations\202610032136245_AddStaffComplaints.cs" />
+    <Compile Include="Migrations\202610032136245_AddStaffComplaints.Designer.cs">
+      <DependentUpon>202610032136245_AddStaffComplaints.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\202610040958154_AddStaffTimeEntries.cs" />
+    <Compile Include="Migrations\202610040958154_AddStaffTimeEntries.Designer.cs">
+      <DependentUpon>202610040958154_AddStaffTimeEntries.cs</DependentUpon>
+    </Compile>
     <Compile Include="Migrations\Configuration.cs" />
     <Compile Include="Models\AddOn.cs" />
     <Compile Include="Models\Admin.cs" />
@@ -254,8 +262,10 @@
     <Compile Include="Models\OtpVerification.cs" />
     <Compile Include="Models\Package.cs" />
     <Compile Include="Models\Staff.cs" />
+    <Compile Include="Models\StaffComplaint.cs" />
     <Compile Include="Models\StaffDashboardViewModel.cs" />
     <Compile Include="Models\StaffTask.cs" />
+    <Compile Include="Models\StaffTimeEntry.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Services\OtpDeliveryService.cs" />
   </ItemGroup>
@@ -316,6 +326,11 @@
     <Content Include="Scripts\ViewBooking.js" />
     <Content Include="Views\Cust\StaffComplaints.cshtml" />
     <Content Include="Views\Cust\RegisterStaff.cshtml" />
+    <Content Include="Views\Cust\AssignStaffTask.cshtml" />
+    <Content Include="Views\Cust\AdminComplaints.cshtml" />
+    <Content Include="Views\Cust\StaffClockInOut.cshtml" />
+    <Content Include="Views\Cust\EditStaffProfile.cshtml" />
+    <Content Include="Views\Cust\Login.cshtml" />
     <None Include="Views\Cust\StaffDashboard.cshtml" />
     <Content Include="Web.config" />
     <Content Include="Web.Debug.config">
@@ -332,9 +347,6 @@
     <Content Include="Views\Home\Contact.cshtml" />
     <Content Include="Views\Home\Index.cshtml" />
     <Content Include="Views\Cust\Index.cshtml" />
-    <Content Include="F:\Login.cshtml">
-      <Link>Views\Cust\Login.cshtml</Link>
-    </Content>
     <Content Include="Views\Cust\Customerregister.cshtml" />
     <Content Include="Views\Cust\Adminregister.cshtml" />
     <Content Include="Views\Cust\Portfolio.cshtml" />
@@ -358,6 +370,8 @@
     <Content Include="Views\Cust\StaffRegister.cshtml" />
     <Content Include="Views\Cust\StaffInformation.cshtml" />
     <Content Include="Views\Cust\ViewStaff.cshtml" />
+    <Content Include="Views\Cust\StaffEvents.cshtml" />
+    <Content Include="Views\Cust\StaffEventDetails.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />
@@ -441,6 +455,12 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Migrations\202610031042159_StaffPhone10.resx">
       <DependentUpon>202610031042159_StaffPhone10.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\202610032136245_AddStaffComplaints.resx">
+      <DependentUpon>202610032136245_AddStaffComplaints.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\202610040958154_AddStaffTimeEntries.resx">
+      <DependentUpon>202610040958154_AddStaffTimeEntries.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <PropertyGroup>

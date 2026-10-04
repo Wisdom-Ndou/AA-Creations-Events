@@ -316,10 +316,87 @@
             font-size: 34px;
         }
     }
+
+
+    /* ==========================================
+   TASK ACTION BUTTONS
+   ========================================== */
+
+    .task-action-btn {
+        border: none;
+        border-radius: 6px;
+        padding: 8px 13px;
+        font-size: 12px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: 0.2s ease;
+        white-space: nowrap;
+    }
+
+    .start-btn {
+        background: #e8f1ff;
+        color: #2f65b9;
+    }
+
+        .start-btn:hover {
+            background: #d7e7ff;
+        }
+
+    .complete-btn {
+        background: #e7f6ec;
+        color: #237a42;
+    }
+
+        .complete-btn:hover {
+            background: #d4efdd;
+        }
+
+    .task-finished {
+        color: #237a42;
+        font-size: 12px;
+        font-weight: 700;
+    }
+
+    .task-message {
+        padding: 14px 18px;
+        margin-bottom: 20px;
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: 600;
+    }
+
+    .success-message {
+        background: #e7f6ec;
+        color: #237a42;
+        border: 1px solid #c7e8d2;
+    }
+
+    .error-message {
+        background: #fde8e8;
+        color: #b42318;
+        border: 1px solid #f5c2c2;
+    }
+
+
 </style>
 
 
 <div class="staff-task-page">
+
+
+    @if (TempData["TaskSuccess"] != null)
+    {
+        <div class="task-message success-message">
+            @TempData["TaskSuccess"]
+        </div>
+    }
+
+    @if (TempData["TaskError"] != null)
+    {
+        <div class="task-message error-message">
+            @TempData["TaskError"]
+        </div>
+    }
 
     <!-- ==========================================
          PAGE HEADER
@@ -449,6 +526,7 @@
                             <th>Due</th>
                             <th>Priority</th>
                             <th>Status</th>
+                            <th>Actions</th>
                         </tr>
                     </thead>
 
@@ -573,6 +651,68 @@
                                     <span class="task-status @statusClass">
                                         @task.Status
                                     </span>
+
+                                </td>
+
+
+                                <!-- ACTIONS -->
+
+                                <td>
+
+                                    @if (task.Status == "Pending")
+                                    {
+                                        using (Html.BeginForm(
+                                            "UpdateStaffTaskStatus",
+                                            "Cust",
+                                            FormMethod.Post,
+                                            new { style = "display:inline;" }))
+                                        {
+                                            @Html.AntiForgeryToken()
+
+                                            <input type="hidden"
+                                                   name="taskId"
+                                                   value="@task.TaskId" />
+
+                                            <input type="hidden"
+                                                   name="newStatus"
+                                                   value="In Progress" />
+
+                                            <button type="submit"
+                                                    class="task-action-btn start-btn">
+                                                Start Task
+                                            </button>
+                                        }
+                                    }
+                                    else if (task.Status == "In Progress")
+                                    {
+                                        using (Html.BeginForm(
+                                            "UpdateStaffTaskStatus",
+                                            "Cust",
+                                            FormMethod.Post,
+                                            new { style = "display:inline;" }))
+                                        {
+                                            @Html.AntiForgeryToken()
+
+                                            <input type="hidden"
+                                                   name="taskId"
+                                                   value="@task.TaskId" />
+
+                                            <input type="hidden"
+                                                   name="newStatus"
+                                                   value="Completed" />
+
+                                            <button type="submit"
+                                                    class="task-action-btn complete-btn">
+                                                Mark Complete
+                                            </button>
+                                        }
+                                    }
+                                    else if (task.Status == "Completed")
+                                    {
+                                        <span class="task-finished">
+                                            Completed ✓
+                                        </span>
+                                    }
 
                                 </td>
 
