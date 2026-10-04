@@ -695,20 +695,20 @@ namespace WebApplication1.Controllers
                 case "durban":
                     centerLatitude = -29.8587;
                     centerLongitude = 31.0218;
-                    radiusKm = 60;
+                    radiusKm = 35;
                     return true;
 
                 case "pietermaritzburg":
                     centerLatitude = -29.6006;
                     centerLongitude = 30.3794;
-                    radiusKm = 45;
+                    radiusKm = 25;
                     return true;
 
                 case "mandeni":
                 case "emandeni":
                     centerLatitude = -29.1460;
                     centerLongitude = 31.4070;
-                    radiusKm = 45;
+                    radiusKm = 20;
                     return true;
 
                 default:
@@ -772,29 +772,41 @@ namespace WebApplication1.Controllers
 
         private static string GetEventCitySearchViewbox(string city)
         {
-            // Nominatim viewbox format: left,top,right,bottom.
-            // These are deliberately broader than the service radius and are
-            // used only to rank nearby results, not to decide whether a
-            // customer is allowed to book there.
-            switch (NormalizeEventCity(city).ToLowerInvariant())
+            double centerLatitude;
+            double centerLongitude;
+            double radiusKm;
+
+            if (!TryGetEventCityServiceArea(
+                    city,
+                    out centerLatitude,
+                    out centerLongitude,
+                    out radiusKm))
             {
-                case "durban":
-                    return "30.35,-29.20,31.65,-30.50";
-
-                case "pietermaritzburg":
-                    return "29.75,-29.05,30.95,-30.15";
-
-                case "mandeni":
-                case "emandeni":
-                    return "30.70,-28.55,31.95,-29.75";
-
-                default:
-                    return string.Empty;
+                return string.Empty;
             }
-        }
-        
 
-       
+            // Nominatim viewbox format: left,top,right,bottom.
+            // Derive it from the same service radius used for pin and booking
+            // validation so search cannot suggest places from a much wider area.
+            var latitudeDelta = radiusKm / 111.0;
+            var longitudeScale =
+                111.0 * Math.Cos(DegreesToRadians(centerLatitude));
+            var longitudeDelta =
+                longitudeScale > 0 ? radiusKm / longitudeScale : latitudeDelta;
+
+            var left = centerLongitude - longitudeDelta;
+            var right = centerLongitude + longitudeDelta;
+            var top = centerLatitude + latitudeDelta;
+            var bottom = centerLatitude - latitudeDelta;
+
+            return string.Join(",",
+                left.ToString(System.Globalization.CultureInfo.InvariantCulture),
+                top.ToString(System.Globalization.CultureInfo.InvariantCulture),
+                right.ToString(System.Globalization.CultureInfo.InvariantCulture),
+                bottom.ToString(System.Globalization.CultureInfo.InvariantCulture));
+        }
+
+
         private static string GetGeocodedCity(JObject feature)
         {
             var geocoding = feature["properties"]?["geocoding"] as JObject;
@@ -914,25 +926,25 @@ namespace WebApplication1.Controllers
                 var typedAddress = address.Trim();
                 var viewbox = GetEventCitySearchViewbox(city);
 
-                // Prefer the selected city explicitly. This fixes cases where
-                // a common street/place name is ranked in another province.
+                // Try the user's exact text both with and without the selected
+                // city. Both searches are bounded to the same service area
+                // used by map pins and final booking validation.
                 var queries = new[]
                 {
                     typedAddress + ", " + city + ", KwaZulu-Natal, South Africa",
                     typedAddress
                 };
 
-                var insideResults = new List<object>();
-                var outsideResults = new List<object>();
+                var results = new List<object>();
                 var seenCoordinates = new HashSet<string>(
                     StringComparer.OrdinalIgnoreCase);
 
-                for (var queryIndex = 0; queryIndex < queries.Length; queryIndex++)
+                foreach (var query in queries)
                 {
                     var features = SearchNominatimFeatures(
-                        queries[queryIndex],
+                        query,
                         viewbox,
-                        12);
+                        15);
 
                     foreach (var token in features)
                     {
@@ -964,6 +976,17 @@ namespace WebApplication1.Controllers
                             continue;
                         }
 
+                        // This is the exact same rule used by map pin validation
+                        // and CreateBooking. Never show a suggestion the user
+                        // will immediately be told they cannot select.
+                        if (!IsWithinSelectedCityServiceArea(
+                                city,
+                                latitude,
+                                longitude))
+                        {
+                            continue;
+                        }
+
                         var coordinateKey =
                             Math.Round(latitude, 6)
                                 .ToString(System.Globalization.CultureInfo.InvariantCulture) +
@@ -974,39 +997,22 @@ namespace WebApplication1.Controllers
                         if (!seenCoordinates.Add(coordinateKey))
                             continue;
 
-                        var resolvedCity = GetGeocodedCity(feature);
-                        var label = GetGeocodedLabel(feature);
-                        var inSelectedCity =
-                            IsWithinSelectedCityServiceArea(
-                                city,
-                                latitude,
-                                longitude);
-
-                        var result = new
+                        results.Add(new
                         {
-                            address = label,
+                            address = GetGeocodedLabel(feature),
                             latitude = latitude,
                             longitude = longitude,
-                            resolvedCity = resolvedCity,
-                            inSelectedCity = inSelectedCity
-                        };
+                            resolvedCity = GetGeocodedCity(feature),
+                            inSelectedCity = true
+                        });
 
-                        if (inSelectedCity)
-                            insideResults.Add(result);
-                        else
-                            outsideResults.Add(result);
+                        if (results.Count >= 12)
+                            break;
                     }
 
-                    // If the city-qualified query found a valid local match,
-                    // do not make a second request unnecessarily.
-                    if (insideResults.Count > 0)
+                    if (results.Count >= 12)
                         break;
                 }
-
-                var results = insideResults
-                    .Concat(outsideResults)
-                    .Take(12)
-                    .ToList();
 
                 return Json(new
                 {
