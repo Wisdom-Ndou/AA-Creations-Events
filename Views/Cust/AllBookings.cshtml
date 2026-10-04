@@ -1,508 +1,192 @@
-﻿@model WebApplication1.Models.AllBookingsViewModel
-
+@model WebApplication1.Models.AllBookingsViewModel
+@using System
+@using System.Linq
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-
-    <meta charset="UTF-8">
-
-    <meta name="viewport"
-          content="width=device-width, initial-scale=1.0">
-
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>All Bookings - AA Creations & Events</title>
-
-    <link rel="stylesheet"
-          href="~/Content/AdminDashboard.css" />
-
+    <link rel="stylesheet" href="~/Content/AdminDashboard.css" />
+    <style>
+        .booking-actions{display:flex;gap:.45rem;flex-wrap:wrap;margin-top:.5rem}
+        .aa-modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.68);display:none;align-items:center;justify-content:center;padding:20px;z-index:1000}
+        .aa-modal-backdrop.is-open{display:flex}
+        .aa-modal{width:min(470px,100%);background:#151515;border:1px solid #353535;border-radius:18px;padding:24px;box-shadow:0 24px 80px rgba(0,0,0,.55)}
+        .aa-modal.success{border-color:#2f7a51}.aa-modal.warning{border-color:#b88716}.aa-modal.error{border-color:#9a3457}
+        .aa-modal-icon{width:46px;height:46px;border-radius:50%;display:grid;place-items:center;background:rgba(255,42,109,.12);color:#ff2a6d;font-size:1.25rem;font-weight:800;margin-bottom:14px}
+        .aa-modal h3{margin:0 0 8px;color:#fff}.aa-modal p{margin:0;color:#c8c8d0;line-height:1.55}
+        .aa-modal-actions{display:flex;justify-content:flex-end;margin-top:20px}
+        .aa-modal-close{border:0;border-radius:9px;padding:10px 18px;background:#ff2a6d;color:#fff;font-weight:700;cursor:pointer}
+        .booking-action-btn[disabled]{opacity:.55;cursor:not-allowed}
+    </style>
 </head>
-
 <body>
+<section class="page-head">
+    <div class="badge">Admin Access</div>
+    <h1>All <em>Bookings</em></h1>
+    <p>Review customer bookings without losing your place.</p>
+</section>
 
-    <!-- ==========================================
-         PAGE HEADER
-    =========================================== -->
+<main class="main">
+    @Html.AntiForgeryToken()
 
-    <section class="page-head">
-
-        <div class="badge">
-            Admin Access
-        </div>
-
-        <h1>
-            All <em>Bookings</em>
-        </h1>
-
-        <p>
-            View and manage all customer bookings.
-        </p>
-
+    <section class="stat-row dashboard-widgets">
+        <div class="stat-card"><div class="label">Total Bookings</div><div class="value">@Model.TotalBookings</div><div class="delta">All bookings</div></div>
+        <div class="stat-card"><div class="label">Upcoming</div><div class="value">@Model.UpcomingBookingCount</div><div class="delta">Confirmed upcoming events</div></div>
+        <div class="stat-card"><div class="label">Past Events</div><div class="value">@Model.PastBookingCount</div><div class="delta">Events already completed</div></div>
+        <div class="stat-card"><div class="label">Cancelled</div><div class="value">@Model.CancelledBookingCount</div><div class="delta down">Declined or cancelled</div></div>
     </section>
 
-
-    <main class="main">
-
-
-        <!-- ==========================================
-             SUMMARY
-        =========================================== -->
-
-        <section class="stat-row dashboard-widgets">
-
-            <div class="stat-card">
-
-                <div class="label">
-                    Total Bookings
-                </div>
-
-                <div class="value">
-                    @Model.TotalBookings
-                </div>
-
-                <div class="delta">
-                    All bookings
-                </div>
-
-            </div>
-
-
-            <div class="stat-card">
-
-                <div class="label">
-                    Upcoming
-                </div>
-
-                <div class="value">
-                    @Model.UpcomingBookingCount
-                </div>
-
-                <div class="delta">
-                    Confirmed upcoming events
-                </div>
-
-            </div>
-
-
-            <div class="stat-card">
-
-                <div class="label">
-                    Past Events
-                </div>
-
-                <div class="value">
-                    @Model.PastBookingCount
-                </div>
-
-                <div class="delta">
-                    Events already completed
-                </div>
-
-            </div>
-
-
-            <div class="stat-card">
-
-                <div class="label">
-                    Cancelled
-                </div>
-
-                <div class="value">
-                    @Model.CancelledBookingCount
-                </div>
-
-                <div class="delta down">
-                    Cancelled bookings
-                </div>
-
-            </div>
-
-        </section>
-
-
-        <!-- ==========================================
-             ALL BOOKINGS
-        =========================================== -->
-
-        <div class="panel">
-
-            <div class="panel-head">
-
-                <div>
-
-                    <h2>
-                        All Bookings
-                    </h2>
-
-                    <p>
-                        Every booking currently stored in the database
-                    </p>
-
-                </div>
-
-            </div>
-
-
-
-            <div class="admin-booking-filters" role="group" aria-label="Filter bookings by status">
-                <button type="button" class="booking-filter active" data-status-filter="all">All</button>
-                <button type="button" class="booking-filter" data-status-filter="pending">Pending</button>
-                <button type="button" class="booking-filter" data-status-filter="approved">Approved</button>
-                <button type="button" class="booking-filter" data-status-filter="cancelled">Cancelled</button>
-            </div>
-
-            <div class="table-wrap">
-
-                <table>
-
-                    <thead>
-
-                        <tr>
-
-                            <th>
-                                Booking ID
-                            </th>
-
-                            <th>
-                                Client
-                            </th>
-
-                            <th>
-                                Event
-                            </th>
-
-                            <th>
-                                City
-                            </th>
-
-                            <th>
-                                Date / Venue Address
-                            </th>
-
-                            <th>
-                                Time
-                            </th>
-
-                            <th>
-                                Package
-                            </th>
-
-                            <th>
-                                Total
-                            </th>
-
-                            <th>
-                                Status
-                            </th>
-
-                        </tr>
-
-                    </thead>
-
-
-                    <tbody>
-
-
-                        @if (Model.AllBookings != null &&
-                             Model.AllBookings.Any())
-
-
-                        {
-
-                            foreach (var booking in Model.AllBookings)
-
-                            {
-
-                                string clientName =
-                                    ((booking.FirstName ?? "") +
-                                     " " +
-                                     (booking.LastName ?? "")).Trim();
-
-
-                                if (string.IsNullOrWhiteSpace(clientName))
-                                {
-                                    clientName = "Customer";
-                                }
-
-
-
-
-
-                                string status =
-                                    string.IsNullOrWhiteSpace(booking.Status)
-                                         ? "Pending"
-                                        : booking.Status;
-
-
-                                string statusClass =
-                                    status.ToLower() == "approved"
-                                        ? "approved"
-                                        : status.ToLower() == "declined"
-                                            ? "declined"
-                                            : "pending";
-                            <tr data-booking-status="@status.ToLowerInvariant()">
-
-                                <td class="booking-actions">
-
-                                    @if (status.Equals("Pending",
-                                        StringComparison.OrdinalIgnoreCase))
-                                    {
-                                        <form action="@Url.Action("UpdateBookingStatus", "Cust")"
-                                              method="post"
-                                              style="display:inline;">
-
-                                            @Html.AntiForgeryToken()
-
-                                            <input type="hidden"
-                                                   name="bookingId"
-                                                   value="@booking.BookingId" />
-
-                                            <input type="hidden"
-                                                   name="status"
-                                                   value="Approved" />
-
-                                            <button type="submit"
-                                                    class="approve-btn">
-                                                Approve
-                                            </button>
-
-                                        </form>
-
-                                        <form action="@Url.Action("UpdateBookingStatus", "Cust")"
-                                              method="post"
-                                              style="display:inline;">
-
-                                            @Html.AntiForgeryToken()
-
-                                            <input type="hidden"
-                                                   name="bookingId"
-                                                   value="@booking.BookingId" />
-
-                                            <input type="hidden"
-                                                   name="status"
-                                                   value="Declined" />
-
-                                            <button type="submit"
-                                                    class="decline-btn">
-                                                Decline
-                                            </button>
-
-                                        </form>
-                                    }
-                                    else
-                                    {
-                                        <span class="no-action">
-                                            Reviewed
-                                        </span>
-                                    }
-
-                                </td>
-
-
-
-                                <!-- BOOKING ID -->
-
-                                <td class="cell-id">
-                                    #BK-@booking.BookingId
-                                </td>
-
-
-                                <!-- CLIENT -->
-
-                                <td>
-                                    @clientName
-                                </td>
-
-
-                                <!-- EVENT -->
-
-                                <td>
-                                    @booking.Occasion
-                                </td>
-
-
-                                <!-- CITY -->
-
-                                <td>
-                                    @booking.City
-                                </td>
-
-
-                                <!-- DATE -->
-
-                                <td>
-                                    <strong>
-                                        @booking.EventDate.ToString("dd MMM yyyy")
-                                    </strong>
-
-                                    <br />
-
-                                    <span class="venue-address">
-                                        @booking.Address
-                                    </span>
-                                </td>
-
-
-                                <!-- TIME -->
-
-                                <td>
-                                    @booking.EventTime
-                                </td>
-
-
-                                <!-- PACKAGE -->
-
-                                <td>
-                                    @booking.PackageId
-                                </td>
-
-
-                                <!-- TOTAL -->
-
-                                <td>
-                                    R @booking.TotalPrice.ToString("N2")
-                                </td>
-
-
-                                <!-- STATUS -->
-
-                                <td>
-
-                                    <span class="status @statusClass">
-
-                                        <span class="dot"></span>
-
-                                        @status
-
-                                    </span>
-
-                                    @if (status.ToLower() == "pending")
-                                    {
-                                        <div class="booking-actions">
-
-                                            <button type="button"
-                                                    class="approve-btn"
-                                                    onclick="updateBookingStatus(@booking.BookingId, 'approved')">
-                                                Approve
-                                            </button>
-
-                                            <button type="button"
-                                                    class="decline-btn"
-                                                    onclick="updateBookingStatus(@booking.BookingId, 'declined')">
-                                                Decline
-                                            </button>
-
-                                        </div>
-                                    }
-
-                                </td>
-
-                            </tr>
-
-                        }
-
-                    }
-                    else
+    <section class="panel">
+        <div class="panel-head"><div><h2>All Bookings</h2><p>Approve or decline bookings in place.</p></div></div>
+
+        <div class="admin-booking-filters" role="group" aria-label="Filter bookings by status">
+            <button type="button" class="booking-filter active" data-status-filter="all">All</button>
+            <button type="button" class="booking-filter" data-status-filter="pending">Pending</button>
+            <button type="button" class="booking-filter" data-status-filter="approved">Approved</button>
+            <button type="button" class="booking-filter" data-status-filter="cancelled">Cancelled</button>
+        </div>
+
+        <div class="table-wrap">
+            <table>
+                <thead><tr><th>Booking</th><th>Client</th><th>Event</th><th>City</th><th>Date / Venue</th><th>Time</th><th>Package</th><th>Total</th><th>Status / Action</th></tr></thead>
+                <tbody>
+                @if (Model.AllBookings != null && Model.AllBookings.Any())
+                {
+                    foreach (var booking in Model.AllBookings)
                     {
-
-                        <tr>
-
-                            <td colspan="9"
-                                style="text-align:center;">
-
-                                No bookings have been made yet.
-
+                        var clientName = ((booking.FirstName ?? "") + " " + (booking.LastName ?? "")).Trim();
+                        if (String.IsNullOrWhiteSpace(clientName)) { clientName = "Customer"; }
+                        var status = String.IsNullOrWhiteSpace(booking.Status) ? "Pending" : booking.Status;
+                        var lower = status.ToLowerInvariant();
+                        var statusClass = lower == "approved" ? "approved" : (lower == "declined" || lower == "cancelled" ? "declined" : "pending");
+                        <tr data-booking-row="@booking.BookingId" data-booking-status="@lower">
+                            <td class="cell-id">#BK-@booking.BookingId</td>
+                            <td>@clientName</td>
+                            <td>@booking.Occasion</td>
+                            <td>@booking.City</td>
+                            <td><strong>@booking.EventDate.ToString("dd MMM yyyy")</strong><br /><span class="venue-address">@booking.Address</span></td>
+                            <td>@booking.EventTime</td>
+                            <td>@booking.PackageId</td>
+                            <td>R @booking.TotalPrice.ToString("N2")</td>
+                            <td>
+                                <span class="status @statusClass" data-status-pill><span class="dot"></span><span data-status-text>@status</span></span>
+                                @if (status.Equals("Pending", StringComparison.OrdinalIgnoreCase))
+                                {
+                                    <div class="booking-actions" data-booking-actions>
+                                        <button type="button" class="approve-btn booking-action-btn" data-booking-id="@booking.BookingId" data-new-status="approved">Approve</button>
+                                        <button type="button" class="decline-btn booking-action-btn" data-booking-id="@booking.BookingId" data-new-status="declined">Decline</button>
+                                    </div>
+                                }
                             </td>
-
                         </tr>
-
                     }
-
-                        </tbody>
-
-
-                    </table>
-
-            </div>
-
-
-            <div class="table-foot">
-
-                <span>
-
-                    Showing
-                    @Model.TotalBookings
-                    booking(s)
-
-                </span>
-
-            </div>
-
+                }
+                else
+                {
+                    <tr><td colspan="9" style="text-align:center">No bookings have been made yet.</td></tr>
+                }
+                </tbody>
+            </table>
         </div>
+        <div class="table-foot"><span>Showing @Model.TotalBookings booking(s)</span></div>
+    </section>
 
+    <a href="@Url.Action("AdminDashboard","Cust")" class="quick-action" style="max-width:260px">← Back to Admin Dashboard</a>
+</main>
 
-        <!-- ==========================================
-             BACK TO DASHBOARD
-        =========================================== -->
+<div id="aaModalBackdrop" class="aa-modal-backdrop" role="presentation">
+    <div id="aaModal" class="aa-modal" role="dialog" aria-modal="true" aria-labelledby="aaModalTitle">
+        <div class="aa-modal-icon" id="aaModalIcon">!</div>
+        <h3 id="aaModalTitle">Booking update</h3>
+        <p id="aaModalMessage"></p>
+        <div class="aa-modal-actions"><button type="button" class="aa-modal-close" id="aaModalClose">Close</button></div>
+    </div>
+</div>
 
-        <div style="margin-top: 20px;">
+<script>
+(function(){
+    const token = document.querySelector('input[name="__RequestVerificationToken"]');
+    const modalBackdrop = document.getElementById('aaModalBackdrop');
+    const modal = document.getElementById('aaModal');
+    const modalTitle = document.getElementById('aaModalTitle');
+    const modalMessage = document.getElementById('aaModalMessage');
+    const modalIcon = document.getElementById('aaModalIcon');
 
-            <a href="@Url.Action("AdminDashboard", "Cust")"
-               class="quick-action">
+    function showModal(type,title,message){
+        modal.className = 'aa-modal ' + type;
+        modalTitle.textContent = title;
+        modalMessage.textContent = message;
+        modalIcon.textContent = type === 'success' ? '✓' : (type === 'warning' ? '!' : '×');
+        modalBackdrop.classList.add('is-open');
+    }
+    function closeModal(){ modalBackdrop.classList.remove('is-open'); }
+    document.getElementById('aaModalClose').addEventListener('click',closeModal);
+    modalBackdrop.addEventListener('click',function(e){ if(e.target===modalBackdrop) closeModal(); });
 
-                ← Back to Admin Dashboard
+    document.querySelectorAll('.booking-action-btn').forEach(function(button){
+        button.addEventListener('click',async function(){
+            const bookingId = button.dataset.bookingId;
+            const newStatus = button.dataset.newStatus;
+            const row = document.querySelector('[data-booking-row="'+bookingId+'"]');
+            const rowButtons = row ? row.querySelectorAll('.booking-action-btn') : [];
+            rowButtons.forEach(b => b.disabled = true);
 
-            </a>
+            try{
+                const body = new URLSearchParams();
+                body.append('__RequestVerificationToken', token ? token.value : '');
+                body.append('bookingId', bookingId);
+                body.append('status', newStatus);
 
-        </div>
-
-    </main>
-
-
-    <!-- ==========================================
-         SIGN OUT
-    =========================================== -->
-
-    <p class="footer-text">
-
-        <a class="footer-link"
-           href="@Url.Action("AdminLogout", "Cust")">
-
-            Sign Out
-
-        </a>
-
-    </p>
-
-
-
-    <script>
-        (function () {
-            var buttons = document.querySelectorAll(".booking-filter");
-            var rows = document.querySelectorAll("tr[data-booking-status]");
-
-            buttons.forEach(function (button) {
-                button.addEventListener("click", function () {
-                    var wanted = button.getAttribute("data-status-filter");
-
-                    buttons.forEach(function (item) {
-                        item.classList.remove("active");
-                    });
-                    button.classList.add("active");
-
-                    rows.forEach(function (row) {
-                        var status = (row.getAttribute("data-booking-status") || "pending").toLowerCase();
-                        var isCancelled = status === "declined" || status === "cancelled";
-                        var show = wanted === "all" ||
-                            status === wanted ||
-                            (wanted === "cancelled" && isCancelled);
-
-                        row.style.display = show ? "" : "none";
-                    });
+                const response = await fetch('@Url.Action("UpdateBookingStatus","Cust")',{
+                    method:'POST',
+                    headers:{'Content-Type':'application/x-www-form-urlencoded; charset=UTF-8','X-Requested-With':'XMLHttpRequest'},
+                    body:body.toString()
                 });
+                const data = await response.json();
+
+                if(!data.success){
+                    const noStaff = (data.message || '').toLowerCase().indexOf('no staff member') >= 0;
+                    showModal(noStaff ? 'warning' : 'error', noStaff ? 'Staff assignment required' : 'Booking update failed', data.message || 'The booking could not be updated.');
+                    rowButtons.forEach(b => b.disabled = false);
+                    return;
+                }
+
+                if(row){
+                    const statusText = row.querySelector('[data-status-text]');
+                    const pill = row.querySelector('[data-status-pill]');
+                    const actions = row.querySelector('[data-booking-actions]');
+                    row.dataset.bookingStatus = (data.status || newStatus).toLowerCase();
+                    if(statusText) statusText.textContent = data.status;
+                    if(pill){
+                        pill.classList.remove('pending','approved','declined');
+                        pill.classList.add((data.status || '').toLowerCase()==='approved' ? 'approved' : 'declined');
+                    }
+                    if(actions) actions.remove();
+                }
+                showModal('success','Booking updated',data.message || 'The booking status was updated successfully.');
+            }catch(error){
+                rowButtons.forEach(b => b.disabled = false);
+                showModal('error','Something went wrong','We could not update this booking. Please check your connection and try again.');
+            }
+        });
+    });
+
+    const filters=document.querySelectorAll('.booking-filter');
+    filters.forEach(function(button){
+        button.addEventListener('click',function(){
+            const wanted=button.dataset.statusFilter;
+            filters.forEach(b=>b.classList.remove('active'));
+            button.classList.add('active');
+            document.querySelectorAll('tr[data-booking-status]').forEach(function(row){
+                const status=(row.dataset.bookingStatus||'pending').toLowerCase();
+                const cancelled=status==='declined'||status==='cancelled';
+                row.style.display=(wanted==='all'||status===wanted||(wanted==='cancelled'&&cancelled))?'':'none';
             });
-        })();
-    </script>
-
+        });
+    });
+})();
+</script>
 </body>
-
 </html>
