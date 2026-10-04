@@ -9,7 +9,6 @@
 
 <main id="bookingApp"
       data-booking-url="@Url.Action("CreateBooking", "Cust")"
-      data-address-search-url="@Url.Action("SearchEventAddresses", "Cust")"
       data-address-reverse-url="@Url.Action("ReverseEventLocation", "Cust")"
       data-logged-in="@(Session["CustomerId"] != null ? "true" : "false")"
       data-customer-first-name="@ViewBag.CustomerFirstName"
