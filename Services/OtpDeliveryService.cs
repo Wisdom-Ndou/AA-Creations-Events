@@ -274,6 +274,36 @@ namespace WebApplication1.Services
 <p>Thank you for choosing AA Creations & Events.</p>");
         }
 
+        public bool SendAdminRegistrationEmail(string email, string firstName)
+        {
+            return SendEmail(
+                email,
+                "AA Creations & Events - Admin Account Created",
+                $@"<h2>Admin Account Created</h2>
+<p>Hi {System.Net.WebUtility.HtmlEncode(firstName)},</p>
+<p>Your AA Creations & Events administrator account has been successfully created.</p>
+<p>You can now sign in from the Admin option on the login page using the email address registered for this account and the administrator authorization code.</p>
+<p>If you did not expect this account to be created, please contact AA Creations & Events.</p>");
+        }
+
+        public bool SendStaffRegistrationEmail(
+            string email,
+            string firstName,
+            string team,
+            string city)
+        {
+            return SendEmail(
+                email,
+                "AA Creations & Events - Staff Account Created",
+                $@"<h2>Staff Account Created</h2>
+<p>Hi {System.Net.WebUtility.HtmlEncode(firstName)},</p>
+<p>Your AA Creations & Events staff account has been successfully created.</p>
+<p><strong>Team:</strong> {System.Net.WebUtility.HtmlEncode(team)}</p>
+<p><strong>Assigned City:</strong> {System.Net.WebUtility.HtmlEncode(city)}</p>
+<p>You can now sign in through the Staff sign-in page using the email address registered for this account.</p>
+<p>Welcome to the AA Creations & Events team.</p>");
+        }
+
         public bool SendCustomerComplaintConfirmationEmail(
             string email,
             string firstName,
