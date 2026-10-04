@@ -442,6 +442,37 @@ function renderBookingStep() {
     }
 
     if (state.step === 4) {
+        if (isCustomOccasion()) {
+            state.paymentAmount = 0;
+
+            root.innerHTML = `
+      <div class="payment-heading">Custom Event Request</div>
+      <p class="payment-subtext">Because this occasion does not use a preset package, no payment is due yet. AA Creations & Events will review your event details and prepare a custom quote.</p>
+
+      <div class="review-box" style="margin-bottom:18px;">
+        <div class="review-title">What happens next</div>
+        <p class="muted" style="line-height:1.6;margin:.4rem 0;">
+          Submit your booking request now. Your Special Instructions will be used to understand the setup you want, and payment will only be requested after a quote is prepared.
+        </p>
+        <label style="display:flex;gap:10px;align-items:flex-start;margin-top:12px;">
+          <input type="checkbox" id="termsAccepted" name="termsAccepted" ${state.termsAccepted ? "checked" : ""} style="margin-top:4px;">
+          <span>I understand and accept the <a href="/Cust/TermsAndConditions" target="_blank" rel="noreferrer">Terms & Conditions</a> for this booking request.</span>
+        </label>
+      </div>
+
+      <div class="payment-actions">
+        <button type="button" class="ghost-btn" id="backStep4">← Back to Review</button>
+        <div class="confirm-wrap">
+          <p class="fill-hint" id="fillHint" ${isStep4Valid() ? "hidden" : ""}>Accept the Terms & Conditions to continue</p>
+          <button type="button" class="pink-btn" id="confirmBookingFinal" ${isStep4Valid() ? "" : "disabled"}>Submit Custom Request ✓</button>
+        </div>
+      </div>
+    `;
+
+            attachStepHandlers();
+            return;
+        }
+
         const total = getTotal();
         const minimumPayment = getMinimumPayment();
         if (state.paymentAmount === null || Number(state.paymentAmount) < minimumPayment || Number(state.paymentAmount) > total) {
