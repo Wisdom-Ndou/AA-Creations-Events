@@ -1191,12 +1191,43 @@ namespace WebApplication1.Controllers
                 request.City = allowedCities.First(city =>
                     city.Equals(requestedCity, StringComparison.OrdinalIgnoreCase));
 
-                if (!ValidateSubmittedEventLocation(request.City, request.Latitude, request.Longitude))
+                request.Address = (request.Address ?? string.Empty).Trim();
+
+                if (string.IsNullOrWhiteSpace(request.Address))
                 {
                     return Json(new
                     {
                         success = false,
-                        message = "Please choose and confirm an event location inside the selected city service area."
+                        message = "Please enter the event address."
+                    });
+                }
+
+                // The map is optional. Manual address entry can be submitted
+                // without coordinates. If coordinates are supplied, however,
+                // they must be a complete pair and must pass the same city
+                // service-area rule as the interactive map.
+                bool hasLatitude = request.Latitude.HasValue;
+                bool hasLongitude = request.Longitude.HasValue;
+
+                if (hasLatitude != hasLongitude)
+                {
+                    return Json(new
+                    {
+                        success = false,
+                        message = "The map location is incomplete. Please pin the location again or continue using the manually entered address."
+                    });
+                }
+
+                if (hasLatitude &&
+                    !ValidateSubmittedEventLocation(
+                        request.City,
+                        request.Latitude,
+                        request.Longitude))
+                {
+                    return Json(new
+                    {
+                        success = false,
+                        message = "The pinned location is outside the selected city service area. Move the pin inside the service area or continue with a manual address instead."
                     });
                 }
 
