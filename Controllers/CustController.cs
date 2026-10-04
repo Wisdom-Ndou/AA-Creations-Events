@@ -695,20 +695,20 @@ namespace WebApplication1.Controllers
                 case "durban":
                     centerLatitude = -29.8587;
                     centerLongitude = 31.0218;
-                    radiusKm = 35;
+                    radiusKm = 30;
                     return true;
 
                 case "pietermaritzburg":
                     centerLatitude = -29.6006;
                     centerLongitude = 30.3794;
-                    radiusKm = 25;
+                    radiusKm = 20;
                     return true;
 
                 case "mandeni":
                 case "emandeni":
                     centerLatitude = -29.1460;
                     centerLongitude = 31.4070;
-                    radiusKm = 20;
+                    radiusKm = 15;
                     return true;
 
                 default:
@@ -1046,9 +1046,48 @@ namespace WebApplication1.Controllers
         {
             city = NormalizeEventCity(city);
 
-            
-            
+            if (!IsAllowedEventCity(city))
+            {
+                return Json(new
+                {
+                    success = false,
+                    message = "Please select a valid city/town first."
+                }, JsonRequestBehavior.AllowGet);
+            }
 
+            if (latitude < -90 || latitude > 90 ||
+                longitude < -180 || longitude > 180)
+            {
+                return Json(new
+                {
+                    success = false,
+                    message = "The selected map coordinates are invalid."
+                }, JsonRequestBehavior.AllowGet);
+            }
+
+            var inSelectedCity = IsWithinSelectedCityServiceArea(
+                city,
+                latitude,
+                longitude);
+
+            if (!inSelectedCity)
+            {
+                return Json(new
+                {
+                    success = true,
+                    address = "",
+                    resolvedCity = "",
+                    latitude = latitude,
+                    longitude = longitude,
+                    inSelectedCity = false,
+                    geocodeAvailable = false
+                }, JsonRequestBehavior.AllowGet);
+            }
+
+            // The pin itself is already valid at this point. Reverse
+            // geocoding is optional enrichment only: if the external address
+            // service is unavailable, keep the customer's manual address and
+            // still allow the valid pin to be confirmed.
             try
             {
                 var url =
@@ -1065,44 +1104,45 @@ namespace WebApplication1.Controllers
 
                 var feature = GetFirstNominatimFeature(url);
 
-                if (feature == null)
-                {
-                    return Json(new
-                    {
-                        success = false,
-                        message = "We could not find an address at that map location."
-                    }, JsonRequestBehavior.AllowGet);
-                }
-
-                
-
                 return Json(new
                 {
                     success = true,
-                    address = GetGeocodedLabel(feature),
-                    resolvedCity = GetGeocodedCity(feature),
+                    address = feature == null
+                        ? ""
+                        : GetGeocodedLabel(feature),
+                    resolvedCity = feature == null
+                        ? ""
+                        : GetGeocodedCity(feature),
                     latitude = latitude,
                     longitude = longitude,
-                    inSelectedCity = IsWithinSelectedCityServiceArea(
-                        city,
-                        latitude,
-                        longitude)
+                    inSelectedCity = true,
+                    geocodeAvailable = feature != null
                 }, JsonRequestBehavior.AllowGet);
             }
             catch (WebException)
             {
                 return Json(new
                 {
-                    success = false,
-                    message = "We could not verify that map location right now. Please try again."
+                    success = true,
+                    address = "",
+                    resolvedCity = "",
+                    latitude = latitude,
+                    longitude = longitude,
+                    inSelectedCity = true,
+                    geocodeAvailable = false
                 }, JsonRequestBehavior.AllowGet);
             }
             catch (Exception)
             {
                 return Json(new
                 {
-                    success = false,
-                    message = "The map address lookup failed. Please try again."
+                    success = true,
+                    address = "",
+                    resolvedCity = "",
+                    latitude = latitude,
+                    longitude = longitude,
+                    inSelectedCity = true,
+                    geocodeAvailable = false
                 }, JsonRequestBehavior.AllowGet);
             }
         }
