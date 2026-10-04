@@ -186,6 +186,7 @@ label {
 input[type="text"],
 input[type="tel"] {
     width: 100%;
+    max-width: none;
     padding: 12px 14px;
     border: 1.5px solid var(--border-pink);
     border-radius: 10px;
