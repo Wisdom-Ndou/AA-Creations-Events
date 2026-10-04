@@ -263,8 +263,6 @@
       <DependentUpon>202610032100554_SyncTermsAcceptanceSchema.cs</DependentUpon>
     </Compile>
     <Compile Include="Migrations\202610040937350_AddExpenditures.cs" />
-    <Compile Include="Migrations\202610041500000_AddBookingPaymentTracking.cs" />
-    <Compile Include="Migrations\202610041510000_AddCustomerComplaints.cs" />
     <Compile Include="Migrations\202610040937350_AddExpenditures.Designer.cs">
       <DependentUpon>202610040937350_AddExpenditures.cs</DependentUpon>
     </Compile>
