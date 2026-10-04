@@ -83,14 +83,14 @@ nav {
 .logo {
     font-size: 16px;
     letter-spacing: 2px;
-    font-weight: 600;
-    color: var(--ink);
+    font-weight: 700;
+    color: var(--pink);
     text-decoration: none;
-    transition: color 0.3s ease;
+    transition: color 0.3s ease, opacity 0.3s ease;
 }
 
 .logo:hover {
-    color: var(--pink);
+    color: var(--pink-dark);
 }
 
 .nav-links {
