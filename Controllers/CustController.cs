@@ -412,7 +412,8 @@ namespace WebApplication1.Controllers
                 Session.Remove("ExpectedOtpPurpose");
 
                 TempData["OtpError"] =
-                    "We could not send the verification code.";
+                    "We could not send the verification code. " +
+                    (deliveryService.LastError ?? "Please check the email service configuration.");
 
                 return RedirectToAction(
                     "ForgotPasswordMethod",
@@ -1382,7 +1383,10 @@ namespace WebApplication1.Controllers
                 {
                     Session.Remove("PendingAccountEmail");
                     Session.Remove("PendingAccountPhone");
-                    TempData["OtpError"] = "We could not send a verification code to the new email address. Your email and phone number were not changed.";
+                    string deliveryError = TempData["OtpDeliveryError"] as string;
+                    TempData["OtpError"] =
+                        "We could not send a verification code to the new email address. Your email and phone number were not changed. " +
+                        (deliveryError ?? "Please check the email service configuration.");
                     return RedirectToAction("ManageAccount", "Cust");
                 }
 
@@ -1397,7 +1401,10 @@ namespace WebApplication1.Controllers
                 if (!CreateAndSendOtp(customer, "ChangePhone", customer.Cust_Email))
                 {
                     Session.Remove("PendingAccountPhone");
-                    TempData["OtpError"] = "We could not send a verification code to your verified email address. Your phone number was not changed.";
+                    string deliveryError = TempData["OtpDeliveryError"] as string;
+                    TempData["OtpError"] =
+                        "We could not send a verification code to your verified email address. Your phone number was not changed. " +
+                        (deliveryError ?? "Please check the email service configuration.");
                     return RedirectToAction("ManageAccount", "Cust");
                 }
 
@@ -1440,13 +1447,15 @@ namespace WebApplication1.Controllers
             db.SaveChanges();
             Session["ExpectedOtpPurpose"] = purpose;
 
-            bool sent = new OtpDeliveryService().SendOtpByEmail(recipientEmail, otp);
+            var deliveryService = new OtpDeliveryService();
+            bool sent = deliveryService.SendOtpByEmail(recipientEmail, otp);
 
             if (!sent)
             {
                 verification.IsUsed = true;
                 db.SaveChanges();
                 Session.Remove("ExpectedOtpPurpose");
+                TempData["OtpDeliveryError"] = deliveryService.LastError;
                 return false;
             }
 
@@ -1562,7 +1571,8 @@ namespace WebApplication1.Controllers
                 Session.Remove("ExpectedOtpPurpose");
 
                 TempData["OtpError"] =
-                    "We could not send the verification code.";
+                    "We could not send the verification code. " +
+                    (deliveryService.LastError ?? "Please check the email service configuration.");
 
                 return RedirectToAction("ManageAccount", "Cust");
             }
