@@ -274,6 +274,30 @@ namespace WebApplication1.Services
 <p>Thank you for choosing AA Creations & Events.</p>");
         }
 
+        public bool SendCustomerComplaintConfirmationEmail(
+            string email,
+            string firstName,
+            int complaintId,
+            int bookingId,
+            string category,
+            string subject,
+            DateTime submittedAt)
+        {
+            return SendEmail(
+                email,
+                "AA Creations & Events - Complaint Received",
+                $@"<h2>Complaint Received</h2>
+<p>Hi {firstName},</p>
+<p>We have received your complaint successfully and linked it to your booking.</p>
+<p><strong>Complaint Reference:</strong> #CP-{complaintId}</p>
+<p><strong>Booking Reference:</strong> #BK-{bookingId}</p>
+<p><strong>Category:</strong> {System.Net.WebUtility.HtmlEncode(category)}</p>
+<p><strong>Subject:</strong> {System.Net.WebUtility.HtmlEncode(subject)}</p>
+<p><strong>Submitted:</strong> {submittedAt:dd MMMM yyyy 'at' HH:mm}</p>
+<p>Our admin team will review the complaint and any response will appear in your Complaint History.</p>
+<p>Thank you for contacting AA Creations & Events.</p>");
+        }
+
         public bool SendBookingCancellationEmail(
             string email,
             string firstName,
