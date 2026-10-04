@@ -18,9 +18,15 @@
 
     @if (TempData["AccountSuccess"] != null)
     {
-        <div class="account-success">
-            @TempData["AccountSuccess"]
-        </div>
+        <div class="account-success">@TempData["AccountSuccess"]</div>
+    }
+    @if (TempData["OtpNotice"] != null)
+    {
+        <div class="account-success">@TempData["OtpNotice"]</div>
+    }
+    @if (TempData["OtpError"] != null)
+    {
+        <div class="account-error">@TempData["OtpError"]</div>
     }
 
     @using (Html.BeginForm("ManageAccount", "Cust", FormMethod.Post))
@@ -30,6 +36,7 @@
         <div class="account-card">
 
             <h2>Personal Information</h2>
+            <p class="security-note">Name changes save immediately. A new email address must be verified at that address before it replaces your current email. Phone-number changes are verified through your current verified email.</p>
 
             <div class="account-grid">
 
