@@ -2,6 +2,7 @@ using System;
 using System.Configuration;
 using System.Net;
 using System.Net.Mail;
+using System.Diagnostics;
 
 namespace WebApplication1.Services
 {
@@ -58,9 +59,15 @@ namespace WebApplication1.Services
 
                 return true;
             }
-            catch
+            catch (Exception ex)
             {
-                // Email delivery must not undo a successful registration/booking.
+                // Email delivery must not undo a successful registration/booking,
+                // but failures must be diagnosable rather than silently swallowed.
+                Trace.TraceError(
+                    "AA Creations email delivery failed. Recipient={0}; Subject={1}; Error={2}",
+                    recipientEmail,
+                    subject,
+                    ex);
                 return false;
             }
         }
