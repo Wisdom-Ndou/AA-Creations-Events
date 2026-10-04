@@ -2605,6 +2605,134 @@ namespace WebApplication1.Controllers
         }
 
         [HttpGet]
+        public ActionResult CustomerComplaints(int? bookingId)
+        {
+            if (Session["CustomerId"] == null)
+            {
+                return RedirectToAction("Login", "Cust");
+            }
+
+            int customerId = (int)Session["CustomerId"];
+
+            ViewBag.Bookings = db.Bookings
+                .Where(b => b.CustomerId == customerId)
+                .OrderByDescending(b => b.EventDate)
+                .ToList();
+
+            ViewBag.SelectedBookingId = bookingId;
+
+            var complaints = db.CustomerComplaints
+                .Where(x => x.CustomerId == customerId)
+                .Include("Booking")
+                .OrderByDescending(x => x.CreatedAt)
+                .ToList();
+
+            return View(complaints);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public ActionResult CreateCustomerComplaint(int bookingId, string category, string subject, string description)
+        {
+            if (Session["CustomerId"] == null)
+            {
+                return RedirectToAction("Login", "Cust");
+            }
+
+            int customerId = (int)Session["CustomerId"];
+
+            var booking = db.Bookings.FirstOrDefault(b =>
+                b.BookingId == bookingId &&
+                b.CustomerId == customerId);
+
+            if (booking == null)
+            {
+                TempData["CustomerComplaintError"] = "The selected booking could not be found.";
+                return RedirectToAction("CustomerComplaints", "Cust");
+            }
+
+            if (string.IsNullOrWhiteSpace(category) ||
+                string.IsNullOrWhiteSpace(subject) ||
+                string.IsNullOrWhiteSpace(description))
+            {
+                TempData["CustomerComplaintError"] = "Please complete the complaint category, subject and description.";
+                return RedirectToAction("CustomerComplaints", "Cust", new { bookingId = bookingId });
+            }
+
+            db.CustomerComplaints.Add(new CustomerComplaint
+            {
+                CustomerId = customerId,
+                BookingId = bookingId,
+                Category = category.Trim(),
+                Subject = subject.Trim(),
+                Description = description.Trim(),
+                Status = "Submitted",
+                CreatedAt = DateTime.Now
+            });
+
+            db.SaveChanges();
+
+            TempData["CustomerComplaintSuccess"] = "Your complaint has been submitted and linked to this booking.";
+            return RedirectToAction("CustomerComplaints", "Cust", new { bookingId = bookingId });
+        }
+
+        [HttpGet]
+        public ActionResult AdminCustomerComplaints()
+        {
+            if (Session["AdminId"] == null ||
+                Session["AdminAuthenticated"] == null ||
+                !(bool)Session["AdminAuthenticated"])
+            {
+                return RedirectToAction("Login", "Cust");
+            }
+
+            var complaints = db.CustomerComplaints
+                .Include("Customer")
+                .Include("Booking")
+                .OrderBy(x => x.Status == "Submitted" ? 0 : x.Status == "Under Review" ? 1 : 2)
+                .ThenByDescending(x => x.CreatedAt)
+                .ToList();
+
+            return View(complaints);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public ActionResult RespondToCustomerComplaint(int complaintId, string adminResponse, string status)
+        {
+            if (Session["AdminId"] == null ||
+                Session["AdminAuthenticated"] == null ||
+                !(bool)Session["AdminAuthenticated"])
+            {
+                return RedirectToAction("Login", "Cust");
+            }
+
+            var complaint = db.CustomerComplaints.FirstOrDefault(x => x.ComplaintId == complaintId);
+            if (complaint == null)
+            {
+                return HttpNotFound();
+            }
+
+            if (string.IsNullOrWhiteSpace(adminResponse))
+            {
+                TempData["CustomerComplaintAdminError"] = "Please enter a response before updating the complaint.";
+                return RedirectToAction("AdminCustomerComplaints", "Cust");
+            }
+
+            var allowedStatuses = new[] { "Under Review", "Resolved", "Closed" };
+            complaint.Status = allowedStatuses.Contains(status) ? status : "Under Review";
+            complaint.AdminResponse = adminResponse.Trim();
+            complaint.ResolvedAt = complaint.Status == "Resolved" || complaint.Status == "Closed"
+                ? (DateTime?)DateTime.Now
+                : null;
+
+            db.SaveChanges();
+
+            TempData["CustomerComplaintAdminSuccess"] = "Customer complaint updated successfully.";
+            return RedirectToAction("AdminCustomerComplaints", "Cust");
+        }
+
+        [HttpGet]
         public ActionResult AdminStaffComplaints()
         {
             if (Session["AdminId"] == null ||
