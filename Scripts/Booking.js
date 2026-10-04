@@ -410,8 +410,8 @@ function renderBookingStep() {
         <div class="review-box">
           <div class="review-title">Package & Pricing</div>
           <div class="review-row">
-            <span class="muted">${selectedPackage?.name || "No package selected"}</span>
-            <span>R${formatMoney(selectedPackage?.price)}</span>
+            <span class="muted">${isCustomOccasion() ? "Custom Setup — quote required" : (selectedPackage?.name || "No package selected")}</span>
+            <span>${isCustomOccasion() ? "Pending quote" : "R" + formatMoney(selectedPackage?.price)}</span>
           </div>
           ${selectedAddOns.map(a => `
             <div class="review-row">
@@ -825,18 +825,18 @@ function renderConfirmation(result = {}) {
     <div class="confirmation">
       <div class="confirmation-card">
         <div class="confirmation-icon">✓</div>
-        <h2>Booking Confirmed!</h2>
+        <h2>${isCustomOccasion() ? "Request Submitted!" : "Booking Confirmed!"}</h2>
         <p style="margin-bottom:8px;font-size:14px;color:var(--muted-foreground);">
-          Thank you, <strong>${escapeHtml(state.form.firstName)}</strong>! Your celebration setup is booked.
+          Thank you, <strong>${escapeHtml(state.form.firstName)}</strong>! ${isCustomOccasion() ? "Your custom celebration request has been received." : "Your celebration setup is booked."}
         </p>
 
         <div class="summary-mini">
-          <div class="summary-mini-row"><span class="summary-mini-label">Package</span><strong>${pkg?.name || ""}</strong></div>
+          <div class="summary-mini-row"><span class="summary-mini-label">Package</span><strong>${isCustomOccasion() ? "Custom Setup" : (pkg?.name || "")}</strong></div>
           <div class="summary-mini-row"><span class="summary-mini-label">Date</span><strong>${escapeHtml(state.form.date)}</strong></div>
           <div class="summary-mini-row"><span class="summary-mini-label">Time</span><strong>${escapeHtml(state.form.time)}</strong></div>
-          <div class="summary-mini-row"><span class="summary-mini-label">Total</span><strong style="color:var(--primary);">R${formatMoney(total)}</strong></div>
-          <div class="summary-mini-row"><span class="summary-mini-label">Paid now</span><strong>R${formatMoney(result.amountPaid ?? state.paymentAmount)}</strong></div>
-          <div class="summary-mini-row"><span class="summary-mini-label">Balance</span><strong>R${formatMoney(result.balanceOutstanding ?? Math.max(0,total-state.paymentAmount))}</strong></div>
+          <div class="summary-mini-row"><span class="summary-mini-label">Total</span><strong style="color:var(--primary);">${isCustomOccasion() ? "Quote pending" : "R" + formatMoney(total)}</strong></div>
+          <div class="summary-mini-row"><span class="summary-mini-label">Paid now</span><strong>${isCustomOccasion() ? "No payment due yet" : "R" + formatMoney(result.amountPaid ?? state.paymentAmount)}</strong></div>
+          <div class="summary-mini-row"><span class="summary-mini-label">Balance</span><strong>${isCustomOccasion() ? "Set after quote" : "R" + formatMoney(result.balanceOutstanding ?? Math.max(0,total-state.paymentAmount))}</strong></div>
           <div class="summary-mini-row"><span class="summary-mini-label">Payment status</span><strong>${escapeHtml(result.paymentStatus || "")}</strong></div>
         </div>
 
