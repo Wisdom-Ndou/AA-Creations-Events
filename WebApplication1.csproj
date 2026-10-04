@@ -331,6 +331,7 @@
     <Content Include="Views\Cust\StaffClockInOut.cshtml" />
     <Content Include="Views\Cust\EditStaffProfile.cshtml" />
     <Content Include="Views\Cust\Login.cshtml" />
+    <Content Include="Views\Cust\BusinessAnalytics.cshtml" />
     <None Include="Views\Cust\StaffDashboard.cshtml" />
     <Content Include="Web.config" />
     <Content Include="Web.Debug.config">
@@ -372,6 +373,7 @@
     <Content Include="Views\Cust\ViewStaff.cshtml" />
     <Content Include="Views\Cust\StaffEvents.cshtml" />
     <Content Include="Views\Cust\StaffEventDetails.cshtml" />
+    <Content Include="Views\Cust\StaffJobs.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />

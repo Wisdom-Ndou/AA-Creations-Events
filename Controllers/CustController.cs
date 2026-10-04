@@ -144,26 +144,25 @@ namespace WebApplication1.Controllers
 
                 string correctAccessCode =
     ConfigurationManager.AppSettings["AdminAccessCode"];
-
-                if (correctAccessCode == null)
+                if (string.IsNullOrWhiteSpace(correctAccessCode))
                 {
                     ModelState.AddModelError(
                         "",
-                        "DEBUG: AdminAccessCode key was NOT found in the running Web.config."
+                        "Admin access code is not configured."
                     );
 
                     return View();
                 }
 
                 if (correctAccessCode.Length == 0)
-                {
-                    ModelState.AddModelError(
-                        "",
-                        "DEBUG: AdminAccessCode exists but its value is empty."
-                    );
+{
+    ModelState.AddModelError(
+        "",
+        " AdminAccessCode Correct "
+    );
 
-                    return View();
-                }
+    return View();
+}
 
                 accessCode = accessCode.Trim();
                 correctAccessCode = correctAccessCode.Trim();
@@ -2565,8 +2564,40 @@ namespace WebApplication1.Controllers
             );
         }
 
+        // ==========================================
+        // STAFF JOBS - ADMIN
+        // ==========================================
 
-     
+        [HttpGet]
+        public ActionResult StaffJobs()
+        {
+            // ==========================================
+            // MAKE SURE ADMIN IS LOGGED IN
+            // ==========================================
+
+            if (Session["AdminAuthenticated"] == null ||
+                !(bool)Session["AdminAuthenticated"])
+            {
+                return RedirectToAction("Login", "Cust");
+            }
+
+
+            // ==========================================
+            // GET ALL STAFF JOBS
+            // ==========================================
+
+            var jobs = db.StaffTasks
+                .Include("Staff")
+                .Include("Booking")
+                .OrderBy(t => t.Status == "Completed")
+                .ThenBy(t => t.DueDate)
+                .ThenByDescending(t => t.Priority == "High")
+                .ToList();
+
+
+            return View(jobs);
+        }
+
 
 
         // ==============================================
@@ -3672,12 +3703,17 @@ namespace WebApplication1.Controllers
         }
 
 
+        [HttpGet]
+        public ActionResult AdminLogout()
+        {
+            return RedirectToAction("Login", "Cust");
+        }
         // ===============================
         // ADMIN LOGIN - POST
         // ===============================
 
-        
-        
+
+
 
         [HttpGet]
         public JsonResult AdminExists(string email)
