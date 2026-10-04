@@ -212,7 +212,7 @@
 
                     <div class="terms-box">
                         <label class="terms-label">
-                            <input type="checkbox" id="termsAccepted" name="termsAccepted" required />
+                            <input type="checkbox" id="termsAccepted" name="termsAccepted" value="true" required />
                             <span>I confirm that all information provided is accurate and I agree to the Admin Terms of Use.</span>
                         </label>
                     </div>
@@ -229,7 +229,7 @@
                             <div class="success-icon">✓</div>
                             <h2 id="successTitle">Registration successful</h2>
                             <p id="successMessage">
-                                @(TempData["RegistrationSuccess"] ?? "Your registration was successful. You can now sign in and start booking.")
+                                @(TempData["AdminRegistrationSuccess"] ?? "Your admin registration was successful. You can now sign in.")
                             </p>
                             @Html.ActionLink(
                                 "Go to Sign In",
