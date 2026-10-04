@@ -1,65 +1,1003 @@
-@using System
-@using System.Collections.Generic
-@using System.Linq
 @model IEnumerable<WebApplication1.Models.CustomerComplaint>
+
 @{
     ViewBag.Title = "Booking Complaints";
-    var bookings = ViewBag.Bookings as List<WebApplication1.Models.Booking> ?? new List<WebApplication1.Models.Booking>();
-    int? selectedBookingId = ViewBag.SelectedBookingId as int?;
+
+    var bookings =
+        ViewBag.Bookings as List<WebApplication1.Models.Booking>
+        ?? new List<WebApplication1.Models.Booking>();
+
+    int? selectedBookingId =
+        ViewBag.SelectedBookingId as int?;
+
+    var complaintList =
+        Model == null
+            ? new List<WebApplication1.Models.CustomerComplaint>()
+            : Model.OrderByDescending(c => c.CreatedAt).ToList();
+
+    int totalComplaints = complaintList.Count;
+
+    int openComplaints = complaintList.Count(c =>
+        !string.Equals(c.Status, "Resolved", StringComparison.OrdinalIgnoreCase) &&
+        !string.Equals(c.Status, "Closed", StringComparison.OrdinalIgnoreCase));
+
+    int resolvedComplaints = complaintList.Count(c =>
+        string.Equals(c.Status, "Resolved", StringComparison.OrdinalIgnoreCase) ||
+        string.Equals(c.Status, "Closed", StringComparison.OrdinalIgnoreCase));
 }
+
 <link rel="stylesheet" href="~/Content/Manage Account styles.css" />
+
 <style>
-.complaints-page{max-width:960px;margin:0 auto;padding:34px 20px}.complaint-grid{display:grid;grid-template-columns:.9fr 1.1fr;gap:20px}.complaint-item{padding:16px 0;border-bottom:1px solid #eadde4}.complaint-item:last-child{border-bottom:0}.complaint-meta{font-size:.84rem;color:#725d68}.complaint-status{display:inline-block;padding:5px 10px;border-radius:999px;background:#fff0f5;color:#9d174d;font-weight:700;font-size:.78rem}.complaint-response{margin-top:10px;padding:12px;border-radius:10px;background:#f8f4f6}.account-field select,.account-field textarea{width:100%;box-sizing:border-box}.account-field textarea{min-height:140px;resize:vertical}@@media(max-width:780px){.complaint-grid{grid-template-columns:1fr}}
+    .complaints-page {
+        width: min(100% - 40px, 1180px);
+        margin: 0 auto;
+        padding: 36px 0 50px;
+    }
+
+    /* HERO */
+
+    .complaints-hero {
+        position: relative;
+        overflow: hidden;
+        margin-bottom: 22px;
+        padding: 32px;
+        border: 1px solid #eed9e4;
+        border-radius: 26px;
+        background: radial-gradient(circle at top right, rgba(224, 43, 125, .10), transparent 34%), linear-gradient(135deg, #fff8fb, #fff1f6);
+        box-shadow: 0 14px 36px rgba(73, 21, 48, .06);
+    }
+
+        .complaints-hero::after {
+            content: "";
+            position: absolute;
+            right: -55px;
+            top: -55px;
+            width: 180px;
+            height: 180px;
+            border-radius: 50%;
+            border: 1px solid rgba(197, 29, 103, .10);
+        }
+
+    .complaints-eyebrow {
+        position: relative;
+        z-index: 1;
+        margin: 0 0 9px;
+        color: #bc1c61;
+        font-size: .76rem;
+        font-weight: 800;
+        letter-spacing: .14em;
+        text-transform: uppercase;
+    }
+
+    .complaints-hero h1 {
+        position: relative;
+        z-index: 1;
+        margin: 0 0 8px;
+        color: #2e1423;
+        font-size: 3rem;
+        line-height: 1.05;
+    }
+
+    .complaints-hero p:last-child {
+        position: relative;
+        z-index: 1;
+        max-width: 690px;
+        margin: 0;
+        color: #725d68;
+        font-size: 1rem;
+        line-height: 1.7;
+    }
+
+    /* STATS */
+
+    .complaint-stats {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 14px;
+        margin-bottom: 22px;
+    }
+
+    .complaint-stat {
+        padding: 18px 20px;
+        border: 1px solid #efdee7;
+        border-radius: 18px;
+        background: #fff;
+        box-shadow: 0 10px 26px rgba(58, 20, 39, .05);
+    }
+
+        .complaint-stat span {
+            display: block;
+            margin-bottom: 5px;
+            color: #7a6570;
+            font-size: .78rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: .05em;
+        }
+
+        .complaint-stat strong {
+            display: block;
+            color: #b61b5c;
+            font-size: 1.9rem;
+            line-height: 1.1;
+        }
+
+    /* PAGE GRID */
+
+    .complaint-grid {
+        display: grid;
+        grid-template-columns: minmax(0, .86fr) minmax(0, 1.35fr);
+        gap: 24px;
+        align-items: start;
+    }
+
+    .complaint-card {
+        border: 1px solid #efdee7;
+        border-radius: 24px;
+        background: #fff;
+        box-shadow: 0 16px 36px rgba(55, 18, 37, .06);
+    }
+
+    .complaint-card-inner {
+        padding: 28px;
+    }
+
+    .complaint-card-header {
+        margin-bottom: 22px;
+    }
+
+        .complaint-card-header h2 {
+            margin: 0 0 7px;
+            color: #2e1423;
+            font-size: 2rem;
+            line-height: 1.1;
+        }
+
+        .complaint-card-header p {
+            margin: 0;
+            color: #7b6771;
+            line-height: 1.6;
+        }
+
+    /* FORM */
+
+    .complaint-form {
+        display: flex;
+        flex-direction: column;
+        gap: 18px;
+    }
+
+    .account-field {
+        display: flex;
+        flex-direction: column;
+        gap: 7px;
+    }
+
+        .account-field label {
+            color: #34202b;
+            font-size: .92rem;
+            font-weight: 700;
+        }
+
+        .account-field select,
+        .account-field input,
+        .account-field textarea {
+            width: 100%;
+            max-width: none;
+            box-sizing: border-box;
+            border: 1px solid #dfccd6;
+            border-radius: 14px;
+            padding: 13px 15px;
+            outline: none;
+            color: #2c1b24;
+            background: #fff;
+            font: inherit;
+            transition: border-color .2s ease, box-shadow .2s ease, background .2s ease;
+        }
+
+            .account-field select:focus,
+            .account-field input:focus,
+            .account-field textarea:focus {
+                border-color: #c51d67;
+                background: #fffdfd;
+                box-shadow: 0 0 0 4px rgba(197, 29, 103, .09);
+            }
+
+            .account-field input::placeholder,
+            .account-field textarea::placeholder {
+                color: #aa929f;
+            }
+
+        .account-field textarea {
+            min-height: 180px;
+            resize: vertical;
+            line-height: 1.6;
+        }
+
+    .field-help {
+        color: #917c86;
+        font-size: .8rem;
+        line-height: 1.45;
+    }
+
+    .form-section-note {
+        display: flex;
+        gap: 10px;
+        padding: 12px 13px;
+        border: 1px solid #f0d9e4;
+        border-radius: 13px;
+        color: #744e61;
+        background: #fff7fa;
+        font-size: .83rem;
+        line-height: 1.5;
+    }
+
+        .form-section-note span:first-child {
+            color: #c51d67;
+            font-weight: 900;
+        }
+
+    .complaint-submit-wrap {
+        display: flex;
+        justify-content: flex-end;
+        margin-top: 2px;
+    }
+
+    .submit-complaint-btn {
+        min-width: 220px;
+        border: 0;
+        border-radius: 999px;
+        padding: 14px 24px;
+        color: #fff;
+        background: linear-gradient( 135deg, #b6185a, #e52883 );
+        box-shadow: 0 14px 24px rgba(197, 29, 103, .20);
+        font-size: .95rem;
+        font-weight: 800;
+        cursor: pointer;
+        transition: transform .18s ease, box-shadow .18s ease, opacity .18s ease;
+    }
+
+        .submit-complaint-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 18px 30px rgba(197, 29, 103, .26);
+        }
+
+        .submit-complaint-btn:active {
+            transform: translateY(0);
+        }
+
+    /* HISTORY */
+
+    .complaint-history-list {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+    }
+
+    .complaint-item {
+        position: relative;
+        overflow: hidden;
+        border: 1px solid #eedde5;
+        border-radius: 19px;
+        background: #fff;
+        box-shadow: 0 9px 22px rgba(55, 18, 37, .04);
+    }
+
+        .complaint-item::before {
+            content: "";
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 5px;
+            background: #d32973;
+        }
+
+        .complaint-item.status-resolved::before {
+            background: #29a465;
+        }
+
+        .complaint-item.status-closed::before {
+            background: #68737c;
+        }
+
+        .complaint-item.status-open::before,
+        .complaint-item.status-pending::before {
+            background: #d32973;
+        }
+
+    .complaint-item-inner {
+        padding: 19px 20px 18px 22px;
+    }
+
+    .complaint-item-top {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 16px;
+    }
+
+    .complaint-main-info {
+        display: flex;
+        gap: 13px;
+        min-width: 0;
+    }
+
+    .complaint-category-icon {
+        width: 42px;
+        height: 42px;
+        flex: 0 0 42px;
+        display: grid;
+        place-items: center;
+        border-radius: 13px;
+        color: #b61b5c;
+        background: #fff0f6;
+        font-size: 18px;
+    }
+
+    .complaint-item h3 {
+        margin: 0 0 5px;
+        color: #2e1423;
+        font-size: 1.06rem;
+        line-height: 1.35;
+    }
+
+    .complaint-meta {
+        color: #806b75;
+        font-size: .82rem;
+        line-height: 1.55;
+    }
+
+    .complaint-status {
+        flex: 0 0 auto;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 10px;
+        border-radius: 999px;
+        font-size: .72rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: .04em;
+    }
+
+        .complaint-status::before {
+            content: "";
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: currentColor;
+        }
+
+        .complaint-status.open,
+        .complaint-status.pending {
+            color: #b71f5c;
+            background: #fff0f6;
+        }
+
+        .complaint-status.resolved {
+            color: #16804d;
+            background: #eaf9f0;
+        }
+
+        .complaint-status.closed {
+            color: #59636b;
+            background: #eef1f3;
+        }
+
+    .complaint-body {
+        margin: 15px 0 0 55px;
+        padding-top: 14px;
+        border-top: 1px solid #f2e7ec;
+        color: #56424c;
+        font-size: .91rem;
+        line-height: 1.7;
+    }
+
+    .complaint-response {
+        margin: 14px 0 0 55px;
+        padding: 15px 16px;
+        border: 1px solid #ecd9e2;
+        border-radius: 14px;
+        background: linear-gradient( 135deg, #fff8fb, #fff );
+    }
+
+    .response-heading {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        margin-bottom: 6px;
+        color: #8e1749;
+        font-size: .82rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: .04em;
+    }
+
+        .response-heading span:first-child {
+            width: 23px;
+            height: 23px;
+            display: grid;
+            place-items: center;
+            border-radius: 50%;
+            color: #fff;
+            background: #c51d67;
+            font-size: .7rem;
+        }
+
+    .complaint-response p {
+        margin: 0;
+        color: #59454f;
+        font-size: .9rem;
+        line-height: 1.65;
+    }
+
+    /* EMPTY STATE */
+
+    .complaint-empty {
+        display: grid;
+        place-items: center;
+        min-height: 300px;
+        padding: 28px;
+        border: 1px dashed #e9d5df;
+        border-radius: 18px;
+        background: linear-gradient( 180deg, #fffafd, #fff );
+        text-align: center;
+    }
+
+    .complaint-empty-icon {
+        width: 64px;
+        height: 64px;
+        margin: 0 auto 14px;
+        display: grid;
+        place-items: center;
+        border-radius: 20px;
+        color: #c51d67;
+        background: #fff0f6;
+        font-size: 27px;
+    }
+
+    .complaint-empty h3 {
+        margin: 0 0 7px;
+        color: #2e1423;
+        font-size: 1.25rem;
+    }
+
+    .complaint-empty p {
+        max-width: 380px;
+        margin: 0 auto;
+        color: #7d6973;
+        line-height: 1.65;
+    }
+
+    /* ALERTS */
+
+    .account-success,
+    .account-error {
+        margin-bottom: 18px;
+        padding: 13px 15px;
+        border-radius: 13px;
+        font-weight: 600;
+    }
+
+    .account-success {
+        color: #276849;
+        background: #edf9f3;
+        border: 1px solid #b9dfca;
+    }
+
+    .account-error {
+        color: #a22652;
+        background: #fff1f6;
+        border: 1px solid #edbdd0;
+    }
+
+    /* BACK */
+
+    .back-link-wrap {
+        margin-top: 22px;
+    }
+
+    .back-bookings-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 9px;
+        padding: 11px 15px;
+        border-radius: 999px;
+        color: #3b2631;
+        text-decoration: none;
+        font-weight: 700;
+        transition: background .2s ease, color .2s ease;
+    }
+
+        .back-bookings-link:hover {
+            color: #b31a59;
+            background: #fff0f6;
+        }
+
+    @@media (max-width: 980px) {
+        .complaint-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .complaint-stats {
+            grid-template-columns: repeat(3, 1fr);
+        }
+    }
+
+    @@media (max-width: 680px) {
+        .complaints-page {
+            width: min(100% - 28px, 1180px);
+            padding-top: 24px;
+        }
+
+        .complaints-hero {
+            padding: 24px 21px;
+        }
+
+            .complaints-hero h1 {
+                font-size: 2.25rem;
+            }
+
+        .complaint-stats {
+            grid-template-columns: 1fr;
+        }
+
+        .complaint-card-inner {
+            padding: 22px 18px;
+        }
+
+        .complaint-card-header h2 {
+            font-size: 1.7rem;
+        }
+
+        .complaint-item-top {
+            flex-direction: column;
+        }
+
+        .complaint-status {
+            margin-left: 55px;
+        }
+
+        .complaint-body,
+        .complaint-response {
+            margin-left: 0;
+        }
+
+        .complaint-submit-wrap {
+            justify-content: stretch;
+        }
+
+        .submit-complaint-btn {
+            width: 100%;
+        }
+    }
 </style>
+
 <main class="complaints-page">
-    <div class="account-header"><div><p class="account-eyebrow">MY BOOKINGS</p><h1>Booking Complaints</h1><p>Report an issue against a specific booking and follow the response here.</p></div></div>
 
-    @if(TempData["CustomerComplaintSuccess"]!=null){<div class="account-success">@TempData["CustomerComplaintSuccess"]</div>}
-    @if(TempData["CustomerComplaintError"]!=null){<div class="account-error">@TempData["CustomerComplaintError"]</div>}
+    <section class="complaints-hero">
+        <p class="complaints-eyebrow">
+            My AA Creations
+        </p>
 
-    <div class="complaint-grid">
-        <section class="account-card">
-            <h2>Submit a Complaint</h2>
-            @using(Html.BeginForm("CreateCustomerComplaint","Cust",FormMethod.Post)){
-                @Html.AntiForgeryToken()
-                <div class="account-field"><label for="bookingId">Booking</label>
-                    <select id="bookingId" name="bookingId" class="account-input" required>
-                        <option value="">Select booking…</option>
-                        @foreach(var booking in bookings){
-                            <option value="@booking.BookingId" @(selectedBookingId == booking.BookingId ? "selected" : "")>
-                                #BK-@booking.BookingId · @booking.Occasion · @booking.EventDate.ToString("dd MMM yyyy")
+        <h1>Booking Complaints</h1>
+
+        <p>
+            Report an issue linked to one of your bookings and
+            keep track of the response from the AA Creations & Events team.
+        </p>
+    </section>
+
+
+    <section class="complaint-stats">
+
+        <article class="complaint-stat">
+            <span>Total Complaints</span>
+            <strong>@totalComplaints</strong>
+        </article>
+
+        <article class="complaint-stat">
+            <span>Open</span>
+            <strong>@openComplaints</strong>
+        </article>
+
+        <article class="complaint-stat">
+            <span>Resolved</span>
+            <strong>@resolvedComplaints</strong>
+        </article>
+
+    </section>
+
+
+    @if (TempData["CustomerComplaintSuccess"] != null)
+    {
+        <div class="account-success">
+            @TempData["CustomerComplaintSuccess"]
+        </div>
+    }
+
+    @if (TempData["CustomerComplaintError"] != null)
+    {
+        <div class="account-error">
+            @TempData["CustomerComplaintError"]
+        </div>
+    }
+
+
+    <section class="complaint-grid">
+
+        <!-- SUBMIT COMPLAINT -->
+
+        <article class="complaint-card">
+
+            <div class="complaint-card-inner">
+
+                <header class="complaint-card-header">
+                    <h2>Submit a Complaint</h2>
+
+                    <p>
+                        Give us the details of the issue so the admin team
+                        can investigate the correct booking.
+                    </p>
+                </header>
+
+
+                @using (
+                    Html.BeginForm(
+                        "CreateCustomerComplaint",
+                        "Cust",
+                        FormMethod.Post,
+                        new { @class = "complaint-form" }
+                    )
+                )
+                {
+                    @Html.AntiForgeryToken()
+
+
+                    <div class="account-field">
+
+                        <label for="bookingId">
+                            Booking
+                        </label>
+
+                        <select id="bookingId"
+                                name="bookingId"
+                                required>
+
+                            <option value="">
+                                Select booking...
                             </option>
-                        }
-                    </select>
-                </div>
-                <div class="account-field"><label for="category">Category</label>
-                    <select id="category" name="category" class="account-input" required>
-                        <option value="">Select category…</option>
-                        <option>Service Quality</option><option>Decoration / Setup</option><option>Payment / Refund</option><option>Communication</option><option>Other</option>
-                    </select>
-                </div>
-                <div class="account-field"><label for="subject">Subject</label><input id="subject" name="subject" class="account-input" maxlength="120" required /></div>
-                <div class="account-field"><label for="description">What happened?</label><textarea id="description" name="description" class="account-input" maxlength="2000" required></textarea></div>
-                <div class="account-actions"><button type="submit" class="save-account-btn">Submit Complaint</button></div>
-            }
-        </section>
 
-        <section class="account-card">
-            <h2>Your Complaint History</h2>
-            @if(!Model.Any()){<p>You have not submitted any booking complaints.</p>}
-            else{
-                foreach(var complaint in Model){
-                    <article class="complaint-item">
-                        <div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start">
-                            <div><strong>@complaint.Subject</strong><div class="complaint-meta">#BK-@complaint.BookingId · @complaint.Category · @complaint.CreatedAt.ToString("dd MMM yyyy HH:mm")</div></div>
-                            <span class="complaint-status">@complaint.Status</span>
-                        </div>
-                        <p>@complaint.Description</p>
-                        @if(!String.IsNullOrWhiteSpace(complaint.AdminResponse)){<div class="complaint-response"><strong>AA Creations response</strong><p>@complaint.AdminResponse</p></div>}
-                    </article>
+                            @foreach (var booking in bookings)
+                            {
+                                <option value="@booking.BookingId"
+                                        @(selectedBookingId == booking.BookingId ? "selected" : "")>
+
+                                    #BK-@booking.BookingId ·
+                                    @booking.Occasion ·
+                                    @booking.EventDate.ToString("dd MMM yyyy")
+
+                                </option>
+                            }
+
+                        </select>
+
+                        <span class="field-help">
+                            Select the exact booking related to the issue.
+                        </span>
+
+                    </div>
+
+
+                    <div class="account-field">
+
+                        <label for="category">
+                            Category
+                        </label>
+
+                        <select id="category"
+                                name="category"
+                                required>
+
+                            <option value="">
+                                Select category...
+                            </option>
+
+                            <option>
+                                Service Quality
+                            </option>
+
+                            <option>
+                                Decoration / Setup
+                            </option>
+
+                            <option>
+                                Payment / Refund
+                            </option>
+
+                            <option>
+                                Communication
+                            </option>
+
+                            <option>
+                                Other
+                            </option>
+
+                        </select>
+
+                    </div>
+
+
+                    <div class="account-field">
+
+                        <label for="subject">
+                            Subject
+                        </label>
+
+                        <input id="subject"
+                               name="subject"
+                               type="text"
+                               maxlength="120"
+                               placeholder="Example: Refund has not reflected"
+                               required />
+
+                    </div>
+
+
+                    <div class="account-field">
+
+                        <label for="description">
+                            What happened?
+                        </label>
+
+                        <textarea id="description"
+                                  name="description"
+                                  maxlength="2000"
+                                  placeholder="Describe what happened, when it happened and what you would like us to help with..."
+                                  required></textarea>
+
+                    </div>
+
+
+                    <div class="form-section-note">
+
+                        <span>i</span>
+
+                        <span>
+                            Your complaint will automatically be linked to
+                            the selected booking so you do not need to re-enter
+                            your event or customer details.
+                        </span>
+
+                    </div>
+
+
+                    <div class="complaint-submit-wrap">
+
+                        <button type="submit"
+                                class="submit-complaint-btn">
+
+                            Submit Complaint
+
+                        </button>
+
+                    </div>
                 }
-            }
-        </section>
+
+            </div>
+
+        </article>
+
+
+        <!-- COMPLAINT HISTORY -->
+
+        <article class="complaint-card">
+
+            <div class="complaint-card-inner">
+
+                <header class="complaint-card-header">
+
+                    <h2>Your Complaint History</h2>
+
+                    <p>
+                        Track open issues and view responses from the admin team.
+                    </p>
+
+                </header>
+
+
+                @if (complaintList.Any())
+                {
+                    <div class="complaint-history-list">
+
+                        @foreach (var complaint in complaintList)
+                        {
+                            var status =
+                                string.IsNullOrWhiteSpace(complaint.Status)
+                                    ? "Open"
+                                    : complaint.Status.Trim();
+
+                            var statusClass =
+                                status.ToLower()
+                                    .Replace(" ", "-");
+
+                            var category =
+                                complaint.Category ?? "Other";
+
+                            var categoryIcon = "!";
+
+                            if (
+                                category.IndexOf(
+                                    "Payment",
+                                    StringComparison.OrdinalIgnoreCase
+                                ) >= 0
+                            )
+                            {
+                                categoryIcon = "R";
+                            }
+                            else if (
+                                category.IndexOf(
+                                    "Communication",
+                                    StringComparison.OrdinalIgnoreCase
+                                ) >= 0
+                            )
+                            {
+                                categoryIcon = "✉";
+                            }
+                            else if (
+                                category.IndexOf(
+                                    "Decoration",
+                                    StringComparison.OrdinalIgnoreCase
+                                ) >= 0
+                            )
+                            {
+                                categoryIcon = "✦";
+                            }
+                            else if (
+                                category.IndexOf(
+                                    "Service",
+                                    StringComparison.OrdinalIgnoreCase
+                                ) >= 0
+                            )
+                            {
+                                categoryIcon = "★";
+                            }
+
+
+                            <article class="
+                                    complaint-item
+                                    status-@statusClass">
+
+                                <div class="complaint-item-inner">
+
+                                    <div class="complaint-item-top">
+
+                                        <div class="complaint-main-info">
+
+                                            <div class="complaint-category-icon">
+                                                @categoryIcon
+                                            </div>
+
+                                            <div>
+
+                                                <h3>
+                                                    @complaint.Subject
+                                                </h3>
+
+                                                <div class="complaint-meta">
+
+                                                    Booking #@complaint.BookingId
+
+                                                    <br />
+
+                                                    @complaint.Category
+                                                    ·
+                                                    @complaint.CreatedAt.ToString(
+                                                        "dd MMM yyyy 'at' HH:mm"
+                                                    )
+
+                                                </div>
+
+                                            </div>
+
+                                        </div>
+
+
+                                        <span class="
+                                                complaint-status
+                                                @statusClass">
+
+                                            @status
+
+                                        </span>
+
+                                    </div>
+
+
+                                    <div class="complaint-body">
+                                        @complaint.Description
+                                    </div>
+
+
+                                    @if (
+                                        !string.IsNullOrWhiteSpace(
+                                            complaint.AdminResponse
+                                        )
+                                    )
+                                    {
+                                        <div class="complaint-response">
+
+                                            <div class="response-heading">
+
+                                                <span>✓</span>
+
+                                                <span>
+                                                    Admin Response
+                                                </span>
+
+                                            </div>
+
+                                            <p>
+                                                @complaint.AdminResponse
+                                            </p>
+
+                                        </div>
+                                    }
+
+                                </div>
+
+                            </article>
+                        }
+
+                    </div>
+                }
+                else
+                {
+                    <div class="complaint-empty">
+
+                        <div>
+
+                            <div class="complaint-empty-icon">
+                                ♡
+                            </div>
+
+                            <h3>
+                                No complaints submitted
+                            </h3>
+
+                            <p>
+                                You currently have no booking complaints.
+                                Any complaint you submit will appear here
+                                together with its status and the admin response.
+                            </p>
+
+                        </div>
+
+                    </div>
+                }
+
+            </div>
+
+        </article>
+
+    </section>
+
+
+    <div class="back-link-wrap">
+
+        <a href="@Url.Action("ViewBooking", "Cust")"
+           class="back-bookings-link">
+
+            <span>←</span>
+
+            <span>
+                Back to My Bookings
+            </span>
+
+        </a>
+
     </div>
-    <p><a href="@Url.Action("ViewBooking","Cust")">← Back to My Bookings</a></p>
+
 </main>
