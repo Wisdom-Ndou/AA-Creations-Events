@@ -261,17 +261,29 @@ function hideAddressSuggestions() {
     if (list) list.classList.remove("visible");
 }
 
+function isResultInsideSelectedCity(result) {
+    return Boolean(
+        result &&
+        (result.inSelectedCity === true ||
+         String(result.inSelectedCity).toLowerCase() === "true")
+    );
+}
+
 function selectAddressResult(result) {
     if (!result) return;
 
     const city = getSelectedCity();
+    const latitude = Number(result.latitude);
+    const longitude = Number(result.longitude);
 
-    if (result.inSelectedCity !== true) {
+    if (!isResultInsideSelectedCity(result) ||
+        !Number.isFinite(latitude) ||
+        !Number.isFinite(longitude)) {
         clearLocationSelection(false);
         hideAddressSuggestions();
 
         showLocationMessage(
-            `That address is outside the ${city} service area. Please choose an address within ${city} or pin another location on the map.`,
+            `That address is outside the ${city} service area. Please choose another address or pin a location inside ${city}.`,
             "error"
         );
 
@@ -280,20 +292,26 @@ function selectAddressResult(result) {
     }
 
     state.form.address = result.address || "";
-    state.form.latitude = Number(result.latitude);
-    state.form.longitude = Number(result.longitude);
+    state.form.latitude = latitude;
+    state.form.longitude = longitude;
     state.form.locationValidated = true;
     state.form.locationConfirmed = true;
 
     const addressInput = document.getElementById("address");
-    const latitude = document.getElementById("latitude");
-    const longitude = document.getElementById("longitude");
+    const latitudeInput = document.getElementById("latitude");
+    const longitudeInput = document.getElementById("longitude");
 
     if (addressInput) addressInput.value = state.form.address;
-    if (latitude) latitude.value = state.form.latitude;
-    if (longitude) longitude.value = state.form.longitude;
+    if (latitudeInput) latitudeInput.value = state.form.latitude;
+    if (longitudeInput) longitudeInput.value = state.form.longitude;
 
     hideAddressSuggestions();
+
+    if (bookingMap && bookingMarker) {
+        bookingMarker.setLatLng([latitude, longitude]);
+        bookingMap.setView([latitude, longitude], 16);
+        bookingMap.invalidateSize({ pan: false });
+    }
 
     showLocationMessage(
         "✓ Address found and location confirmed.",
@@ -435,7 +453,8 @@ function getCityMapSettings(city) {
             return {
                 lat: -29.6006,
                 lng: 30.3794,
-                zoom: 13
+                zoom: 13,
+                radiusKm: 25
             };
 
         case "mandeni":
@@ -443,7 +462,8 @@ function getCityMapSettings(city) {
             return {
                 lat: -29.1460,
                 lng: 31.4070,
-                zoom: 13
+                zoom: 13,
+                radiusKm: 20
             };
 
         case "durban":
@@ -451,7 +471,8 @@ function getCityMapSettings(city) {
             return {
                 lat: -29.8587,
                 lng: 31.0218,
-                zoom: 12
+                zoom: 12,
+                radiusKm: 35
             };
     }
 }
@@ -465,6 +486,21 @@ function getCityMapCenter(city) {
     };
 }
  
+function getCityMapBounds(city) {
+    const settings = getCityMapSettings(city);
+    const radiusKm = settings.radiusKm || 25;
+    const latitudeDelta = radiusKm / 111;
+    const longitudeScale =
+        111 * Math.cos(settings.lat * Math.PI / 180);
+    const longitudeDelta =
+        longitudeScale > 0 ? radiusKm / longitudeScale : latitudeDelta;
+
+    return [
+        [settings.lat - latitudeDelta, settings.lng - longitudeDelta],
+        [settings.lat + latitudeDelta, settings.lng + longitudeDelta]
+    ];
+}
+
 function openLocationMap() {
     const mapContainer = document.getElementById("mapContainer");
     const mapElement = document.getElementById("bookingMap");
@@ -534,7 +570,9 @@ function openLocationMap() {
         requestAnimationFrame(() => {
             bookingMap = L.map("bookingMap", {
                 zoomControl: true,
-                attributionControl: true
+                attributionControl: true,
+                maxBounds: getCityMapBounds(city),
+                maxBoundsViscosity: 0.85
             });
 
             bookingMap.setView([startLat, startLng], startZoom);
@@ -745,7 +783,7 @@ async function findEventAddress() {
     }
 
     // Only accept a result that falls within the selected city's service area.
-    const validResult = results.find(result => result.inSelectedCity === true);
+    const validResult = results.find(isResultInsideSelectedCity);
 
     if (validResult) {
         selectAddressResult(validResult);
