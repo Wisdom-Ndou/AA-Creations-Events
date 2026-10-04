@@ -897,61 +897,127 @@ namespace WebApplication1.Controllers
             }
 
             int customerId = (int)Session["CustomerId"];
-
-            var customer = db.Customers
-                .FirstOrDefault(c => c.Cust_ID == customerId);
+            var customer = db.Customers.FirstOrDefault(c => c.Cust_ID == customerId);
 
             if (customer == null)
             {
                 Session.Clear();
                 Session.Abandon();
-
                 return RedirectToAction("Login", "Cust");
             }
 
-            // Password is not being changed on the Manage Account page.
-            // Therefore, remove password validation from this request.
             ModelState.Remove("Cust_Passw");
 
-            // Check whether another customer already uses this email.
-            if (db.Customers.Any(c =>
-                c.Cust_Email == obj.Cust_Email &&
+            string requestedEmail = (obj.Cust_Email ?? "").Trim();
+            string requestedPhone = (obj.Cust_Phone ?? "").Trim();
+            bool emailChanged = !string.Equals(customer.Cust_Email, requestedEmail, StringComparison.OrdinalIgnoreCase);
+            bool phoneChanged = !string.Equals(customer.Cust_Phone ?? "", requestedPhone, StringComparison.Ordinal);
+
+            if (emailChanged && db.Customers.Any(c =>
+                c.Cust_Email == requestedEmail &&
                 c.Cust_ID != customerId))
             {
-                ModelState.AddModelError(
-                    "Cust_Email",
-                    "An account with this email address already exists."
-                );
-
-                return View(customer);
+                ModelState.AddModelError("Cust_Email", "An account with this email address already exists.");
             }
 
             if (!ModelState.IsValid)
             {
-                return View(customer);
+                return View(obj);
             }
 
-            // Update only the information that the user is allowed
-            // to change on the Manage Account page.
+            // Non-sensitive profile details can be saved immediately.
             customer.Cust_FName = obj.Cust_FName;
             customer.Cust_LName = obj.Cust_LName;
-            customer.Cust_Email = obj.Cust_Email;
-            customer.Cust_Phone = obj.Cust_Phone;
-
-            // Tell Entity Framework that this existing customer was modified.
-            db.Entry(customer).State = EntityState.Modified;
-
-            // Permanently save the changes to the database.
             db.SaveChanges();
 
-            // Keep the session information up to date.
-            Session["CustomerEmail"] = customer.Cust_Email;
             Session["CustomerFirstName"] = customer.Cust_FName;
 
-            TempData["AccountSuccess"] =
-                "Your account details have been updated successfully.";
+            // Sensitive contact changes are staged until OTP verification succeeds.
+            Session.Remove("PendingAccountEmail");
+            Session.Remove("PendingAccountPhone");
 
+            if (emailChanged)
+            {
+                Session["PendingAccountEmail"] = requestedEmail;
+
+                if (phoneChanged)
+                {
+                    Session["PendingAccountPhone"] = requestedPhone;
+                }
+
+                if (!CreateAndSendOtp(customer, "ChangeEmail", requestedEmail))
+                {
+                    Session.Remove("PendingAccountEmail");
+                    Session.Remove("PendingAccountPhone");
+                    TempData["OtpError"] = "We could not send a verification code to the new email address. Your email and phone number were not changed.";
+                    return RedirectToAction("ManageAccount", "Cust");
+                }
+
+                TempData["OtpNotice"] = "We sent a verification code to your new email address. Verify it before the email change is saved.";
+                return RedirectToAction("VerifyOtp", "Cust");
+            }
+
+            if (phoneChanged)
+            {
+                Session["PendingAccountPhone"] = requestedPhone;
+
+                if (!CreateAndSendOtp(customer, "ChangePhone", customer.Cust_Email))
+                {
+                    Session.Remove("PendingAccountPhone");
+                    TempData["OtpError"] = "We could not send a verification code to your verified email address. Your phone number was not changed.";
+                    return RedirectToAction("ManageAccount", "Cust");
+                }
+
+                TempData["OtpNotice"] = "We sent a verification code to your verified email address. Verify it before the phone number change is saved.";
+                return RedirectToAction("VerifyOtp", "Cust");
+            }
+
+            TempData["AccountSuccess"] = "Your account details have been updated successfully.";
             return RedirectToAction("ManageAccount");
+        }
+
+        private bool CreateAndSendOtp(Customer customer, string purpose, string recipientEmail)
+        {
+            string otp = OtpHelper.GenerateOtp();
+
+            var previousOtps = db.OtpVerifications
+                .Where(o => o.CustomerId == customer.Cust_ID &&
+                            o.Purpose == purpose &&
+                            !o.IsUsed)
+                .ToList();
+
+            foreach (var previousOtp in previousOtps)
+            {
+                previousOtp.IsUsed = true;
+            }
+
+            var verification = new OtpVerification
+            {
+                CustomerId = customer.Cust_ID,
+                OtpHash = OtpHelper.HashOtp(otp),
+                DeliveryMethod = "Email",
+                Purpose = purpose,
+                CreatedAt = DateTime.Now,
+                ExpiresAt = OtpHelper.GetExpiryTime(),
+                IsUsed = false,
+                FailedAttempts = 0
+            };
+
+            db.OtpVerifications.Add(verification);
+            db.SaveChanges();
+            Session["ExpectedOtpPurpose"] = purpose;
+
+            bool sent = new OtpDeliveryService().SendOtpByEmail(recipientEmail, otp);
+
+            if (!sent)
+            {
+                verification.IsUsed = true;
+                db.SaveChanges();
+                Session.Remove("ExpectedOtpPurpose");
+                return false;
+            }
+
+            return true;
         }
 
         [HttpPost]
@@ -1193,6 +1259,85 @@ namespace WebApplication1.Controllers
             Session["OtpVerified"] = true;
             Session["OtpPurpose"] = verification.Purpose;
             Session.Remove("ExpectedOtpPurpose");
+
+            // ACCOUNT EMAIL CHANGE
+            if (verification.Purpose == "ChangeEmail")
+            {
+                string pendingEmail = Session["PendingAccountEmail"] as string;
+                var accountCustomer = db.Customers.FirstOrDefault(x => x.Cust_ID == customerId);
+
+                if (accountCustomer == null || string.IsNullOrWhiteSpace(pendingEmail))
+                {
+                    Session.Remove("OtpVerified");
+                    Session.Remove("OtpPurpose");
+                    Session.Remove("PendingAccountEmail");
+                    Session.Remove("PendingAccountPhone");
+                    TempData["OtpError"] = "The pending email change could not be completed. Please try again.";
+                    return RedirectToAction("ManageAccount", "Cust");
+                }
+
+                if (db.Customers.Any(x => x.Cust_ID != customerId && x.Cust_Email == pendingEmail))
+                {
+                    Session.Remove("OtpVerified");
+                    Session.Remove("OtpPurpose");
+                    Session.Remove("PendingAccountEmail");
+                    Session.Remove("PendingAccountPhone");
+                    TempData["OtpError"] = "That email address is already in use.";
+                    return RedirectToAction("ManageAccount", "Cust");
+                }
+
+                accountCustomer.Cust_Email = pendingEmail.Trim();
+                db.SaveChanges();
+
+                Session["CustomerEmail"] = accountCustomer.Cust_Email;
+                Session.Remove("PendingAccountEmail");
+                Session.Remove("OtpVerified");
+                Session.Remove("OtpPurpose");
+
+                string pendingPhoneAfterEmail = Session["PendingAccountPhone"] as string;
+                if (!string.IsNullOrWhiteSpace(pendingPhoneAfterEmail) &&
+                    !string.Equals(accountCustomer.Cust_Phone ?? "", pendingPhoneAfterEmail, StringComparison.Ordinal))
+                {
+                    if (CreateAndSendOtp(accountCustomer, "ChangePhone", accountCustomer.Cust_Email))
+                    {
+                        TempData["OtpNotice"] = "Your new email address is verified. We sent another code there to verify the pending phone number change.";
+                        return RedirectToAction("VerifyOtp", "Cust");
+                    }
+
+                    Session.Remove("PendingAccountPhone");
+                    TempData["AccountSuccess"] = "Your email address was updated successfully, but the phone verification email could not be sent.";
+                    return RedirectToAction("ManageAccount", "Cust");
+                }
+
+                TempData["AccountSuccess"] = "Your new email address has been verified and saved.";
+                return RedirectToAction("ManageAccount", "Cust");
+            }
+
+            // ACCOUNT PHONE CHANGE
+            if (verification.Purpose == "ChangePhone")
+            {
+                string pendingPhone = Session["PendingAccountPhone"] as string;
+                var accountCustomer = db.Customers.FirstOrDefault(x => x.Cust_ID == customerId);
+
+                if (accountCustomer == null || string.IsNullOrWhiteSpace(pendingPhone))
+                {
+                    Session.Remove("OtpVerified");
+                    Session.Remove("OtpPurpose");
+                    Session.Remove("PendingAccountPhone");
+                    TempData["OtpError"] = "The pending phone number change could not be completed. Please try again.";
+                    return RedirectToAction("ManageAccount", "Cust");
+                }
+
+                accountCustomer.Cust_Phone = pendingPhone.Trim();
+                db.SaveChanges();
+
+                Session.Remove("PendingAccountPhone");
+                Session.Remove("OtpVerified");
+                Session.Remove("OtpPurpose");
+
+                TempData["AccountSuccess"] = "Your phone number has been verified and saved.";
+                return RedirectToAction("ManageAccount", "Cust");
+            }
 
             // FORGOT PASSWORD
             if (verification.Purpose == "ForgotPassword")
