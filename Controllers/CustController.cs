@@ -1292,8 +1292,6 @@ namespace WebApplication1.Controllers
                     EventTime = request.EventTime,
                     Address = request.Address,
                     City = request.City,
-                    Latitude = request.Latitude,
-                    Longitude = request.Longitude,
                     Notes = request.Notes,
                     PackageId = package.PackageId,
                     TotalPrice = totalPrice,
