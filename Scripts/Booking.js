@@ -1318,6 +1318,18 @@ function attachStepHandlers() {
     const addressInput = document.getElementById("address");
     if (addressInput) {
         addressInput.addEventListener("input", handleAddressTyping);
+
+        addressInput.addEventListener("keydown", event => {
+            if (event.key !== "Enter") return;
+
+            // Never allow Enter in the address field to submit/reload the form.
+            event.preventDefault();
+            event.stopPropagation();
+
+            clearTimeout(addressSearchTimer);
+            findEventAddress();
+        });
+
         addressInput.addEventListener("focus", () => {
             if (addressInput.value.trim().length >= 3 && !state.form.locationConfirmed) {
                 searchEventAddresses(false);
@@ -1583,6 +1595,22 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         return;
+    }
+
+    // The booking form is a JavaScript state machine, not a traditional
+    // server-posted form. Prevent implicit Enter-key submissions from
+    // reloading the page and resetting the customer back to Step 1.
+    const bookingForm = document.getElementById("bookingForm");
+    if (bookingForm) {
+        bookingForm.addEventListener("submit", event => {
+            event.preventDefault();
+
+            const activeElement = document.activeElement;
+            if (state.step === 2 && activeElement?.id === "address") {
+                clearTimeout(addressSearchTimer);
+                findEventAddress();
+            }
+        });
     }
 
     // Load the signed-in customer's details from the server-rendered page.
