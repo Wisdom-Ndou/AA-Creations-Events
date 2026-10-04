@@ -1,31 +1,145 @@
 @using System
 @using System.Linq
 @model IEnumerable<WebApplication1.Models.CustomerComplaint>
-@{ ViewBag.Title = "Customer Complaints"; }
-<link rel="stylesheet" href="~/Content/AdminDashboard.css" />
-<style>
-.complaint-list{display:grid;gap:16px}.complaint-card{background:#151515;border:1px solid #333;border-radius:14px;padding:18px}.complaint-top{display:flex;justify-content:space-between;gap:16px}.complaint-card textarea,.complaint-card select{width:100%;box-sizing:border-box;background:#202020;color:#fff;border:1px solid #444;border-radius:9px;padding:10px;margin-top:8px}.complaint-card textarea{min-height:90px}.complaint-meta{color:#aaa;font-size:.85rem}.complaint-status{color:#ff5e91;font-weight:700}.complaint-actions{display:grid;grid-template-columns:1fr 180px;gap:10px;margin-top:12px}@media(max-width:650px){.complaint-top,.complaint-actions{display:block}.complaint-card select{margin-top:10px}}
-</style>
-<section class="page-head"><div class="badge">Admin Support</div><h1>Customer <em>Complaints</em></h1><p>Review booking-linked complaints and keep customers updated.</p></section>
-<main class="main">
-@if(TempData["CustomerComplaintAdminError"]!=null){<section class="panel">@TempData["CustomerComplaintAdminError"]</section>}
-@if(TempData["CustomerComplaintAdminSuccess"]!=null){<section class="panel">@TempData["CustomerComplaintAdminSuccess"]</section>}
-<section class="panel"><div class="panel-head"><div><h2>Complaint Queue</h2><p>@Model.Count() complaint(s)</p></div></div>
-<div class="complaint-list">
-@if(!Model.Any()){<p>No customer complaints have been submitted.</p>}
-else{
-foreach(var item in Model){
-<article class="complaint-card">
-<div class="complaint-top"><div><strong>@item.Subject</strong><div class="complaint-meta">#BK-@item.BookingId · @(item.Customer == null ? "Customer" : item.Customer.Cust_FName + " " + item.Customer.Cust_LName) · @item.Category · @item.CreatedAt.ToString("dd MMM yyyy HH:mm")</div></div><span class="complaint-status">@item.Status</span></div>
-<p>@item.Description</p>
-@using(Html.BeginForm("RespondToCustomerComplaint","Cust",FormMethod.Post)){
-@Html.AntiForgeryToken()<input type="hidden" name="complaintId" value="@item.ComplaintId" />
-<div class="complaint-actions"><textarea name="adminResponse" placeholder="Write a clear response to the customer…" required>@item.AdminResponse</textarea>
-<select name="status"><option @(item.Status=="Under Review"?"selected":"")>Under Review</option><option @(item.Status=="Resolved"?"selected":"")>Resolved</option><option @(item.Status=="Closed"?"selected":"")>Closed</option></select></div>
-<button type="submit" class="approve-btn" style="margin-top:10px;padding:9px 14px">Save Response</button>
+@{
+    ViewBag.Title = "Customer Complaints";
+    var complaints = Model == null
+        ? new List<WebApplication1.Models.CustomerComplaint>()
+        : Model.ToList();
+
+    int submittedCount = complaints.Count(c => string.Equals(c.Status, "Submitted", StringComparison.OrdinalIgnoreCase));
+    int reviewCount = complaints.Count(c => string.Equals(c.Status, "Under Review", StringComparison.OrdinalIgnoreCase));
+    int resolvedCount = complaints.Count(c =>
+        string.Equals(c.Status, "Resolved", StringComparison.OrdinalIgnoreCase) ||
+        string.Equals(c.Status, "Closed", StringComparison.OrdinalIgnoreCase));
 }
-</article>
-}}
-</div></section>
-<a href="@Url.Action("AdminDashboard","Cust")" class="quick-action" style="max-width:260px">← Back to Admin Dashboard</a>
+
+<link rel="stylesheet" href="~/Content/AdminDashboard.css" />
+
+<style>
+.admin-complaints-wrap{max-width:1300px;margin:0 auto;padding:2rem;width:100%}
+.admin-complaint-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1rem;margin-bottom:1.5rem}
+.admin-complaint-stat{background:#111;border:1px solid #333;border-left:4px solid #ff2a6d;border-radius:12px;padding:1.2rem 1.3rem}
+.admin-complaint-stat span{display:block;color:#a0a0b0;font-size:.78rem;text-transform:uppercase;letter-spacing:.08em;margin-bottom:.35rem}
+.admin-complaint-stat strong{display:block;color:#fff;font-size:1.8rem}
+.admin-complaint-list{display:grid;gap:1rem}
+.admin-complaint-card{background:#111;border:1px solid #333;border-radius:14px;padding:1.25rem;box-shadow:0 8px 24px rgba(0,0,0,.3)}
+.admin-complaint-top{display:flex;justify-content:space-between;align-items:flex-start;gap:1rem;padding-bottom:1rem;border-bottom:1px solid rgba(255,42,109,.16)}
+.admin-complaint-title{margin:0 0 .35rem;color:#fff;font-size:1.2rem}
+.admin-complaint-meta{color:#a0a0b0;font-size:.84rem;line-height:1.6}
+.admin-complaint-description{margin:1rem 0;color:#e4e4e4;line-height:1.7}
+.admin-status-pill{display:inline-flex;padding:.35rem .7rem;border-radius:999px;font-size:.72rem;font-weight:800;text-transform:uppercase;letter-spacing:.05em;white-space:nowrap}
+.admin-status-pill.submitted{color:#facc15;border:1px solid #facc15;background:rgba(250,204,21,.08)}
+.admin-status-pill.under-review{color:#60a5fa;border:1px solid #60a5fa;background:rgba(96,165,250,.08)}
+.admin-status-pill.resolved{color:#4ade80;border:1px solid #4ade80;background:rgba(74,222,128,.08)}
+.admin-status-pill.closed{color:#c4b5fd;border:1px solid #c4b5fd;background:rgba(196,181,253,.08)}
+.admin-response-form{display:grid;grid-template-columns:minmax(0,1fr) 190px;gap:.8rem;margin-top:1rem}
+.admin-response-form textarea,.admin-response-form select{width:100%;box-sizing:border-box;padding:.8rem .95rem;border:1px solid #444;border-radius:9px;outline:none;background:#1c1c1c;color:#fff;font:inherit}
+.admin-response-form textarea{min-height:110px;resize:vertical;grid-row:span 2}
+.admin-response-form textarea:focus,.admin-response-form select:focus{border-color:#ff2a6d;box-shadow:0 0 0 3px rgba(255,42,109,.12)}
+.admin-response-form button{padding:.7rem 1rem;border-radius:8px;border:1px solid #ff2a6d;background:rgba(255,42,109,.1);color:#ff5e91;font-weight:700}
+.admin-response-form button:hover{background:#ff2a6d;color:#fff}
+.admin-empty{padding:2.5rem 1.5rem;text-align:center;border:1px dashed #444;border-radius:14px;color:#a0a0b0;background:#111}
+.admin-alert{margin-bottom:1rem;padding:.85rem 1rem;border-radius:10px;border:1px solid #444;background:#171717}
+.admin-alert.error{color:#fca5a5;border-color:#7f1d1d}
+.admin-alert.success{color:#86efac;border-color:#166534}
+@@media(max-width:750px){.admin-complaint-stats{grid-template-columns:1fr}.admin-complaint-top{flex-direction:column}.admin-response-form{grid-template-columns:1fr}.admin-response-form textarea{grid-row:auto}}
+</style>
+
+<section class="page-head">
+    <div class="badge">Admin Support</div>
+    <h1>Customer <em>Complaints</em></h1>
+    <p>Review booking-linked customer complaints, respond clearly, and track their resolution.</p>
+</section>
+
+<main class="admin-complaints-wrap">
+    @if (TempData["CustomerComplaintAdminError"] != null)
+    {
+        <div class="admin-alert error">@TempData["CustomerComplaintAdminError"]</div>
+    }
+
+    @if (TempData["CustomerComplaintAdminSuccess"] != null)
+    {
+        <div class="admin-alert success">@TempData["CustomerComplaintAdminSuccess"]</div>
+    }
+
+    <section class="admin-complaint-stats">
+        <article class="admin-complaint-stat">
+            <span>Submitted</span>
+            <strong>@submittedCount</strong>
+        </article>
+        <article class="admin-complaint-stat">
+            <span>Under Review</span>
+            <strong>@reviewCount</strong>
+        </article>
+        <article class="admin-complaint-stat">
+            <span>Resolved / Closed</span>
+            <strong>@resolvedCount</strong>
+        </article>
+    </section>
+
+    <section class="panel">
+        <div class="panel-head">
+            <div>
+                <h2>Complaint Queue</h2>
+                <p>@complaints.Count complaint(s)</p>
+            </div>
+        </div>
+
+        @if (!complaints.Any())
+        {
+            <div class="admin-empty">No customer complaints have been submitted.</div>
+        }
+        else
+        {
+            <div class="admin-complaint-list">
+                @foreach (var item in complaints)
+                {
+                    var statusValue = string.IsNullOrWhiteSpace(item.Status) ? "Submitted" : item.Status.Trim();
+                    var statusClass = statusValue.ToLower().Replace(" ", "-");
+
+                    <article class="admin-complaint-card">
+                        <div class="admin-complaint-top">
+                            <div>
+                                <h3 class="admin-complaint-title">@item.Subject</h3>
+                                <div class="admin-complaint-meta">
+                                    #BK-@item.BookingId ·
+                                    @(item.Customer == null ? "Customer" : item.Customer.Cust_FName + " " + item.Customer.Cust_LName)
+                                    · @item.Category
+                                    · @item.CreatedAt.ToString("dd MMM yyyy HH:mm")
+                                </div>
+                            </div>
+
+                            <span class="admin-status-pill @statusClass">@statusValue</span>
+                        </div>
+
+                        <div class="admin-complaint-description">@item.Description</div>
+
+                        @using (Html.BeginForm("RespondToCustomerComplaint", "Cust", FormMethod.Post, new { @class = "admin-response-form" }))
+                        {
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="complaintId" value="@item.ComplaintId" />
+
+                            <textarea name="adminResponse"
+                                      maxlength="2000"
+                                      required
+                                      placeholder="Write a clear response to the customer...">@item.AdminResponse</textarea>
+
+                            <select name="status">
+                                <option value="Under Review" @(item.Status == "Under Review" ? "selected" : "")>Under Review</option>
+                                <option value="Resolved" @(item.Status == "Resolved" ? "selected" : "")>Resolved</option>
+                                <option value="Closed" @(item.Status == "Closed" ? "selected" : "")>Closed</option>
+                            </select>
+
+                            <button type="submit">Save Response</button>
+                        }
+                    </article>
+                }
+            </div>
+        }
+    </section>
+
+    <a href="@Url.Action("AdminDashboard","Cust")" class="quick-action" style="max-width:260px">
+        ← Back to Admin Dashboard
+    </a>
 </main>
