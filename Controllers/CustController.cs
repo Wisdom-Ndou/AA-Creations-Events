@@ -657,21 +657,21 @@ namespace WebApplication1.Controllers
                 });
             }
 
-            if (!ModelState.IsValid)
-            {
-                return Json(new
-                {
-                    success = false,
-                    message = "The booking information is invalid."
-                });
-            }
-
             if (request == null)
             {
                 return Json(new
                 {
                     success = false,
                     message = "No booking information was received."
+                });
+            }
+
+            if (!ModelState.IsValid)
+            {
+                return Json(new
+                {
+                    success = false,
+                    message = "The booking information is invalid."
                 });
             }
 
@@ -693,28 +693,66 @@ namespace WebApplication1.Controllers
                 request.City = allowedCities.First(city =>
                     city.Equals(requestedCity, StringComparison.OrdinalIgnoreCase));
 
-                // Find the package in the database
-                var package = db.Packages
-                    .FirstOrDefault(p => p.PackageId == request.PackageId);
+                bool isCustomOccasion = string.Equals(
+                    (request.Occasion ?? "").Trim(),
+                    "Other",
+                    StringComparison.OrdinalIgnoreCase);
 
-                if (package == null)
+                Package package;
+                decimal packagePrice = 0m;
+
+                if (isCustomOccasion)
                 {
-                    return Json(new
+                    // "Other" intentionally has no preset package in the UI.
+                    // A lightweight database placeholder preserves the existing
+                    // Booking -> Package relationship while the booking awaits a custom quote.
+                    package = db.Packages.FirstOrDefault(p => p.PackageId == "custom");
+
+                    if (package == null)
                     {
-                        success = false,
-                        message = "The selected package is invalid."
-                    });
+                        package = new Package
+                        {
+                            PackageId = "custom",
+                            Name = "Custom Setup",
+                            Price = 0m
+                        };
+
+                        db.Packages.Add(package);
+                        db.SaveChanges();
+                    }
+
+                    request.PackageId = "custom";
+                }
+                else
+                {
+                    if (!TryGetOccasionPackagePrice(request.Occasion, request.PackageId, out packagePrice))
+                    {
+                        return Json(new
+                        {
+                            success = false,
+                            message = "The selected package is not available for this occasion."
+                        });
+                    }
+
+                    package = db.Packages
+                        .FirstOrDefault(p => p.PackageId == request.PackageId);
+
+                    if (package == null)
+                    {
+                        return Json(new
+                        {
+                            success = false,
+                            message = "The selected package is invalid."
+                        });
+                    }
                 }
 
-                // Get the submitted add-on IDs
                 var requestedAddOnIds = request.AddOns ?? new List<string>();
 
-                // Look up the actual add-ons and their prices from the database
                 var selectedAddOns = db.AddOns
                     .Where(a => requestedAddOnIds.Contains(a.AddOnId))
                     .ToList();
 
-                // Make sure every submitted add-on actually exists
                 if (selectedAddOns.Count != requestedAddOnIds.Count)
                 {
                     return Json(new
@@ -724,10 +762,11 @@ namespace WebApplication1.Controllers
                     });
                 }
 
-                // SERVER-AUTHORITATIVE PRICE CALCULATION
-                decimal totalPrice = package.Price;
-
-                totalPrice += selectedAddOns.Sum(a => a.Price);
+                // Prototype occasion pricing is authoritative on the server.
+                // Custom "Other" bookings are quoted after review, so no payment is collected yet.
+                decimal totalPrice = isCustomOccasion
+                    ? 0m
+                    : packagePrice + selectedAddOns.Sum(a => a.Price);
 
                 if (request.EventDate.Date < DateTime.Today)
                 {
@@ -749,11 +788,17 @@ namespace WebApplication1.Controllers
                 }
 
                 int daysUntilEvent = (request.EventDate.Date - DateTime.Today).Days;
-                decimal minimumPayment = daysUntilEvent <= 1
-                    ? totalPrice
-                    : Math.Round(totalPrice * 0.50m, 2);
+                decimal minimumPayment = isCustomOccasion
+                    ? 0m
+                    : (daysUntilEvent <= 1
+                        ? totalPrice
+                        : Math.Round(totalPrice * 0.50m, 2));
 
-                if (request.PaymentAmount < minimumPayment || request.PaymentAmount > totalPrice)
+                if (isCustomOccasion)
+                {
+                    request.PaymentAmount = 0m;
+                }
+                else if (request.PaymentAmount < minimumPayment || request.PaymentAmount > totalPrice)
                 {
                     return Json(new
                     {
@@ -766,19 +811,25 @@ namespace WebApplication1.Controllers
                     });
                 }
 
-                decimal amountPaid = Math.Round(request.PaymentAmount, 2);
-                decimal outstandingBalance = Math.Max(0m, totalPrice - amountPaid);
-                string paymentStatus = outstandingBalance == 0m
-                    ? "Fully Paid"
-                    : (amountPaid == minimumPayment ? "Deposit Paid" : "Partially Paid");
+                decimal amountPaid = isCustomOccasion
+                    ? 0m
+                    : Math.Round(request.PaymentAmount, 2);
 
-                // Create the Booking entity
+                decimal outstandingBalance = isCustomOccasion
+                    ? 0m
+                    : Math.Max(0m, totalPrice - amountPaid);
+
+                string paymentStatus = isCustomOccasion
+                    ? "Quote Required"
+                    : (outstandingBalance == 0m
+                        ? "Fully Paid"
+                        : (amountPaid == minimumPayment ? "Deposit Paid" : "Partially Paid"));
+
                 var customerId = (int)Session["CustomerId"];
 
                 var booking = new Booking
                 {
                     CustomerId = customerId,
-
                     FirstName = request.FirstName,
                     LastName = request.LastName,
                     Email = request.Email,
@@ -789,17 +840,16 @@ namespace WebApplication1.Controllers
                     Address = request.Address,
                     City = request.City,
                     Notes = request.Notes,
-
-                    // Use the validated package ID
                     PackageId = package.PackageId,
-
-                    // Use the SERVER-CALCULATED price
                     TotalPrice = totalPrice,
-
                     CreatedAt = DateTime.Now,
                     Status = "Pending",
                     AmountPaid = amountPaid,
-                    BalanceDueDate = outstandingBalance > 0m ? (DateTime?)request.EventDate.Date.AddDays(-1) : null,
+                    BalanceDueDate = isCustomOccasion
+                        ? (DateTime?)null
+                        : (outstandingBalance > 0m
+                            ? (DateTime?)request.EventDate.Date.AddDays(-1)
+                            : null),
                     PaymentStatus = paymentStatus,
                     CancellationCharge = 0m,
                     RefundAmount = 0m,
@@ -807,7 +857,6 @@ namespace WebApplication1.Controllers
                     TermsAcceptedAt = DateTime.Now
                 };
 
-                // Add selected add-ons to the booking
                 foreach (var addOn in selectedAddOns)
                 {
                     booking.BookingAddOns.Add(new BookingAddOn
@@ -816,13 +865,9 @@ namespace WebApplication1.Controllers
                     });
                 }
 
-                // Save the booking first. Staff work is created only after
-                // an administrator approves the booking.
                 db.Bookings.Add(booking);
                 db.SaveChanges();
 
-                // Send a receipt/booking-received email after the booking is safely stored.
-                // A delivery failure does not roll back the booking.
                 var bookingEmailService = new OtpDeliveryService();
                 bookingEmailService.SendBookingConfirmationEmail(
                     booking.Email,
@@ -844,7 +889,10 @@ namespace WebApplication1.Controllers
                     balanceOutstanding = booking.BalanceOutstanding,
                     paymentStatus = booking.PaymentStatus,
                     balanceDueDate = booking.BalanceDueDate,
-                    message = "Booking created successfully."
+                    customQuote = isCustomOccasion,
+                    message = isCustomOccasion
+                        ? "Your custom event request has been submitted for a quote."
+                        : "Booking created successfully."
                 });
             }
             catch (Exception)
@@ -855,6 +903,55 @@ namespace WebApplication1.Controllers
                     message = "An error occurred while saving the booking."
                 });
             }
+        }
+
+        private bool TryGetOccasionPackagePrice(string occasion, string packageId, out decimal price)
+        {
+            price = 0m;
+
+            string occasionKey = (occasion ?? "").Trim();
+            string packageKey = (packageId ?? "").Trim().ToLowerInvariant();
+
+            if (occasionKey.Equals("Birthday", StringComparison.OrdinalIgnoreCase))
+            {
+                if (packageKey == "basic") { price = 650m; return true; }
+                if (packageKey == "standard") { price = 850m; return true; }
+                if (packageKey == "premium") { price = 1000m; return true; }
+                return false;
+            }
+
+            if (occasionKey.Equals("Anniversary", StringComparison.OrdinalIgnoreCase))
+            {
+                if (packageKey == "basic") { price = 700m; return true; }
+                if (packageKey == "standard") { price = 950m; return true; }
+                if (packageKey == "premium") { price = 1500m; return true; }
+                return false;
+            }
+
+            if (occasionKey.Equals("Graduation", StringComparison.OrdinalIgnoreCase))
+            {
+                if (packageKey == "basic") { price = 650m; return true; }
+                if (packageKey == "standard") { price = 900m; return true; }
+                if (packageKey == "premium") { price = 1200m; return true; }
+                return false;
+            }
+
+            if (occasionKey.Equals("Valentine's Day", StringComparison.OrdinalIgnoreCase))
+            {
+                if (packageKey == "basic") { price = 750m; return true; }
+                if (packageKey == "standard") { price = 1050m; return true; }
+                return false;
+            }
+
+            if (occasionKey.Equals("Baby Shower", StringComparison.OrdinalIgnoreCase))
+            {
+                if (packageKey == "basic") { price = 800m; return true; }
+                if (packageKey == "standard") { price = 1100m; return true; }
+                if (packageKey == "premium") { price = 1600m; return true; }
+                return false;
+            }
+
+            return false;
         }
 
         public ActionResult ViewBooking()
