@@ -29,6 +29,13 @@
                 <h2 class="form-title">Sign In</h2>
                 <p class="form-subtitle">Welcome back — choose your role to continue</p>
 
+                @if (TempData["LoginSuccess"] != null)
+                {
+                    <div class="login-success" role="status" aria-live="polite">
+                        @TempData["LoginSuccess"]
+                    </div>
+                }
+
                 <div class="role-switch" role="tablist" aria-label="Select role">
                     <button type="button" class="role-btn active" id="roleCustomerBtn" data-role="customer" role="tab" aria-selected="true">
                         Customer
