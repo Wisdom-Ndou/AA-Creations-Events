@@ -118,21 +118,21 @@ function isNameValid(value) {
 
 function isStep1Valid() {
     return Boolean(
+        state.form.occasion &&
+        state.form.packageId &&
         isNameValid(state.form.firstName) &&
         isNameValid(state.form.lastName) &&
         state.form.email.includes("@") &&
-        isPhoneValid(state.form.phone) &&
-        state.form.occasion &&
-        state.form.city && state.form.city.trim()
+        isPhoneValid(state.form.phone)
     );
 }
 
 function isStep2Valid() {
     return Boolean(
-        state.form.packageId &&
         state.form.date &&
         state.form.time &&
-        state.form.address.trim()
+        state.form.address.trim() &&
+        state.form.city && state.form.city.trim()
     );
 }
 
@@ -213,19 +213,43 @@ function renderBookingStep() {
 
     if (state.step === 1) {
         root.innerHTML = `
-      <h2>Your Details</h2>
+      <h2>Choose Your Occasion</h2>
+      <p class="muted" style="margin-bottom:18px;">Start with the celebration type, then choose the package that suits it.</p>
+
+      <div class="form-group full">
+        <label class="form-label" for="occasion">Occasion Type</label>
+        <select class="form-control" id="occasion" name="occasion" required>
+          <option value="">Select an occasion…</option>
+          ${["Birthday", "Anniversary", "Graduation", "Valentine's Day", "Baby Shower", "Other"]
+              .map(o => `<option value="${escapeHtml(o)}" ${state.form.occasion === o ? "selected" : ""}>${escapeHtml(o)}</option>`).join("")}
+        </select>
+      </div>
+
+      ${state.form.occasion ? `
+        <p class="form-label" style="margin-top:20px;">Available Packages</p>
+        <div class="package-select-grid">
+          ${packages.map(pkg => `
+            <button type="button" class="package-choice ${state.form.packageId === pkg.id ? "selected" : ""}" data-package="${pkg.id}">
+              <span class="choice-badge">${pkg.badge}</span>
+              <p class="choice-title">${pkg.name}</p>
+              <div class="choice-price">R${formatMoney(pkg.price)}</div>
+            </button>
+          `).join("")}
+        </div>
+      ` : '<p class="muted">Select an occasion to view the available packages.</p>'}
+
+      <h3 style="margin-top:28px;">Your Details</h3>
       <div class="form-grid two">
         <div class="form-group">
           <label class="form-label" for="firstName">First Name</label>
           <input class="form-control" id="firstName" name="firstName" inputmode="text" pattern="^[A-Za-z]+$" maxlength="50" value="${escapeHtml(state.form.firstName)}" placeholder="Nomsa" required>
-          <small class="muted">Letters only .</small>
+          <small class="muted">Letters only (A–Z).</small>
         </div>
         <div class="form-group">
           <label class="form-label" for="lastName">Last Name</label>
           <input class="form-control" id="lastName" name="lastName" inputmode="text" pattern="^[A-Za-z]+$" maxlength="50" value="${escapeHtml(state.form.lastName)}" placeholder="Mabaso" required>
           <small class="muted">Letters only (A–Z).</small>
         </div>
-
         <div class="form-group">
           <label class="form-label" for="email">Email Address</label>
           <input class="form-control" id="email" name="email" type="email" value="${escapeHtml(state.form.email)}" placeholder="nomsa@example.com" required>
@@ -238,29 +262,9 @@ function renderBookingStep() {
           </div>
           <small class="muted">Enter 9 digits (do not include leading 0).</small>
         </div>
-
-        <div class="form-group full">
-          <label class="form-label" for="occasion">Occasion Type</label>
-          <select class="form-control" id="occasion" name="occasion" required>
-            <option value="">Select an occasion…</option>
-            ${["Birthday", "Anniversary", "Graduation", "Valentine's Day", "Baby Shower", "Other"]
-                .map(o => `<option value="${escapeHtml(o)}" ${state.form.occasion === o ? "selected" : ""}>${escapeHtml(o)}</option>`).join("")}
-          </select>
-        </div>
-
-        <div class="form-group full">
-          <label class="form-label" for="city">City / Town</label>
-          <select class="form-control" id="city" name="city" required>
-            <option value="">Select city…</option>
-            <option value="Pietermaritzburg" ${state.form.city === "Pietermaritzburg" ? "selected" : ""}>Pietermaritzburg</option>
-            <option value="Durban" ${state.form.city === "Durban" ? "selected" : ""}>Durban</option>
-            <option value="Mandeni" ${state.form.city === "Mandeni" ? "selected" : ""}>Mandeni</option>
-          </select>
-         
-        </div>
       </div>
       <div class="form-actions" style="justify-content:flex-end;">
-        <button type="button" class="btn btn-primary" id="nextStep1" ${isStep1Valid() ? "" : "disabled"}>Next: Event Info →</button>
+        <button type="button" class="btn btn-primary" id="nextStep1" ${isStep1Valid() ? "" : "disabled"}>Next: Event Details →</button>
       </div>
     `;
     }
@@ -270,17 +274,6 @@ function renderBookingStep() {
 
         root.innerHTML = `
       <h2>Event Details</h2>
-
-      <p class="form-label">Select Your Package</p>
-      <div class="package-select-grid">
-        ${packages.map(pkg => `
-          <button type="button" class="package-choice ${state.form.packageId === pkg.id ? "selected" : ""}" data-package="${pkg.id}">
-            <span class="choice-badge">${pkg.badge}</span>
-            <p class="choice-title">${pkg.name}</p>
-            <div class="choice-price">R${formatMoney(pkg.price)}</div>
-          </button>
-        `).join("")}
-      </div>
 
       <div class="form-grid two">
         <div class="form-group">
@@ -645,6 +638,12 @@ function handleFormInput(event) {
     // ---- Steps 1–2 generic fields ----
 
     state.form[control.name] = control.value;
+
+    if (control.name === "occasion" && state.step === 1) {
+        state.form.packageId = "";
+        renderBookingStep();
+        return;
+    }
 
     if (state.step === 1) {
         const button = document.getElementById("nextStep1");
