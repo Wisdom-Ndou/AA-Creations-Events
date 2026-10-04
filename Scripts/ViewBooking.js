@@ -599,10 +599,22 @@ function renderDetails(booking, isPast) {
 async function cancelBooking(id) {
     if (!confirm("Cancel this booking? This action cannot be undone.")) return;
 
+    const cancellationReason = window.prompt(
+        "Please tell us why you are cancelling this booking:"
+    );
+
+    if (cancellationReason === null) return;
+
+    if (!cancellationReason.trim()) {
+        alert("Please provide a reason for cancelling this booking.");
+        return;
+    }
+
     const app = document.getElementById("bookingsApp");
     const token = document.querySelector('input[name="__RequestVerificationToken"]');
     const body = new URLSearchParams();
     body.append("bookingId", id);
+    body.append("cancellationReason", cancellationReason.trim());
     if (token) body.append("__RequestVerificationToken", token.value);
 
     const response = await fetch(app.dataset.cancelUrl, {
@@ -623,6 +635,8 @@ async function cancelBooking(id) {
         booking.cancellationCharge = Number(result.cancellationCharge || 0);
         booking.refundAmount = Number(result.refundAmount || 0);
         booking.paymentStatus = result.paymentStatus || booking.paymentStatus;
+        booking.balanceOutstanding = 0;
+        booking.balanceDueDate = null;
     }
     if (result.refundAmount > 0) {
         alert(result.message + " Refund due: R" + formatMoney(result.refundAmount));
