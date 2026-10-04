@@ -512,12 +512,17 @@ namespace WebApplication1.Controllers
         // ==========================================================
 
         private static readonly HashSet<string> AllowedEventCities =
-            new HashSet<string>(StringComparer.OrdinalIgnoreCase)
-            {
-                "Durban",
-                "Pietermaritzburg",
-                "Mandeni"
-            };
+       new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+       {
+        "Durban",
+        "Pietermaritzburg",
+        "Mandeni",
+        "eMandeni"
+       };
+
+        
+
+        
 
         private static string NormalizeEventCity(string city)
         {
@@ -526,9 +531,12 @@ namespace WebApplication1.Controllers
 
         private static bool IsAllowedEventCity(string city)
         {
-            return AllowedEventCities.Contains(NormalizeEventCity(city));
+            return AllowedEventCities.Contains(
+                NormalizeEventCity(city));
         }
+        
 
+       
         private static string GetGeocodedCity(JObject feature)
         {
             var geocoding = feature["properties"]?["geocoding"] as JObject;
@@ -564,26 +572,7 @@ namespace WebApplication1.Controllers
                    ?? string.Empty;
         }
 
-        private static bool IsFeatureInSelectedCity(JObject feature, string selectedCity)
-        {
-            var geocoding = feature["properties"]?["geocoding"] as JObject;
-
-            if (geocoding == null)
-                return false;
-
-            var countryCode = geocoding["country_code"]?.ToString();
-
-            if (!string.Equals(countryCode, "za", StringComparison.OrdinalIgnoreCase))
-                return false;
-
-            var resolvedCity = GetGeocodedCity(feature);
-
-            return string.Equals(
-                NormalizeEventCity(resolvedCity),
-                NormalizeEventCity(selectedCity),
-                StringComparison.OrdinalIgnoreCase
-            );
-        }
+        
 
         private static JObject GetFirstNominatimFeature(string url)
         {
@@ -718,7 +707,7 @@ namespace WebApplication1.Controllers
                         latitude = latitude,
                         longitude = longitude,
                         resolvedCity = resolvedCity,
-                        inSelectedCity = IsFeatureInSelectedCity(feature, city)
+                        inSelectedCity = true
                     });
                 }
 
@@ -754,24 +743,8 @@ namespace WebApplication1.Controllers
         {
             city = NormalizeEventCity(city);
 
-            if (!IsAllowedEventCity(city))
-            {
-                return Json(new
-                {
-                    success = false,
-                    message = "Please select your service city first."
-                }, JsonRequestBehavior.AllowGet);
-            }
-
-            if (latitude < -90 || latitude > 90 ||
-                longitude < -180 || longitude > 180)
-            {
-                return Json(new
-                {
-                    success = false,
-                    message = "The selected map location is invalid."
-                }, JsonRequestBehavior.AllowGet);
-            }
+            
+            
 
             try
             {
@@ -798,23 +771,7 @@ namespace WebApplication1.Controllers
                     }, JsonRequestBehavior.AllowGet);
                 }
 
-                if (!IsFeatureInSelectedCity(feature, city))
-                {
-                    var resolvedCity = GetGeocodedCity(feature);
-
-                    return Json(new
-                    {
-                        success = false,
-                        outsideCity = true,
-                        resolvedCity = resolvedCity,
-                        message =
-                            "The pinned location is outside your selected city (" +
-                            city +
-                            "). Please choose a location inside " +
-                            city +
-                            "."
-                    }, JsonRequestBehavior.AllowGet);
-                }
+                
 
                 return Json(new
                 {
@@ -844,46 +801,36 @@ namespace WebApplication1.Controllers
         }
 
         private bool ValidateSubmittedEventLocation(
-            string city,
-            decimal? latitude,
-            decimal? longitude)
+      string city,
+      decimal? latitude,
+      decimal? longitude)
         {
-            if (!IsAllowedEventCity(city) ||
-                !latitude.HasValue ||
-                !longitude.HasValue)
+            city = NormalizeEventCity(city);
+
+            // A supported service city must still be selected.
+            if (!IsAllowedEventCity(city))
             {
                 return false;
             }
 
-            if (latitude.Value < -90 || latitude.Value > 90 ||
-                longitude.Value < -180 || longitude.Value > 180)
+            // The customer must still confirm a map location.
+            if (!latitude.HasValue || !longitude.HasValue)
             {
                 return false;
             }
 
-            try
-            {
-                var url =
-                    "https://nominatim.openstreetmap.org/reverse" +
-                    "?format=geocodejson" +
-                    "&addressdetails=1" +
-                    "&zoom=18" +
-                    "&lat=" +
-                    latitude.Value.ToString(
-                        System.Globalization.CultureInfo.InvariantCulture) +
-                    "&lon=" +
-                    longitude.Value.ToString(
-                        System.Globalization.CultureInfo.InvariantCulture);
+            double lat = (double)latitude.Value;
+            double lon = (double)longitude.Value;
 
-                var feature = GetFirstNominatimFeature(url);
-
-                return feature != null &&
-                       IsFeatureInSelectedCity(feature, city);
-            }
-            catch
+            // Only check that the coordinates themselves are valid.
+            if (lat < -90 || lat > 90 ||
+                lon < -180 || lon > 180)
             {
                 return false;
             }
+
+            // No city-radius/location restriction.
+            return true;
         }
 
         [HttpPost]
@@ -947,17 +894,14 @@ namespace WebApplication1.Controllers
             }
 
             if (!ValidateSubmittedEventLocation(
-                    request.City,
-                    request.Latitude,
-                    request.Longitude))
+         request.City,
+         request.Latitude,
+         request.Longitude))
             {
                 return Json(new
                 {
                     success = false,
-                    message =
-                        "The event location could not be verified inside " +
-                        request.City +
-                        ". Please select an address from the suggestions or pin a location inside the selected city."
+                    message = "Please select and confirm a valid event location."
                 });
             }
 

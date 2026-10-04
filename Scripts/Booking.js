@@ -180,19 +180,17 @@ function showAddressSuggestions(results) {
     }
 
     list.innerHTML = results.map((result, index) => {
-        const outside = !result.inSelectedCity;
-
         return `
             <button type="button"
-                    class="address-suggestion ${outside ? "outside" : ""}"
+                    class="address-suggestion"
                     data-result-index="${index}">
-                <span class="address-suggestion-icon">${outside ? "⚠️" : "📍"}</span>
+                <span class="address-suggestion-icon">📍</span>
                 <span class="address-suggestion-text">
                     <strong>${escapeHtml(result.address || "Unnamed location")}</strong>
                     <small>
-                        ${outside
-                            ? `Outside selected city${result.resolvedCity ? ` • ${escapeHtml(result.resolvedCity)}` : ""}`
-                            : `Inside ${escapeHtml(getSelectedCity())}`}
+                        ${result.resolvedCity
+                ? escapeHtml(result.resolvedCity)
+                : "Select this location"}
                     </small>
                 </span>
             </button>
@@ -218,19 +216,7 @@ function hideAddressSuggestions() {
 function selectAddressResult(result) {
     if (!result) return;
 
-    if (!result.inSelectedCity) {
-        state.form.locationValidated = false;
-        state.form.locationConfirmed = false;
-
-        showLocationMessage(
-            `The address selected is outside of ${getSelectedCity()}. Please choose an address inside ${getSelectedCity()}.`,
-            "error"
-        );
-
-        hideAddressSuggestions();
-        updateStep2Button();
-        return;
-    }
+    
 
     state.form.address = result.address || "";
     state.form.latitude = Number(result.latitude);
@@ -249,7 +235,7 @@ function selectAddressResult(result) {
     hideAddressSuggestions();
 
     showLocationMessage(
-        `✓ Address found inside ${getSelectedCity()} and location confirmed.`,
+        "✓ Address found and location confirmed.",
         "success"
     );
 
@@ -271,7 +257,7 @@ async function searchEventAddresses(showMessage = true) {
 
     if (!city) {
         showLocationMessage(
-            "Please select Durban, Pietermaritzburg or Mandeni before entering an event address.",
+            "Please select a valid map location first.",
             "error"
         );
         hideAddressSuggestions();
@@ -380,172 +366,216 @@ function handleAddressTyping() {
     }, 1100);
 }
 
-function getCityMapCenter(city) {
-    switch (city.toLowerCase()) {
+function getCityMapSettings(city) {
+    const normalized = String(city || "").trim().toLowerCase();
+
+    switch (normalized) {
         case "pietermaritzburg":
-            return { lat: -29.6168, lng: 30.3928 };
+            return {
+                lat: -29.6006,
+                lng: 30.3794,
+                zoom: 13
+            };
+
         case "mandeni":
-            return { lat: -29.1506, lng: 31.4308 };
+        case "emandeni":
+            return {
+                lat: -29.1460,
+                lng: 31.4070,
+                zoom: 13
+            };
+
         case "durban":
         default:
-            return { lat: -29.8587, lng: 31.0218 };
+            return {
+                lat: -29.8587,
+                lng: 31.0218,
+                zoom: 12
+            };
     }
 }
 
-async function reverseGeocodeMapLocation(lat, lng) {
-    const city = getSelectedCity();
+function getCityMapCenter(city) {
+    const settings = getCityMapSettings(city);
 
-    if (!city) {
-        showLocationMessage(
-            "Please select your service city before pinning a location.",
-            "error"
-        );
-        return false;
-    }
-
-    const endpoint = getBookingEndpoint("addressReverseUrl");
-
-    if (!endpoint) {
-        showLocationMessage("The map address service is not configured.", "error");
-        return false;
-    }
-
-    showLocationMessage("Checking the pinned location...", "info");
-
-    const url =
-        `${endpoint}?latitude=${encodeURIComponent(lat)}&longitude=${encodeURIComponent(lng)}&city=${encodeURIComponent(city)}`;
-
-    try {
-        const response = await fetch(url, {
-            method: "GET",
-            headers: { "Accept": "application/json" }
-        });
-
-        const result = await response.json();
-
-        if (!response.ok || !result.success) {
-            state.form.locationValidated = false;
-            state.form.locationConfirmed = false;
-
-            showLocationMessage(
-                result.message ||
-                `The pinned location is outside of ${city}.`,
-                "error"
-            );
-
-            updateStep2Button();
-            return false;
-        }
-
-        state.form.address = result.address || "";
-        state.form.latitude = Number(result.latitude);
-        state.form.longitude = Number(result.longitude);
-        state.form.locationValidated = true;
-        state.form.locationConfirmed = false;
-
-        const addressInput = document.getElementById("address");
-        const latitude = document.getElementById("latitude");
-        const longitude = document.getElementById("longitude");
-
-        if (addressInput) addressInput.value = state.form.address;
-        if (latitude) latitude.value = state.form.latitude;
-        if (longitude) longitude.value = state.form.longitude;
-
-        showLocationMessage(
-            `✓ Pinned address found: ${state.form.address}. Click Confirm Location to use it.`,
-            "success"
-        );
-
-        updateStep2Button();
-        return true;
-    } catch (error) {
-        console.error("Reverse geocoding failed:", error);
-
-        state.form.locationValidated = false;
-        state.form.locationConfirmed = false;
-
-        showLocationMessage(
-            "We couldn't identify an address at that pin. Please move the marker to a valid address inside the selected city.",
-            "error"
-        );
-
-        updateStep2Button();
-        return false;
-    }
+    return {
+        lat: settings.lat,
+        lng: settings.lng
+    };
 }
-
+ 
 function openLocationMap() {
     const mapContainer = document.getElementById("mapContainer");
-    const city = getSelectedCity();
+    const mapElement = document.getElementById("bookingMap");
 
-    if (!mapContainer) return;
-
-    if (!city) {
-        showLocationMessage(
-            "Please select Durban, Pietermaritzburg or Mandeni before opening the map.",
-            "error"
-        );
+    if (!mapContainer || !mapElement) {
+        console.error("Map container or bookingMap element not found.");
         return;
     }
 
     if (typeof L === "undefined") {
-        showLocationMessage("The map service is unavailable right now.", "error");
+        console.error("Leaflet is not loaded.");
+
+        showLocationMessage(
+            "The map service could not load. Please refresh the page.",
+            "error"
+        );
+
         return;
     }
 
+    const city = getSelectedCity();
+
+    if (!city) {
+        showLocationMessage(
+            "Please select a city/town before opening the map.",
+            "error"
+        );
+        return;
+    }
+
+    const settings = getCityMapSettings(city);
+
+    // Show map before Leaflet calculates its size
     mapContainer.style.display = "block";
+    mapContainer.style.width = "100%";
 
-    const cityCenter = getCityMapCenter(city);
+    mapElement.style.display = "block";
+    mapElement.style.width = "100%";
+    mapElement.style.height = "350px";
+    mapElement.style.minHeight = "350px";
 
-    const start = {
-        lat: state.form.latitude !== null
-            ? Number(state.form.latitude)
-            : cityCenter.lat,
-        lng: state.form.longitude !== null
-            ? Number(state.form.longitude)
-            : cityCenter.lng
-    };
-
+    // Remove previous map
     if (bookingMap) {
+        bookingMap.off();
         bookingMap.remove();
         bookingMap = null;
         bookingMarker = null;
     }
 
-    bookingMap = L.map("bookingMap").setView(
-        [start.lat, start.lng],
-        state.form.latitude !== null ? 16 : 12
+    // Clean Leaflet ID if necessary
+    if (mapElement._leaflet_id) {
+        mapElement._leaflet_id = null;
+    }
+
+    let startLat = settings.lat;
+    let startLng = settings.lng;
+    let startZoom = settings.zoom;
+
+    if (
+        state.form.latitude !== null &&
+        state.form.longitude !== null &&
+        Number.isFinite(Number(state.form.latitude)) &&
+        Number.isFinite(Number(state.form.longitude))
+    ) {
+        startLat = Number(state.form.latitude);
+        startLng = Number(state.form.longitude);
+        startZoom = 16;
+    }
+
+    bookingMap = L.map("bookingMap", {
+        zoomControl: true,
+        attributionControl: true
+    });
+
+    bookingMap.setView(
+        [startLat, startLng],
+        startZoom
     );
 
-    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-        attribution: "&copy; OpenStreetMap contributors"
-    }).addTo(bookingMap);
+    const osmLayer = L.tileLayer(
+        "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+        {
+            minZoom: 3,
+            maxZoom: 19,
+            attribution: "&copy; OpenStreetMap contributors"
+        }
+    );
+
+    osmLayer.on("loading", function () {
+        console.log("MAP: loading tiles...");
+    });
+
+    osmLayer.on("load", function () {
+        console.log("MAP: tiles loaded successfully.");
+    });
+
+    osmLayer.on("tileerror", function (event) {
+        console.error("MAP TILE ERROR:", event);
+
+        showLocationMessage(
+            "The map background could not be loaded. Check the browser console.",
+            "error"
+        );
+    });
+
+    osmLayer.addTo(bookingMap);
 
     bookingMarker = L.marker(
-        [start.lat, start.lng],
-        { draggable: true }
+        [startLat, startLng],
+        {
+            draggable: true
+        }
     ).addTo(bookingMap);
 
-    bookingMap.on("click", function (event) {
-        bookingMarker.setLatLng(event.latlng);
-        reverseGeocodeMapLocation(
-            event.latlng.lat,
-            event.latlng.lng
+    async function setSelectedMapLocation(latlng) {
+        const lat = Number(latlng.lat);
+        const lng = Number(latlng.lng);
+
+        state.form.latitude = lat;
+        state.form.longitude = lng;
+        state.form.locationValidated = false;
+        state.form.locationConfirmed = false;
+
+        const latitudeInput = document.getElementById("latitude");
+        const longitudeInput = document.getElementById("longitude");
+
+        if (latitudeInput) {
+            latitudeInput.value = lat;
+        }
+
+        if (longitudeInput) {
+            longitudeInput.value = lng;
+        }
+
+        showLocationMessage(
+            "Location selected. Finding the address...",
+            "info"
         );
+
+        await reverseGeocodeMapLocation(lat, lng);
+    }
+
+    bookingMap.on("click", function (event) {
+        console.log("MAP CLICK:", event.latlng);
+
+        bookingMarker.setLatLng(event.latlng);
+
+        setSelectedMapLocation(event.latlng);
     });
 
     bookingMarker.on("dragend", function () {
         const position = bookingMarker.getLatLng();
 
-        reverseGeocodeMapLocation(
-            position.lat,
-            position.lng
-        );
+        setSelectedMapLocation(position);
     });
 
-    setTimeout(() => bookingMap.invalidateSize(), 100);
-}
+    setTimeout(function () {
+        if (bookingMap) {
+            bookingMap.invalidateSize(true);
+            bookingMap.setView(
+                [startLat, startLng],
+                startZoom
+            );
+        }
+    }, 200);
 
+    setTimeout(function () {
+        if (bookingMap) {
+            bookingMap.invalidateSize(true);
+        }
+    }, 700);
+}
 function confirmEventLocation() {
     if (!state.form.locationValidated ||
         state.form.latitude === null ||
@@ -613,23 +643,13 @@ async function findEventAddress() {
     }
 
     // Prefer the first result that is actually inside the selected city.
-    const validResult = results.find(result => result.inSelectedCity);
+    // Accept the first matching address.
+    // There is no longer a city-boundary restriction.
+    const validResult = results[0];
 
     if (validResult) {
         selectAddressResult(validResult);
-        return;
     }
-
-    // Results exist, but none belong to the selected city.
-    state.form.locationValidated = false;
-    state.form.locationConfirmed = false;
-
-    showLocationMessage(
-        `The address was found, but it is outside of ${city}. Please select an address inside ${city}.`,
-        "error"
-    );
-
-    updateStep2Button();
 }
 
 // ---- Step 4 (banking) helpers ----
