@@ -1,6 +1,7 @@
 ﻿@{
     ViewBag.Title = "Verify OTP";
 }
+<link rel="stylesheet" href="~/Content/Manage Account styles.css" />
 
 <div class="manage-account-page">
 
@@ -8,9 +9,16 @@
 
         <h2>Verify Your Identity</h2>
 
-        <p>
-            Enter the 6-digit verification code that was sent to you.
-        </p>
+        <p>Enter the 6-digit verification code that was sent to you. Codes expire after five minutes and can only be used once.</p>
+
+        @if (TempData["OtpNotice"] != null)
+        {
+            <div class="account-success">@TempData["OtpNotice"]</div>
+        }
+        @if (TempData["OtpError"] != null)
+        {
+            <div class="account-error">@TempData["OtpError"]</div>
+        }
 
         @using (Html.BeginForm("VerifyOtp", "Cust", FormMethod.Post))
         {
