@@ -404,6 +404,7 @@
     <Content Include="Views\Cust\ViewBooking.cshtml" />
     <Content Include="Views\Cust\contactus.cshtml" />
     <Content Include="Views\Cust\Bankingdetails.cshtml" />
+    <Content Include="Views\Cust\BalancePayment.cshtml" />
     <Content Include="Views\Cust\ManageAccount.cshtml" />
     <Content Include="Views\Cust\VerifyOtp.cshtml" />
     <Content Include="Views\Cust\ChangePassword.cshtml" />
