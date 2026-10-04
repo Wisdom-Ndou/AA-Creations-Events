@@ -742,3 +742,45 @@ tbody tr:hover {
     opacity: .55;
     cursor: not-allowed;
 }
+
+
+.aa-modal-actions {
+    gap: 10px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.aa-modal-manage-staff {
+    display: none;
+    padding: 10px 18px;
+    border: 1px solid #4ade80;
+    border-radius: 9px;
+    color: #4ade80;
+    background: rgba(74,222,128,.08);
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.aa-modal-manage-staff.is-visible {
+    display: inline-flex;
+}
+
+.aa-modal-manage-staff:hover {
+    color: #050505;
+    background: #4ade80;
+}
+
+.aa-modal.warning .aa-modal-icon {
+    color: #facc15;
+    background: rgba(250,204,21,.12);
+}
+
+.admin-warning-banner {
+    margin: 0 0 18px;
+    padding: 14px 16px;
+    border: 1px solid #b88716;
+    border-radius: 12px;
+    background: rgba(184,135,22,.10);
+    color: #f5d46b;
+    line-height: 1.5;
+}
