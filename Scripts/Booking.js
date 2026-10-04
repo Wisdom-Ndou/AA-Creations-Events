@@ -766,6 +766,9 @@ async function findEventAddress() {
 
     clearTimeout(addressSearchTimer);
 
+    // SearchEventAddresses renders the matching suggestions itself.
+    // Do not auto-select the first result; let the customer choose the
+    // correct address from the list.
     const results = await searchEventAddresses(true);
 
     if (!results || results.length === 0) {
@@ -774,30 +777,32 @@ async function findEventAddress() {
         updateStep2Button();
 
         showLocationMessage(
-            "We couldn't find this address. Please check the spelling or pin the exact location on the map.",
+            "We couldn't find a matching address inside the selected service area. Please refine the address or pin the exact location on the map.",
             "warning"
         );
 
-        openLocationMap();
         return;
     }
 
-    // Only accept a result that falls within the selected city's service area.
-    const validResult = results.find(isResultInsideSelectedCity);
+    const validResults = results.filter(isResultInsideSelectedCity);
 
-    if (validResult) {
-        selectAddressResult(validResult);
+    if (validResults.length === 0) {
+        clearLocationSelection(false);
+
+        showLocationMessage(
+            `We found matching addresses, but none are inside the ${city} service area. Please refine the address or pin a location within ${city}.`,
+            "error"
+        );
+
+        updateStep2Button();
         return;
     }
 
-    clearLocationSelection(false);
-
+    showAddressSuggestions(validResults);
     showLocationMessage(
-        `We found matching addresses, but none are inside the ${city} service area. Please refine the address or pin a location within ${city}.`,
-        "error"
+        `Select the correct address from the ${validResults.length === 1 ? "suggestion" : "suggestions"} below.`,
+        "info"
     );
-
-    updateStep2Button();
 }
 
 // ---- Step 4 (banking) helpers ----
