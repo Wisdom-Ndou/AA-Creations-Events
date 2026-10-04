@@ -13,16 +13,17 @@
 </section>
 
 <main class="main">
+    @Html.AntiForgeryToken()
     @if (TempData["AdminSuccess"] != null) { <p>@TempData["AdminSuccess"]</p> }
     <section class="stat-row dashboard-widgets">
         <a href="@Url.Action("AllBookings","Cust")" class="stat-card dashboard-widget">
             <div class="label">All Bookings</div><div class="value">@Model.TotalBookings</div>
         </a>
         <a href="@Url.Action("PendingApprovals","Cust")" class="stat-card dashboard-widget">
-            <div class="label">Pending Approvals</div><div class="value">@Model.PendingBookings</div>
+            <div class="label">Pending Approvals</div><div class="value" data-pending-count>@Model.PendingBookings</div>
         </a>
         <a href="@Url.Action("UpcomingEvents","Cust")" class="stat-card dashboard-widget">
-            <div class="label">Upcoming Events</div><div class="value">@Model.UpcomingEvents</div>
+            <div class="label">Upcoming Events</div><div class="value" data-upcoming-count>@Model.UpcomingEvents</div>
         </a>
         <div class="stat-card dashboard-widget">
             <div class="label">Approved Revenue</div><div class="value">R @Model.ConfirmedRevenue.ToString("N2")</div>
@@ -58,28 +59,20 @@
                         foreach (var booking in Model.RecentBookings)
                         {
                             var status = string.IsNullOrWhiteSpace(booking.Status) ? "Pending" : booking.Status;
-                            <tr>
+                            <tr data-dashboard-booking-row="@booking.BookingId">
                                 <td>#BK-@booking.BookingId</td>
                                 <td>@booking.FirstName @booking.LastName</td>
                                 <td>@booking.Occasion</td>
                                 <td>@booking.City</td>
                                 <td>@booking.EventDate.ToString("dd MMM yyyy")</td>
-                                <td>@status</td>
+                                <td><span data-dashboard-status>@status</span></td>
                                 <td>
                                 @if (status.Equals("Pending", StringComparison.OrdinalIgnoreCase))
                                 {
-                                    using (Html.BeginForm("UpdateBookingStatus", "Cust", FormMethod.Post, new { style = "display:inline" }))
-                                    {
-                                        @Html.AntiForgeryToken()
-                                        <input type="hidden" name="bookingId" value="@booking.BookingId" />
-                                        <button type="submit" name="status" value="Approved" class="approve-btn">Approve</button>
-                                    }
-                                    using (Html.BeginForm("UpdateBookingStatus", "Cust", FormMethod.Post, new { style = "display:inline" }))
-                                    {
-                                        @Html.AntiForgeryToken()
-                                        <input type="hidden" name="bookingId" value="@booking.BookingId" />
-                                        <button type="submit" name="status" value="Declined" class="decline-btn">Decline</button>
-                                    }
+                                    <div class="booking-actions" data-dashboard-actions>
+                                        <button type="button" class="approve-btn dashboard-booking-action" data-booking-id="@booking.BookingId" data-new-status="approved">Approve</button>
+                                        <button type="button" class="decline-btn dashboard-booking-action" data-booking-id="@booking.BookingId" data-new-status="declined">Decline</button>
+                                    </div>
                                 }
                                 else
                                 {
@@ -121,3 +114,119 @@
         </div>
     </section>
 </main>
+
+
+<div id="dashboardBookingModalBackdrop" class="aa-modal-backdrop" role="presentation">
+    <div id="dashboardBookingModal" class="aa-modal" role="dialog" aria-modal="true" aria-labelledby="dashboardBookingModalTitle">
+        <div class="aa-modal-icon" id="dashboardBookingModalIcon">!</div>
+        <h3 id="dashboardBookingModalTitle">Booking update</h3>
+        <p id="dashboardBookingModalMessage"></p>
+        <div class="aa-modal-actions">
+            <button type="button" class="aa-modal-close" id="dashboardBookingModalClose">Close</button>
+        </div>
+    </div>
+</div>
+
+<script>
+(function () {
+    const token = document.querySelector('input[name="__RequestVerificationToken"]');
+    const backdrop = document.getElementById('dashboardBookingModalBackdrop');
+    const modal = document.getElementById('dashboardBookingModal');
+    const title = document.getElementById('dashboardBookingModalTitle');
+    const message = document.getElementById('dashboardBookingModalMessage');
+    const icon = document.getElementById('dashboardBookingModalIcon');
+    const closeButton = document.getElementById('dashboardBookingModalClose');
+
+    function showModal(type, heading, copy) {
+        modal.className = 'aa-modal ' + type;
+        title.textContent = heading;
+        message.textContent = copy;
+        icon.textContent = type === 'success' ? '✓' : (type === 'warning' ? '!' : '×');
+        backdrop.classList.add('is-open');
+    }
+
+    function closeModal() {
+        backdrop.classList.remove('is-open');
+    }
+
+    closeButton.addEventListener('click', closeModal);
+    backdrop.addEventListener('click', function (event) {
+        if (event.target === backdrop) closeModal();
+    });
+
+    document.querySelectorAll('.dashboard-booking-action').forEach(function (button) {
+        button.addEventListener('click', async function () {
+            const bookingId = button.dataset.bookingId;
+            const newStatus = button.dataset.newStatus;
+            const row = document.querySelector('[data-dashboard-booking-row="' + bookingId + '"]');
+            const rowButtons = row ? row.querySelectorAll('.dashboard-booking-action') : [];
+
+            rowButtons.forEach(function (item) { item.disabled = true; });
+
+            try {
+                const body = new URLSearchParams();
+                body.append('__RequestVerificationToken', token ? token.value : '');
+                body.append('bookingId', bookingId);
+                body.append('status', newStatus);
+
+                const response = await fetch('@Url.Action("UpdateBookingStatus","Cust")', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: body.toString()
+                });
+
+                const data = await response.json();
+
+                if (!data.success) {
+                    const noStaff = (data.message || '').toLowerCase().indexOf('no staff member') >= 0;
+                    showModal(
+                        noStaff ? 'warning' : 'error',
+                        noStaff ? 'Staff assignment required' : 'Booking update failed',
+                        data.message || 'The booking could not be updated.'
+                    );
+                    rowButtons.forEach(function (item) { item.disabled = false; });
+                    return;
+                }
+
+                if (row) {
+                    const statusText = row.querySelector('[data-dashboard-status]');
+                    const actions = row.querySelector('[data-dashboard-actions]');
+
+                    if (statusText) statusText.textContent = data.status || newStatus;
+                    if (actions) actions.innerHTML = '<span>Reviewed</span>';
+                }
+
+                const pendingCount = document.querySelector('[data-pending-count]');
+                if (pendingCount) {
+                    const currentPending = Number(pendingCount.textContent || 0);
+                    pendingCount.textContent = Math.max(0, currentPending - 1);
+                }
+
+                if ((data.status || '').toLowerCase() === 'approved') {
+                    const upcomingCount = document.querySelector('[data-upcoming-count]');
+                    if (upcomingCount) {
+                        const currentUpcoming = Number(upcomingCount.textContent || 0);
+                        upcomingCount.textContent = currentUpcoming + 1;
+                    }
+                }
+
+                showModal(
+                    'success',
+                    'Booking updated',
+                    data.message || 'The booking status was updated successfully.'
+                );
+            } catch (error) {
+                rowButtons.forEach(function (item) { item.disabled = false; });
+                showModal(
+                    'error',
+                    'Something went wrong',
+                    'We could not update this booking. Please check your connection and try again.'
+                );
+            }
+        });
+    });
+})();
+</script>
