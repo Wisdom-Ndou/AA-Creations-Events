@@ -596,52 +596,117 @@ function renderDetails(booking, isPast) {
     `;
 }
 
-async function cancelBooking(id) {
-    if (!confirm("Cancel this booking? This action cannot be undone.")) return;
+let cancellationBookingId = null;
 
-    const cancellationReason = window.prompt(
-        "Please tell us why you are cancelling this booking:"
-    );
+function openCancellationModal(id) {
+    const booking = bookings.find(item => item.id === id);
+    if (!booking) return;
 
-    if (cancellationReason === null) return;
+    cancellationBookingId = id;
 
-    if (!cancellationReason.trim()) {
-        alert("Please provide a reason for cancelling this booking.");
+    const modal = document.getElementById("cancelBookingModal");
+    const reason = document.getElementById("cancelReason");
+    const error = document.getElementById("cancelReasonError");
+    const counter = document.getElementById("cancelReasonCount");
+    const summary = document.getElementById("cancelBookingSummary");
+    const confirmButton = document.getElementById("cancelModalConfirm");
+
+    summary.innerHTML =
+        "<strong>" + escapeHtml(booking.occasion || "Booking") + "</strong><br>" +
+        "Booking #" + escapeHtml(booking.id) + " · " +
+        new Date(booking.date).toLocaleDateString("en-ZA");
+
+    reason.value = "";
+    reason.classList.remove("invalid");
+    error.hidden = true;
+    counter.textContent = "0 / 500";
+    confirmButton.disabled = false;
+    confirmButton.textContent = "Confirm Cancellation";
+
+    modal.classList.add("is-open");
+    modal.setAttribute("aria-hidden", "false");
+    setTimeout(() => reason.focus(), 50);
+}
+
+function closeCancellationModal() {
+    const modal = document.getElementById("cancelBookingModal");
+    if (!modal) return;
+
+    modal.classList.remove("is-open");
+    modal.setAttribute("aria-hidden", "true");
+    cancellationBookingId = null;
+}
+
+async function submitCancellation() {
+    if (!cancellationBookingId) return;
+
+    const reason = document.getElementById("cancelReason");
+    const error = document.getElementById("cancelReasonError");
+    const confirmButton = document.getElementById("cancelModalConfirm");
+    const cancellationReason = reason.value.trim();
+
+    if (!cancellationReason) {
+        reason.classList.add("invalid");
+        error.hidden = false;
+        reason.focus();
         return;
     }
+
+    reason.classList.remove("invalid");
+    error.hidden = true;
+    confirmButton.disabled = true;
+    confirmButton.textContent = "Cancelling...";
 
     const app = document.getElementById("bookingsApp");
     const token = document.querySelector('input[name="__RequestVerificationToken"]');
     const body = new URLSearchParams();
-    body.append("bookingId", id);
-    body.append("cancellationReason", cancellationReason.trim());
+    body.append("bookingId", cancellationBookingId);
+    body.append("cancellationReason", cancellationReason);
     if (token) body.append("__RequestVerificationToken", token.value);
 
-    const response = await fetch(app.dataset.cancelUrl, {
-        method: "POST",
-        headers: { "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8" },
-        body: body.toString()
-    });
-    const result = await response.json();
+    try {
+        const response = await fetch(app.dataset.cancelUrl, {
+            method: "POST",
+            headers: { "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8" },
+            body: body.toString()
+        });
 
-    if (!result.success) {
-        alert(result.message || "The booking could not be cancelled.");
-        return;
-    }
+        const result = await response.json();
 
-    const booking = bookings.find(item => item.id === id);
-    if (booking) {
-        booking.status = result.status;
-        booking.cancellationCharge = Number(result.cancellationCharge || 0);
-        booking.refundAmount = Number(result.refundAmount || 0);
-        booking.paymentStatus = result.paymentStatus || booking.paymentStatus;
-        booking.balanceOutstanding = 0;
-        booking.balanceDueDate = null;
+        if (!result.success) {
+            confirmButton.disabled = false;
+            confirmButton.textContent = "Confirm Cancellation";
+            alert(result.message || "The booking could not be cancelled.");
+            return;
+        }
+
+        const booking = bookings.find(item => item.id === cancellationBookingId);
+        if (booking) {
+            booking.status = result.status;
+            booking.cancellationCharge = Number(result.cancellationCharge || 0);
+            booking.refundAmount = Number(result.refundAmount || 0);
+            booking.paymentStatus = result.paymentStatus || booking.paymentStatus;
+            booking.balanceOutstanding = 0;
+            booking.balanceDueDate = null;
+        }
+
+        closeCancellationModal();
+        renderBookings();
+
+        if (result.refundAmount > 0) {
+            alert(result.message + " Refund due: R" + formatMoney(result.refundAmount));
+        } else {
+            alert(result.message || "Booking cancelled.");
+        }
+    } catch (error) {
+        confirmButton.disabled = false;
+        confirmButton.textContent = "Confirm Cancellation";
+        alert("We could not cancel this booking right now. Please try again.");
     }
-    if (result.refundAmount > 0) {
-        alert(result.message + " Refund due: R" + formatMoney(result.refundAmount));
-    }
-    renderBookings();
+}
+
+function cancelBooking(id) {
+    openCancellationModal(id);
 }
 
 document.addEventListener("DOMContentLoaded", function () {
@@ -656,5 +721,39 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // Initial render
     renderBookings();
+
+    const cancelModal = document.getElementById("cancelBookingModal");
+    const cancelModalClose = document.getElementById("cancelModalClose");
+    const cancelModalKeep = document.getElementById("cancelModalKeep");
+    const cancelModalConfirm = document.getElementById("cancelModalConfirm");
+    const cancelReason = document.getElementById("cancelReason");
+    const cancelReasonCount = document.getElementById("cancelReasonCount");
+
+    if (cancelModalClose) cancelModalClose.addEventListener("click", closeCancellationModal);
+    if (cancelModalKeep) cancelModalKeep.addEventListener("click", closeCancellationModal);
+    if (cancelModalConfirm) cancelModalConfirm.addEventListener("click", submitCancellation);
+
+    if (cancelReason) {
+        cancelReason.addEventListener("input", function () {
+            cancelReason.classList.remove("invalid");
+            const error = document.getElementById("cancelReasonError");
+            if (error) error.hidden = true;
+            if (cancelReasonCount) {
+                cancelReasonCount.textContent = cancelReason.value.length + " / 500";
+            }
+        });
+    }
+
+    if (cancelModal) {
+        cancelModal.addEventListener("click", function (event) {
+            if (event.target === cancelModal) closeCancellationModal();
+        });
+    }
+
+    document.addEventListener("keydown", function (event) {
+        if (event.key === "Escape" && cancelModal && cancelModal.classList.contains("is-open")) {
+            closeCancellationModal();
+        }
+    });
 
 });
