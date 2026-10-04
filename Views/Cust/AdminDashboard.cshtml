@@ -115,6 +115,18 @@
     </section>
 </main>
 
+<div id="dashboardBookingModalBackdrop" class="aa-modal-backdrop" role="presentation">
+    <div id="dashboardBookingModal" class="aa-modal" role="dialog" aria-modal="true" aria-labelledby="dashboardBookingModalTitle">
+        <div class="aa-modal-icon" id="dashboardBookingModalIcon">!</div>
+        <h3 id="dashboardBookingModalTitle">Booking update</h3>
+        <p id="dashboardBookingModalMessage"></p>
+        <div class="aa-modal-actions">
+            <a href="@Url.Action("StaffManagement","Cust")" class="aa-modal-manage-staff" id="dashboardBookingModalManageStaff">Manage Staff</a>
+            <button type="button" class="aa-modal-close" id="dashboardBookingModalClose">Close</button>
+        </div>
+    </div>
+</div>
+
 <script>
 (function () {
     const token = document.querySelector('input[name="__RequestVerificationToken"]');
@@ -124,12 +136,14 @@
     const message = document.getElementById('dashboardBookingModalMessage');
     const icon = document.getElementById('dashboardBookingModalIcon');
     const closeButton = document.getElementById('dashboardBookingModalClose');
+    const manageStaff = document.getElementById('dashboardBookingModalManageStaff');
 
-    function showModal(type, heading, copy) {
+    function showModal(type, heading, copy, showManageStaff) {
         modal.className = 'aa-modal ' + type;
         title.textContent = heading;
         message.textContent = copy;
         icon.textContent = type === 'success' ? '✓' : (type === 'warning' ? '!' : '×');
+        manageStaff.classList.toggle('is-visible', Boolean(showManageStaff));
         backdrop.classList.add('is-open');
     }
 
@@ -169,11 +183,22 @@
                 const data = await response.json();
 
                 if (!data.success) {
-                    const noStaff = (data.message || '').toLowerCase().indexOf('no staff member') >= 0;
+                    const noStaff =
+                        data.errorCode === 'NO_AVAILABLE_STAFF' ||
+                        data.errorCode === 'NO_REGISTERED_STAFF';
+
+                    const heading =
+                        data.errorCode === 'NO_AVAILABLE_STAFF'
+                            ? 'No staff currently available'
+                            : (data.errorCode === 'NO_REGISTERED_STAFF'
+                                ? 'No staff registered for this city'
+                                : 'Booking update failed');
+
                     showModal(
                         noStaff ? 'warning' : 'error',
-                        noStaff ? 'Staff assignment required' : 'Booking update failed',
-                        data.message || 'The booking could not be updated.'
+                        heading,
+                        data.message || 'The booking could not be updated.',
+                        noStaff
                     );
                     rowButtons.forEach(function (item) { item.disabled = false; });
                     return;
