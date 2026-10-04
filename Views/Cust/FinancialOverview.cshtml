@@ -1,25 +1,59 @@
+@using System
 @using System.Linq
 @model WebApplication1.Models.FinancialOverviewViewModel
 @{ ViewBag.Title = "Financial Overview"; }
 <link rel="stylesheet" href="~/Content/AdminDashboard.css" />
-<main class="main">
-<section class="page-head"><span class="badge">Admin Finance</span><h1>Financial <em>Overview</em></h1><p>Track confirmed booking income, recorded expenditure and operating profit.</p></section>
-<section class="stats">
-<div class="stat"><span>Income</span><strong>R @Model.Income.ToString("N2")</strong><small>Approved and completed bookings</small></div>
-<div class="stat"><span>Expenditure</span><strong>R @Model.TotalExpenditure.ToString("N2")</strong><small>Recorded business expenses</small></div>
-<div class="stat"><span>Profit</span><strong>R @Model.Profit.ToString("N2")</strong><small>Income minus expenditure</small></div>
+<style>
+.finance-page{max-width:1240px;margin:0 auto;padding:32px 22px}
+.finance-hero{padding:28px 30px;border-radius:20px;background:linear-gradient(135deg,#1b0d14,#30101f);border:1px solid #4c2435;margin-bottom:22px}
+.finance-hero .eyebrow{color:#ff5e91;text-transform:uppercase;letter-spacing:.12em;font-weight:800;font-size:.78rem}.finance-hero h1{margin:.35rem 0;color:#fff;font-size:2.3rem}.finance-hero p{color:#d5c6ce;margin:0}
+.finance-summary{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:22px}
+.finance-card{border-radius:18px;padding:22px;background:#fff;color:#2a1722;box-shadow:0 12px 32px rgba(0,0,0,.18);border-top:4px solid #ff2a6d}
+.finance-card span{display:block;color:#765966;font-size:.82rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em}.finance-card strong{display:block;font-size:2rem;margin:.35rem 0}.finance-card small{color:#765966}
+.finance-grid{display:grid;grid-template-columns:minmax(0,.85fr) minmax(0,1.35fr);gap:20px}
+.finance-panel{background:#fff;color:#2a1722;border-radius:18px;padding:22px;box-shadow:0 12px 32px rgba(0,0,0,.16)}.finance-panel h2{margin:0 0 4px}.finance-panel .sub{color:#765966;margin:0 0 18px}
+.finance-form{display:grid;grid-template-columns:1fr 1fr;gap:14px}.finance-field{display:flex;flex-direction:column;gap:6px}.finance-field label{font-size:.86rem;font-weight:700}.finance-input{width:100%;box-sizing:border-box;padding:12px 13px;border:1px solid #d9c5cf;border-radius:10px;background:#fff;color:#2a1722;font:inherit;outline:none}.finance-input:focus{border-color:#c2185b;box-shadow:0 0 0 3px rgba(194,24,91,.1)}
+.finance-submit{margin-top:16px;border:0;border-radius:10px;padding:12px 18px;background:#c2185b;color:#fff;font-weight:800;cursor:pointer}.finance-submit:hover{background:#9d174d}
+.finance-alert{padding:12px 14px;border-radius:10px;margin-bottom:16px;background:#fff0f5;color:#8d244a;border:1px solid #efb7c9}.finance-alert.success{background:#edf9f3;color:#17643f;border-color:#b8dfcc}
+.finance-table{width:100%;border-collapse:collapse}.finance-table th,.finance-table td{text-align:left;padding:11px 9px;border-bottom:1px solid #efe3e9;color:#2a1722}.finance-table th{font-size:.78rem;text-transform:uppercase;color:#a3144d}.finance-table-wrap{overflow:auto}
+@media(max-width:900px){.finance-summary{grid-template-columns:1fr}.finance-grid{grid-template-columns:1fr}}@media(max-width:600px){.finance-form{grid-template-columns:1fr}}
+</style>
+<main class="finance-page">
+<section class="finance-hero"><div class="eyebrow">Admin Finance</div><h1>Financial Overview</h1><p>Track confirmed income, business expenses and current operating profit.</p></section>
+
+<section class="finance-summary">
+    <article class="finance-card"><span>Total Income</span><strong>R @Model.Income.ToString("N2")</strong><small>Approved, setup-completed and completed bookings</small></article>
+    <article class="finance-card"><span>Total Expenditure</span><strong>R @Model.TotalExpenditure.ToString("N2")</strong><small>Recorded operating expenses</small></article>
+    <article class="finance-card"><span>Current Profit</span><strong>R @Model.Profit.ToString("N2")</strong><small>Income minus expenditure</small></article>
 </section>
-@if(TempData["FinanceError"]!=null){<section class="panel">@TempData["FinanceError"]</section>}
-@if(TempData["FinanceSuccess"]!=null){<section class="panel">@TempData["FinanceSuccess"]</section>}
-<div class="dashboard-grid">
-<section class="panel"><div class="panel-head"><div><h2>Record Expenditure</h2><p>Add an actual business cost to the financial report.</p></div></div>
-@using(Html.BeginForm("AddExpenditure","Cust",FormMethod.Post)){@Html.AntiForgeryToken()
-<div class="form-grid"><div class="form-group"><label>Description</label><input class="form-control" name="description" required /></div>
-<div class="form-group"><label>Amount (R)</label><input class="form-control" name="amount" type="number" min="0.01" step="0.01" required /></div>
-<div class="form-group"><label>Date</label><input class="form-control" name="expenseDate" type="date" value="@(DateTime.Today.ToString("yyyy-MM-dd"))" required /></div>
-<div class="form-group"><label>Category</label><input class="form-control" name="category" placeholder="Decor, transport, supplies..." /></div></div>
-<p style="margin-top:18px"><button type="submit" class="approve-btn">Record Expenditure</button></p>}</section>
-<section class="panel"><div class="panel-head"><div><h2>Recent Expenditure</h2><p>@Model.Expenditures.Count recorded expenses</p></div></div>
-@if(!Model.Expenditures.Any()){<p>No expenditure has been recorded yet.</p>}else{<div class="table-wrap"><table><thead><tr><th>Date</th><th>Description</th><th>Category</th><th>Amount</th></tr></thead><tbody>
-@foreach(var e in Model.Expenditures.Take(12)){<tr><td>@e.ExpenseDate.ToString("dd MMM yyyy")</td><td>@e.Description</td><td>@e.Category</td><td>R @e.Amount.ToString("N2")</td></tr>}
-</tbody></table></div>}</section></div></main>
+
+@if(TempData["FinanceError"]!=null){<div class="finance-alert">@TempData["FinanceError"]</div>}
+@if(TempData["FinanceSuccess"]!=null){<div class="finance-alert success">@TempData["FinanceSuccess"]</div>}
+
+<section class="finance-grid">
+    <article class="finance-panel">
+        <h2>Record Expenditure</h2><p class="sub">Add an actual business cost to the report.</p>
+        @using(Html.BeginForm("AddExpenditure","Cust",FormMethod.Post)){
+            @Html.AntiForgeryToken()
+            <div class="finance-form">
+                <div class="finance-field"><label for="description">Description</label><input id="description" class="finance-input" name="description" placeholder="e.g. Floral supplies" required /></div>
+                <div class="finance-field"><label for="amount">Amount (R)</label><input id="amount" class="finance-input" name="amount" type="number" min="0.01" step="0.01" placeholder="0.00" required /></div>
+                <div class="finance-field"><label for="expenseDate">Date</label><input id="expenseDate" class="finance-input" name="expenseDate" type="date" value="@DateTime.Today.ToString("yyyy-MM-dd")" required /></div>
+                <div class="finance-field"><label for="category">Category</label><input id="category" class="finance-input" name="category" placeholder="Decor, transport, supplies..." /></div>
+            </div>
+            <button type="submit" class="finance-submit">Record Expenditure</button>
+        }
+    </article>
+
+    <article class="finance-panel">
+        <h2>Expenditure History</h2><p class="sub">@Model.Expenditures.Count recorded expense(s)</p>
+        @if(!Model.Expenditures.Any()){<p>No expenditure has been recorded yet.</p>}
+        else{
+            <div class="finance-table-wrap"><table class="finance-table"><thead><tr><th>Date</th><th>Description</th><th>Category</th><th>Amount</th></tr></thead><tbody>
+            @foreach(var e in Model.Expenditures.Take(20)){<tr><td>@e.ExpenseDate.ToString("dd MMM yyyy")</td><td>@e.Description</td><td>@e.Category</td><td>R @e.Amount.ToString("N2")</td></tr>}
+            </tbody></table></div>
+        }
+    </article>
+</section>
+<p style="margin-top:20px"><a class="quick-action" style="max-width:260px" href="@Url.Action("AdminDashboard","Cust")">← Back to Admin Dashboard</a></p>
+</main>
