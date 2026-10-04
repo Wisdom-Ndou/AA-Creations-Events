@@ -14,7 +14,7 @@
     bool isCustomer = Session["CustomerAuthenticated"] != null && (bool)Session["CustomerAuthenticated"];
 }
 <nav class="desktop-nav" aria-label="Main navigation">
-    <a href="@Url.Action("Index", "Cust")" class="logo">AA Creations & Events</a>
+    <a href="@(isCustomer ? Url.Action("CustomerDashboard","Cust") : isAdmin ? Url.Action("AdminDashboard","Cust") : isStaff ? Url.Action("StaffDashboard","Cust") : Url.Action("Index","Cust"))" class="logo">AA Creations & Events</a>
     <ul class="nav-links">
         @if (isAdmin)
         {
@@ -42,6 +42,7 @@
 
             if (isCustomer)
             {
+                <li><a href="@Url.Action("CustomerDashboard","Cust")">DASHBOARD</a></li>
                 <li><a href="@Url.Action("ViewBooking","Cust")">VIEW BOOKING</a></li>
                 <li><a href="@Url.Action("contactus", "Cust")">CONTACT US</a></li>
                 <li><a href="@Url.Action("ManageAccount","Cust")" class="login-btn">MANAGE ACCOUNT</a></li>
