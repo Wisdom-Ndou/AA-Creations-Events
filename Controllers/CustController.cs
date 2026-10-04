@@ -769,6 +769,29 @@ namespace WebApplication1.Controllers
                 latitude,
                 longitude) <= radiusKm;
         }
+
+        private static string GetEventCitySearchViewbox(string city)
+        {
+            // Nominatim viewbox format: left,top,right,bottom.
+            // These are deliberately broader than the service radius and are
+            // used only to rank nearby results, not to decide whether a
+            // customer is allowed to book there.
+            switch (NormalizeEventCity(city).ToLowerInvariant())
+            {
+                case "durban":
+                    return "30.35,-29.20,31.65,-30.50";
+
+                case "pietermaritzburg":
+                    return "29.75,-29.05,30.95,-30.15";
+
+                case "mandeni":
+                case "emandeni":
+                    return "30.70,-28.55,31.95,-29.75";
+
+                default:
+                    return string.Empty;
+            }
+        }
         
 
        
@@ -858,22 +881,25 @@ namespace WebApplication1.Controllers
 
             try
             {
-                // We deliberately do not hard-filter the results by a city
-                // bounding box. Results may be outside the selected city so
-                // the customer can be told clearly when that happens.
-                var query =
-                    address.Trim() +
-                    ", " +
-                    city +
-                    ", KwaZulu-Natal, South Africa";
+                // Search the address as the customer typed it. Appending the
+                // selected city to every query caused valid suburb/street
+                // addresses to disappear when OpenStreetMap classified them
+                // under a different locality name. The city viewbox biases
+                // ranking toward the chosen service area without hard-filtering.
+                var query = address.Trim();
+                var viewbox = GetEventCitySearchViewbox(city);
 
                 var url =
                     "https://nominatim.openstreetmap.org/search" +
                     "?format=geocodejson" +
                     "&addressdetails=1" +
                     "&countrycodes=za" +
-                    "&layer=address,poi" +
-                    "&limit=8" +
+                    "&limit=12" +
+                    "&dedupe=1" +
+                    "&bounded=0" +
+                    (string.IsNullOrWhiteSpace(viewbox)
+                        ? ""
+                        : "&viewbox=" + Uri.EscapeDataString(viewbox)) +
                     "&q=" +
                     Uri.EscapeDataString(query);
 
