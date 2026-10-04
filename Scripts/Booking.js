@@ -1251,7 +1251,7 @@ function renderBookingStep() {
                  value="${paymentAmount.toFixed(2)}"
                  aria-describedby="paymentAmountError"
                  ${requiresFullPayment ? "readonly" : ""} required>
-          <p class="error-text" id="paymentAmountError" aria-live="polite" hidden></p>
+          <p class="payment-validation-message" id="paymentAmountError" aria-live="polite" hidden></p>
           <small class="muted">Remaining balance after this payment: <strong id="remainingBalanceText">R${formatMoney(remainingBalance)}</strong></small>
         </div>
       </div>
