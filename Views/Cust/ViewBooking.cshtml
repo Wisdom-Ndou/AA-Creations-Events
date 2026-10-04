@@ -138,6 +138,38 @@
         </div>
     </main>
 
+    <div class="cancel-modal-backdrop" id="cancelBookingModal" aria-hidden="true">
+        <div class="cancel-modal" role="dialog" aria-modal="true" aria-labelledby="cancelBookingTitle">
+            <button type="button" class="cancel-modal-close" id="cancelModalClose" aria-label="Close cancellation dialog">×</button>
+
+            <div class="cancel-modal-icon">!</div>
+            <p class="eyebrow">Cancel Booking</p>
+            <h2 id="cancelBookingTitle">Tell us why you're cancelling</h2>
+            <p class="cancel-modal-copy">
+                Your refund will be calculated from the amount you've already paid according to the cancellation policy.
+            </p>
+
+            <div class="cancel-booking-summary" id="cancelBookingSummary"></div>
+
+            <label class="cancel-reason-label" for="cancelReason">Cancellation reason</label>
+            <textarea id="cancelReason"
+                      class="cancel-reason-input"
+                      maxlength="500"
+                      rows="5"
+                      placeholder="Please tell us why you need to cancel this booking..."></textarea>
+
+            <div class="cancel-reason-footer">
+                <span id="cancelReasonError" class="cancel-reason-error" hidden>Please enter a reason before continuing.</span>
+                <span id="cancelReasonCount">0 / 500</span>
+            </div>
+
+            <div class="cancel-modal-actions">
+                <button type="button" class="btn btn-outline" id="cancelModalKeep">Keep Booking</button>
+                <button type="button" class="btn cancel-confirm-btn" id="cancelModalConfirm">Confirm Cancellation</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         window.databaseBookings = @Html.Raw(
             Newtonsoft.Json.JsonConvert.SerializeObject(
