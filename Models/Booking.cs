@@ -63,6 +63,28 @@ namespace WebApplication1.Models
 
         public string Status { get; set; }
 
+        // Payment tracking. Card details are never stored; only business payment state is persisted.
+        public decimal AmountPaid { get; set; }
+
+        public DateTime? BalanceDueDate { get; set; }
+
+        [StringLength(30)]
+        public string PaymentStatus { get; set; }
+
+        public decimal CancellationCharge { get; set; }
+
+        public decimal RefundAmount { get; set; }
+
+        [StringLength(30)]
+        public string TermsVersion { get; set; }
+
+        public DateTime? TermsAcceptedAt { get; set; }
+
+        [NotMapped]
+        public decimal BalanceOutstanding
+        {
+            get { return Math.Max(0m, TotalPrice - AmountPaid); }
+        }
 
     }
 }
