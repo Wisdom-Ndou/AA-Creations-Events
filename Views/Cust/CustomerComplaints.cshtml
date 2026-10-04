@@ -1,0 +1,65 @@
+@using System
+@using System.Collections.Generic
+@using System.Linq
+@model IEnumerable<WebApplication1.Models.CustomerComplaint>
+@{
+    ViewBag.Title = "Booking Complaints";
+    var bookings = ViewBag.Bookings as List<WebApplication1.Models.Booking> ?? new List<WebApplication1.Models.Booking>();
+    int? selectedBookingId = ViewBag.SelectedBookingId as int?;
+}
+<link rel="stylesheet" href="~/Content/Manage Account styles.css" />
+<style>
+.complaints-page{max-width:960px;margin:0 auto;padding:34px 20px}.complaint-grid{display:grid;grid-template-columns:.9fr 1.1fr;gap:20px}.complaint-item{padding:16px 0;border-bottom:1px solid #eadde4}.complaint-item:last-child{border-bottom:0}.complaint-meta{font-size:.84rem;color:#725d68}.complaint-status{display:inline-block;padding:5px 10px;border-radius:999px;background:#fff0f5;color:#9d174d;font-weight:700;font-size:.78rem}.complaint-response{margin-top:10px;padding:12px;border-radius:10px;background:#f8f4f6}.account-field select,.account-field textarea{width:100%;box-sizing:border-box}.account-field textarea{min-height:140px;resize:vertical}@media(max-width:780px){.complaint-grid{grid-template-columns:1fr}}
+</style>
+<main class="complaints-page">
+    <div class="account-header"><div><p class="account-eyebrow">MY BOOKINGS</p><h1>Booking Complaints</h1><p>Report an issue against a specific booking and follow the response here.</p></div></div>
+
+    @if(TempData["CustomerComplaintSuccess"]!=null){<div class="account-success">@TempData["CustomerComplaintSuccess"]</div>}
+    @if(TempData["CustomerComplaintError"]!=null){<div class="account-error">@TempData["CustomerComplaintError"]</div>}
+
+    <div class="complaint-grid">
+        <section class="account-card">
+            <h2>Submit a Complaint</h2>
+            @using(Html.BeginForm("CreateCustomerComplaint","Cust",FormMethod.Post)){
+                @Html.AntiForgeryToken()
+                <div class="account-field"><label for="bookingId">Booking</label>
+                    <select id="bookingId" name="bookingId" class="account-input" required>
+                        <option value="">Select booking…</option>
+                        @foreach(var booking in bookings){
+                            <option value="@booking.BookingId" @(selectedBookingId == booking.BookingId ? "selected" : "")>
+                                #BK-@booking.BookingId · @booking.Occasion · @booking.EventDate.ToString("dd MMM yyyy")
+                            </option>
+                        }
+                    </select>
+                </div>
+                <div class="account-field"><label for="category">Category</label>
+                    <select id="category" name="category" class="account-input" required>
+                        <option value="">Select category…</option>
+                        <option>Service Quality</option><option>Decoration / Setup</option><option>Payment / Refund</option><option>Communication</option><option>Other</option>
+                    </select>
+                </div>
+                <div class="account-field"><label for="subject">Subject</label><input id="subject" name="subject" class="account-input" maxlength="120" required /></div>
+                <div class="account-field"><label for="description">What happened?</label><textarea id="description" name="description" class="account-input" maxlength="2000" required></textarea></div>
+                <div class="account-actions"><button type="submit" class="save-account-btn">Submit Complaint</button></div>
+            }
+        </section>
+
+        <section class="account-card">
+            <h2>Your Complaint History</h2>
+            @if(!Model.Any()){<p>You have not submitted any booking complaints.</p>}
+            else{
+                foreach(var complaint in Model){
+                    <article class="complaint-item">
+                        <div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start">
+                            <div><strong>@complaint.Subject</strong><div class="complaint-meta">#BK-@complaint.BookingId · @complaint.Category · @complaint.CreatedAt.ToString("dd MMM yyyy HH:mm")</div></div>
+                            <span class="complaint-status">@complaint.Status</span>
+                        </div>
+                        <p>@complaint.Description</p>
+                        @if(!String.IsNullOrWhiteSpace(complaint.AdminResponse)){<div class="complaint-response"><strong>AA Creations response</strong><p>@complaint.AdminResponse</p></div>}
+                    </article>
+                }
+            }
+        </section>
+    </div>
+    <p><a href="@Url.Action("ViewBooking","Cust")">← Back to My Bookings</a></p>
+</main>
