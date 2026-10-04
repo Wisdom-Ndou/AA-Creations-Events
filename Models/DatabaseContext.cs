@@ -36,6 +36,8 @@ namespace WebApplication1.Models
 
         public DbSet<StaffComplaint> StaffComplaints { get; set; }
 
+        public DbSet<CustomerComplaint> CustomerComplaints { get; set; }
+
         public DbSet<CustomerAgreement> CustomerAgreements { get; set; }
 
         public DbSet<TermsAndConditions> TermsAndConditions { get; set; }
