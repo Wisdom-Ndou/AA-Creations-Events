@@ -856,6 +856,36 @@ namespace WebApplication1.Controllers
             }
         }
 
+        private static JArray SearchNominatimFeatures(
+            string query,
+            string viewbox,
+            int limit)
+        {
+            var url =
+                "https://nominatim.openstreetmap.org/search" +
+                "?format=geocodejson" +
+                "&addressdetails=1" +
+                "&countrycodes=za" +
+                "&dedupe=1" +
+                "&limit=" + limit +
+                (string.IsNullOrWhiteSpace(viewbox)
+                    ? ""
+                    : "&bounded=1&viewbox=" + Uri.EscapeDataString(viewbox)) +
+                "&q=" + Uri.EscapeDataString(query);
+
+            using (var client = new WebClient())
+            {
+                client.Encoding = Encoding.UTF8;
+                client.Headers["User-Agent"] =
+                    "AA-Creations-Events/1.0 (booking address lookup)";
+                client.Headers["Accept"] = "application/json";
+                client.Headers["Accept-Language"] = "en";
+
+                var root = JObject.Parse(client.DownloadString(url));
+                return root["features"] as JArray ?? new JArray();
+            }
+        }
+
         [HttpGet]
         public JsonResult SearchEventAddresses(string address, string city)
         {
@@ -881,99 +911,102 @@ namespace WebApplication1.Controllers
 
             try
             {
-                // Search the address as the customer typed it. Appending the
-                // selected city to every query caused valid suburb/street
-                // addresses to disappear when OpenStreetMap classified them
-                // under a different locality name. The city viewbox biases
-                // ranking toward the chosen service area without hard-filtering.
-                var query = address.Trim();
+                var typedAddress = address.Trim();
                 var viewbox = GetEventCitySearchViewbox(city);
 
-                var url =
-                    "https://nominatim.openstreetmap.org/search" +
-                    "?format=geocodejson" +
-                    "&addressdetails=1" +
-                    "&countrycodes=za" +
-                    "&limit=12" +
-                    "&dedupe=1" +
-                    "&bounded=0" +
-                    (string.IsNullOrWhiteSpace(viewbox)
-                        ? ""
-                        : "&viewbox=" + Uri.EscapeDataString(viewbox)) +
-                    "&q=" +
-                    Uri.EscapeDataString(query);
-
-                JObject root;
-
-                using (var client = new WebClient())
+                // Prefer the selected city explicitly. This fixes cases where
+                // a common street/place name is ranked in another province.
+                var queries = new[]
                 {
-                    client.Encoding = Encoding.UTF8;
-                    client.Headers["User-Agent"] =
-                        "AA-Creations-Events/1.0 (booking address lookup)";
-                    client.Headers["Accept"] = "application/json";
-                    client.Headers["Accept-Language"] = "en";
+                    typedAddress + ", " + city + ", KwaZulu-Natal, South Africa",
+                    typedAddress
+                };
 
-                    root = JObject.Parse(client.DownloadString(url));
-                }
+                var insideResults = new List<object>();
+                var outsideResults = new List<object>();
+                var seenCoordinates = new HashSet<string>(
+                    StringComparer.OrdinalIgnoreCase);
 
-                var features = root["features"] as JArray;
-
-                if (features == null)
+                for (var queryIndex = 0; queryIndex < queries.Length; queryIndex++)
                 {
-                    return Json(new
+                    var features = SearchNominatimFeatures(
+                        queries[queryIndex],
+                        viewbox,
+                        12);
+
+                    foreach (var token in features)
                     {
-                        success = true,
-                        results = new object[0]
-                    }, JsonRequestBehavior.AllowGet);
-                }
+                        var feature = token as JObject;
+                        var coordinates =
+                            feature?["geometry"]?["coordinates"] as JArray;
 
-                var results = new List<object>();
+                        if (feature == null ||
+                            coordinates == null ||
+                            coordinates.Count < 2)
+                        {
+                            continue;
+                        }
 
-                foreach (var token in features)
-                {
-                    var feature = token as JObject;
-                    var coordinates =
-                        feature?["geometry"]?["coordinates"] as JArray;
+                        double longitude;
+                        double latitude;
 
-                    if (feature == null ||
-                        coordinates == null ||
-                        coordinates.Count < 2)
-                    {
-                        continue;
+                        if (!double.TryParse(
+                                coordinates[0]?.ToString(),
+                                System.Globalization.NumberStyles.Any,
+                                System.Globalization.CultureInfo.InvariantCulture,
+                                out longitude) ||
+                            !double.TryParse(
+                                coordinates[1]?.ToString(),
+                                System.Globalization.NumberStyles.Any,
+                                System.Globalization.CultureInfo.InvariantCulture,
+                                out latitude))
+                        {
+                            continue;
+                        }
+
+                        var coordinateKey =
+                            Math.Round(latitude, 6)
+                                .ToString(System.Globalization.CultureInfo.InvariantCulture) +
+                            "," +
+                            Math.Round(longitude, 6)
+                                .ToString(System.Globalization.CultureInfo.InvariantCulture);
+
+                        if (!seenCoordinates.Add(coordinateKey))
+                            continue;
+
+                        var resolvedCity = GetGeocodedCity(feature);
+                        var label = GetGeocodedLabel(feature);
+                        var inSelectedCity =
+                            IsWithinSelectedCityServiceArea(
+                                city,
+                                latitude,
+                                longitude);
+
+                        var result = new
+                        {
+                            address = label,
+                            latitude = latitude,
+                            longitude = longitude,
+                            resolvedCity = resolvedCity,
+                            inSelectedCity = inSelectedCity
+                        };
+
+                        if (inSelectedCity)
+                            insideResults.Add(result);
+                        else
+                            outsideResults.Add(result);
                     }
 
-                    double longitude;
-                    double latitude;
-
-                    if (!double.TryParse(
-                            coordinates[0]?.ToString(),
-                            System.Globalization.NumberStyles.Any,
-                            System.Globalization.CultureInfo.InvariantCulture,
-                            out longitude) ||
-                        !double.TryParse(
-                            coordinates[1]?.ToString(),
-                            System.Globalization.NumberStyles.Any,
-                            System.Globalization.CultureInfo.InvariantCulture,
-                            out latitude))
-                    {
-                        continue;
-                    }
-
-                    var resolvedCity = GetGeocodedCity(feature);
-                    var label = GetGeocodedLabel(feature);
-
-                    results.Add(new
-                    {
-                        address = label,
-                        latitude = latitude,
-                        longitude = longitude,
-                        resolvedCity = resolvedCity,
-                        inSelectedCity = IsWithinSelectedCityServiceArea(
-                            city,
-                            latitude,
-                            longitude)
-                    });
+                    // If the city-qualified query found a valid local match,
+                    // do not make a second request unnecessarily.
+                    if (insideResults.Count > 0)
+                        break;
                 }
+
+                var results = insideResults
+                    .Concat(outsideResults)
+                    .Take(12)
+                    .ToList();
 
                 return Json(new
                 {
