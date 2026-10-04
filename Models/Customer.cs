@@ -27,7 +27,7 @@ namespace WebApplication1.Models
         public string Cust_Phone { get; set; }
 
         [Required]
-        [EmailAddress(ErrorMessage = "Invalid email address format")]
+        [EmailAddress(ErrorMessage = "Please enter a valid email address.")]
         public string Cust_Email { get; set; }
 
         [Required(ErrorMessage = "Password is required.")]
