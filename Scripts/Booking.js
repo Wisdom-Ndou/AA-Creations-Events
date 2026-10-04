@@ -1248,7 +1248,10 @@ function renderBookingStep() {
           <label class="field-label" for="paymentAmount">Amount you want to pay now</label>
           <input class="field-input" id="paymentAmount" name="paymentAmount" type="number"
                  min="${minimumPayment}" max="${total}" step="0.01"
-                 value="${paymentAmount.toFixed(2)}" ${requiresFullPayment ? "readonly" : ""} required>
+                 value="${paymentAmount.toFixed(2)}"
+                 aria-describedby="paymentAmountError"
+                 ${requiresFullPayment ? "readonly" : ""} required>
+          <p class="error-text" id="paymentAmountError" aria-live="polite" hidden></p>
           <small class="muted">Remaining balance after this payment: <strong id="remainingBalanceText">R${formatMoney(remainingBalance)}</strong></small>
         </div>
       </div>
@@ -1440,12 +1443,72 @@ function handleFormInput(event) {
     // ---- Step 4 payment controls ----
 
     if (control.name === "paymentAmount") {
+        const minimum = getMinimumPayment();
+        const total = getTotal();
+        const error = document.getElementById("paymentAmountError");
+
         let amount = Number(control.value);
-        if (!Number.isFinite(amount)) amount = getMinimumPayment();
-        state.paymentAmount = amount;
-        const balance = Math.max(0, getTotal() - amount);
+
+        if (!Number.isFinite(amount)) {
+            amount = minimum;
+            control.value = minimum.toFixed(2);
+        }
+
+        if (amount < minimum) {
+            state.paymentAmount = amount;
+            control.setAttribute("aria-invalid", "true");
+
+            if (error) {
+                error.textContent =
+                    "The minimum payment for this booking is R" +
+                    formatMoney(minimum) +
+                    ". You cannot pay less than the required deposit.";
+                error.hidden = false;
+            }
+
+            // Allow the user to finish typing, but never allow the field to
+            // remain below the deposit once the edit is committed.
+            if (event.type === "change") {
+                amount = minimum;
+                control.value = minimum.toFixed(2);
+                state.paymentAmount = minimum;
+            }
+        }
+        else if (amount > total) {
+            amount = total;
+            control.value = total.toFixed(2);
+            state.paymentAmount = total;
+            control.setAttribute("aria-invalid", "true");
+
+            if (error) {
+                error.textContent =
+                    "The payment amount cannot be more than the booking total of R" +
+                    formatMoney(total) + ".";
+                error.hidden = false;
+            }
+        }
+        else {
+            state.paymentAmount = amount;
+            control.setAttribute("aria-invalid", "false");
+
+            if (error) {
+                error.textContent = "";
+                error.hidden = true;
+            }
+        }
+
+        const effectiveAmount =
+            Number(state.paymentAmount) < minimum
+                ? minimum
+                : Number(state.paymentAmount);
+
+        const balance = Math.max(0, total - effectiveAmount);
         const balanceText = document.getElementById("remainingBalanceText");
-        if (balanceText) balanceText.textContent = "R" + formatMoney(balance);
+
+        if (balanceText) {
+            balanceText.textContent = "R" + formatMoney(balance);
+        }
+
         updateStep4Button();
         return;
     }
