@@ -1724,8 +1724,9 @@ namespace WebApplication1.Controllers
                 db.Bookings
                     .Where(b =>
                         b.Status != null &&
-                        b.Status.ToLower() == "approved")
-                    .Select(b => (decimal?)b.TotalPrice)
+                        b.Status.ToLower() != "declined" &&
+                        b.Status.ToLower() != "cancelled")
+                    .Select(b => (decimal?)b.AmountPaid)
                     .Sum() ?? 0m;
 
             // ---------------------------------------------------------
@@ -2979,8 +2980,10 @@ namespace WebApplication1.Controllers
                 return RedirectToAction("Login", "Cust");
 
             decimal income = db.Bookings
-                .Where(b => b.Status == "Approved" || b.Status == "Setup Completed" || b.Status == "Completed")
-                .Select(b => (decimal?)b.TotalPrice)
+                .Where(b =>
+                    b.Status != "Declined" &&
+                    b.Status != "Cancelled")
+                .Select(b => (decimal?)b.AmountPaid)
                 .Sum() ?? 0m;
 
             var expenses = db.Expenditures.OrderByDescending(e => e.ExpenseDate).ToList();
