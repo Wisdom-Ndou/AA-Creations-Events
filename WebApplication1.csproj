@@ -262,7 +262,10 @@
     <Compile Include="Migrations\202610032100554_SyncTermsAcceptanceSchema.Designer.cs">
       <DependentUpon>202610032100554_SyncTermsAcceptanceSchema.cs</DependentUpon>
     </Compile>
-    <Compile Include="Migrations\202610040030000_AddExpenditures.cs" />
+    <Compile Include="Migrations\202610040937350_AddExpenditures.cs" />
+    <Compile Include="Migrations\202610040937350_AddExpenditures.Designer.cs">
+      <DependentUpon>202610040937350_AddExpenditures.cs</DependentUpon>
+    </Compile>
     <Compile Include="Migrations\Configuration.cs" />
     <Compile Include="Models\AddOn.cs" />
     <Compile Include="Models\Admin.cs" />
@@ -468,6 +471,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Migrations\202610032100554_SyncTermsAcceptanceSchema.resx">
       <DependentUpon>202610032100554_SyncTermsAcceptanceSchema.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\202610040937350_AddExpenditures.resx">
+      <DependentUpon>202610040937350_AddExpenditures.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <PropertyGroup>

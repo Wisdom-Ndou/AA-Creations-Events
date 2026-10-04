@@ -22,7 +22,7 @@
             <li><a href="@Url.Action("AllBookings","Cust")">BOOKINGS</a></li>
             <li><a href="@Url.Action("UpcomingEvents","Cust")">UPCOMING EVENTS</a></li>
             <li><a href="@Url.Action("StaffManagement","Cust")">STAFF</a></li>
-                            <li><a href="@Url.Action("FinancialOverview","Cust")">FINANCE</a></li>
+            <li><a href="@Url.Action("FinancialOverview","Cust")">FINANCE</a></li>
             <li><a href="@Url.Action("AdminStaffComplaints","Cust")">COMPLAINTS</a></li>
             <li><a href="@Url.Action("AdminLogout","Cust")" class="login-btn">SIGN OUT</a></li>
         }
@@ -38,11 +38,11 @@
         {
             <li><a href="@Url.Action("Portfolio", "Cust")">PORTFOLIO</a></li>
             <li><a href="@Url.Action("Booking", "Cust")">MAKE A BOOKING</a></li>
-            <li><a href="@Url.Action("contactus", "Cust")">CONTACT US</a></li>
 
             if (isCustomer)
             {
                 <li><a href="@Url.Action("ViewBooking","Cust")">VIEW BOOKING</a></li>
+                <li><a href="@Url.Action("contactus", "Cust")">CONTACT US</a></li>
                 <li><a href="@Url.Action("ManageAccount","Cust")" class="login-btn">MANAGE ACCOUNT</a></li>
                 <li>
                     @using (Html.BeginForm("Logout", "Cust", FormMethod.Post, new { style = "display:inline" }))
@@ -54,6 +54,7 @@
             }
             else
             {
+                <li><a href="@Url.Action("contactus", "Cust")">CONTACT US</a></li>
                 <li><a href="@Url.Action("Login","Cust")" class="login-btn">LOGIN</a></li>
                 <li><a href="@Url.Action("Customerregister","Cust")">REGISTER</a></li>
             }
