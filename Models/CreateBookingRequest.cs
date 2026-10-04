@@ -30,5 +30,9 @@ namespace WebApplication1.Models
         public string PackageId { get; set; }
 
         public List<string> AddOns { get; set; }
+
+        public decimal PaymentAmount { get; set; }
+
+        public bool TermsAccepted { get; set; }
     }
 }
