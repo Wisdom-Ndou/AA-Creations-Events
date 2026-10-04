@@ -2,10 +2,15 @@
     ViewBag.Title = "Book a Celebration";
 }
 
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+      integrity="sha256-p4NxAoJBhIINfQ3Yn2TuRbMZ4F7xME2B+7Jg2LhFQ8I="
+      crossorigin="" />
 <link rel="stylesheet" href="~/Content/sstyle.css">
 
 <main id="bookingApp"
       data-booking-url="@Url.Action("CreateBooking", "Cust")"
+      data-address-search-url="@Url.Action("SearchEventAddresses", "Cust")"
+      data-address-reverse-url="@Url.Action("ReverseEventLocation", "Cust")"
       data-logged-in="@(Session["CustomerId"] != null ? "true" : "false")"
       data-customer-first-name="@ViewBag.CustomerFirstName"
       data-customer-last-name="@ViewBag.CustomerLastName"
@@ -88,5 +93,8 @@
 </main>
 @section scripts {
     <script src="~/Scripts/Common.js"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+            integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+            crossorigin=""></script>
     <script src="~/Scripts/Booking.js"></script>
 }
