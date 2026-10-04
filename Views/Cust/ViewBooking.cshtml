@@ -21,7 +21,8 @@
     <main class="bookings-page" id="bookingsApp"
           data-logged-in="@(Session["CustomerEmail"] != null ? "true" : "false")"
           data-complete-url="@Url.Action("CompleteCustomerBooking", "Cust")"
-          data-cancel-url="@Url.Action("CancelCustomerBooking", "Cust")">
+          data-cancel-url="@Url.Action("CancelCustomerBooking", "Cust")"
+          data-pay-url="@Url.Action("PayBookingBalance", "Cust")">
         @Html.AntiForgeryToken()
 
         <!-- Login Overlay -->
@@ -149,6 +150,12 @@
                         price = ba.AddOn != null ? ba.AddOn.Price : 0
                     }),
                     totalPrice = b.TotalPrice,
+                    amountPaid = b.AmountPaid,
+                    balanceOutstanding = b.BalanceOutstanding,
+                    paymentStatus = b.PaymentStatus,
+                    balanceDueDate = b.BalanceDueDate,
+                    cancellationCharge = b.CancellationCharge,
+                    refundAmount = b.RefundAmount,
                     createdAt = b.CreatedAt,
                     status = b.Status,
                     staffAssigned = assignedBookingIds.Contains(b.BookingId)
