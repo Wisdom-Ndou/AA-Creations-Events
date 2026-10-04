@@ -1,0 +1,71 @@
+@using System
+@using System.Collections.Generic
+@using WebApplication1.Models
+@{
+    ViewBag.Title = "Customer Dashboard";
+    var customer = ViewBag.Customer as Customer;
+    var recentBookings = ViewBag.RecentBookings as List<Booking> ?? new List<Booking>();
+    int totalBookings = ViewBag.TotalBookings ?? 0;
+    int upcomingBookings = ViewBag.UpcomingBookings ?? 0;
+    decimal balanceOutstanding = ViewBag.BalanceOutstanding ?? 0m;
+    int openComplaints = ViewBag.OpenComplaints ?? 0;
+}
+<link rel="stylesheet" href="~/Content/sstyle.css" />
+<style>
+.customer-dashboard{max-width:1180px;margin:0 auto;padding:34px 20px}.customer-hero{padding:30px;border-radius:22px;background:linear-gradient(135deg,#fff0f5,#fff);border:1px solid #ecd7e1;margin-bottom:22px}.customer-hero .eyebrow{color:#b01752;font-weight:800;letter-spacing:.12em;text-transform:uppercase;font-size:.78rem}.customer-hero h1{margin:.35rem 0;color:#2c1622;font-size:2.35rem}.customer-hero p{margin:0;color:#725d68}.customer-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:22px}.customer-stat{background:#fff;border:1px solid #ecd7e1;border-radius:16px;padding:20px;box-shadow:0 8px 24px rgba(75,35,54,.07)}.customer-stat span{display:block;color:#725d68;font-size:.82rem;font-weight:700}.customer-stat strong{display:block;color:#b01752;font-size:2rem;margin-top:5px}.customer-grid{display:grid;grid-template-columns:1.4fr .8fr;gap:20px}.customer-panel{background:#fff;border:1px solid #ecd7e1;border-radius:18px;padding:22px;box-shadow:0 8px 24px rgba(75,35,54,.07)}.customer-panel h2{margin-top:0;color:#2c1622}.customer-booking{display:flex;justify-content:space-between;gap:18px;padding:14px 0;border-bottom:1px solid #f1e5eb}.customer-booking:last-child{border-bottom:0}.customer-booking strong{color:#2c1622}.customer-muted{color:#725d68;font-size:.9rem}.customer-actions{display:grid;gap:10px}.customer-action{display:flex;justify-content:space-between;align-items:center;padding:13px 15px;border:1px solid #e4ccd7;border-radius:12px;text-decoration:none;color:#2c1622;background:#fff9fb;font-weight:700}.customer-action:hover{border-color:#b01752;color:#b01752}.payment-pill{display:inline-block;margin-top:4px;padding:4px 9px;border-radius:999px;background:#fff0f5;color:#9d174d;font-size:.76rem;font-weight:800}@media(max-width:880px){.customer-stats{grid-template-columns:repeat(2,1fr)}.customer-grid{grid-template-columns:1fr}}@media(max-width:520px){.customer-stats{grid-template-columns:1fr}.customer-dashboard{padding:24px 14px}.customer-booking{flex-direction:column}}
+</style>
+
+<main class="customer-dashboard">
+    <section class="customer-hero">
+        <div class="eyebrow">My AA Creations</div>
+        <h1>Welcome back, @(customer == null ? "Customer" : customer.Cust_FName)</h1>
+        <p>Manage your bookings, payments, complaints and account from one place.</p>
+    </section>
+
+    <section class="customer-stats">
+        <article class="customer-stat"><span>Total Bookings</span><strong>@totalBookings</strong></article>
+        <article class="customer-stat"><span>Upcoming Events</span><strong>@upcomingBookings</strong></article>
+        <article class="customer-stat"><span>Balance Outstanding</span><strong>R @balanceOutstanding.ToString("N2")</strong></article>
+        <article class="customer-stat"><span>Open Complaints</span><strong>@openComplaints</strong></article>
+    </section>
+
+    <section class="customer-grid">
+        <article class="customer-panel">
+            <h2>Recent Bookings</h2>
+            @if (recentBookings.Count == 0)
+            {
+                <p class="customer-muted">You do not have any bookings yet.</p>
+                <a class="btn btn-primary" href="@Url.Action("Booking","Cust")">Make Your First Booking</a>
+            }
+            else
+            {
+                foreach (var booking in recentBookings)
+                {
+                    var paymentStatus = String.IsNullOrWhiteSpace(booking.PaymentStatus) ? "Unpaid" : booking.PaymentStatus;
+                    <div class="customer-booking">
+                        <div>
+                            <strong>@booking.Occasion</strong>
+                            <div class="customer-muted">@booking.EventDate.ToString("dd MMM yyyy") · @booking.City</div>
+                            <span class="payment-pill">@paymentStatus</span>
+                        </div>
+                        <div style="text-align:right">
+                            <strong>R @booking.TotalPrice.ToString("N2")</strong>
+                            <div class="customer-muted">@booking.Status</div>
+                        </div>
+                    </div>
+                }
+                <p style="margin-top:18px"><a class="btn btn-outline" href="@Url.Action("ViewBooking","Cust")">View All Bookings</a></p>
+            }
+        </article>
+
+        <aside class="customer-panel">
+            <h2>Quick Actions</h2>
+            <div class="customer-actions">
+                <a class="customer-action" href="@Url.Action("Booking","Cust")"><span>Make a Booking</span><span>→</span></a>
+                <a class="customer-action" href="@Url.Action("ViewBooking","Cust")"><span>View Bookings & Payments</span><span>→</span></a>
+                <a class="customer-action" href="@Url.Action("CustomerComplaints","Cust")"><span>Booking Complaints</span><span>→</span></a>
+                <a class="customer-action" href="@Url.Action("ManageAccount","Cust")"><span>Manage Account</span><span>→</span></a>
+            </div>
+        </aside>
+    </section>
+</main>
