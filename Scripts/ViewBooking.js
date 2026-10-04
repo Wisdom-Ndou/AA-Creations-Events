@@ -104,18 +104,24 @@ function getStatusClass(status) {
     }
 }
 
-function renderBookingProgress(status, staffAssigned) {
+function renderBookingProgress(status, staffAssigned, paymentStatus, amountPaid) {
     const normalized = (status || "Pending").toLowerCase();
+    const normalizedPayment = (paymentStatus || "").toLowerCase();
 
-    if (normalized === "declined" || normalized === "cancelled") {
+    if (normalized === "declined") {
+        return '<div class="booking-progress cancelled-progress"><div class="cancel-icon">✕</div><div><strong>Booking Declined</strong><p>AA Creations was unable to accept this booking.</p></div></div>';
+    }
+
+    if (normalized === "cancelled") {
         return '<div class="booking-progress cancelled-progress"><div class="cancel-icon">✕</div><div><strong>Booking Cancelled</strong><p>This booking is no longer active.</p></div></div>';
     }
 
-    const labels = ["Booking Submitted", "Payment Received", "Booking Confirmed", "Staff Assigned", "Setup Completed", "Booking Completed"];
-    let currentIndex = 0;
-    // Payment state is rendered separately in the booking details, but the workflow
-    // shows that payment has started before admin confirmation.
-    currentIndex = 1;
+    const paymentLabel = normalizedPayment === "fully paid"
+        ? "Fully Paid"
+        : (Number(amountPaid || 0) > 0 ? "Deposit / Payment Received" : "Payment Pending");
+
+    const labels = ["Booking Submitted", paymentLabel, "Booking Confirmed", "Staff Assigned", "Setup Completed", "Booking Completed"];
+    let currentIndex = Number(amountPaid || 0) > 0 ? 1 : 0;
     if (["approved", "setup completed", "completed"].includes(normalized)) currentIndex = 2;
     if (staffAssigned || ["setup completed", "completed"].includes(normalized)) currentIndex = 3;
     if (["setup completed", "completed"].includes(normalized)) currentIndex = 4;
@@ -464,7 +470,7 @@ function renderDetails(booking, isPast) {
                 Booking Progress
             </h4>
 
-            ${renderBookingProgress(booking.status, booking.staffAssigned)}
+            ${renderBookingProgress(booking.status, booking.staffAssigned, booking.paymentStatus, booking.amountPaid)}
 
             <div class="details-grid">
 
