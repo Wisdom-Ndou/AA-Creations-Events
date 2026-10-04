@@ -420,8 +420,8 @@ function renderBookingStep() {
             </div>
           `).join("")}
           <div class="review-total">
-            <span>Total</span>
-            <span class="total-value">R${formatMoney(total)}</span>
+            <span>${isCustomOccasion() ? "Estimated Total" : "Total"}</span>
+            <span class="total-value">${isCustomOccasion() ? "Quote pending" : "R" + formatMoney(total)}</span>
           </div>
           <p class="transport-note">* Transport fee quoted separately upon confirmation</p>
         </div>
@@ -840,7 +840,7 @@ function renderConfirmation(result = {}) {
           <div class="summary-mini-row"><span class="summary-mini-label">Payment status</span><strong>${escapeHtml(result.paymentStatus || "")}</strong></div>
         </div>
 
-        <p class="confirmation-note">We'll be in touch via WhatsApp to confirm. Transport fee quoted separately.</p>
+        <p class="confirmation-note">${isCustomOccasion() ? "We'll be in touch via WhatsApp with your custom quote and next steps." : "We'll be in touch via WhatsApp to confirm. Transport fee quoted separately."}</p>
 
         <div class="confirmation-actions">
           <a href="/Cust/ViewBooking" class="btn btn-outline">View Bookings</a>
