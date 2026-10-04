@@ -311,6 +311,26 @@ function renderBookingStep() {
         root.innerHTML = `
       <h2>Event Details</h2>
 
+      ${isCustomOccasion() ? `
+        <div class="selected-package-summary custom">
+          <div>
+            <span class="summary-kicker">${escapeHtml(state.form.occasion)}</span>
+            <strong>Custom setup request</strong>
+            <small>No preset package — we'll use your Special Instructions to prepare a quote.</small>
+          </div>
+          <span class="summary-price">Quote required</span>
+        </div>
+      ` : `
+        <div class="selected-package-summary">
+          <div>
+            <span class="summary-kicker">${escapeHtml(state.form.occasion)}</span>
+            <strong>${escapeHtml(getSelectedPackage()?.name || "")}</strong>
+            <small>Your Step 1 package selection</small>
+          </div>
+          <span class="summary-price">R${formatMoney(getSelectedPackage()?.price || 0)}</span>
+        </div>
+      `}
+
       <div class="form-grid two">
         <div class="form-group">
           <label class="form-label" for="date">Event Date</label>
