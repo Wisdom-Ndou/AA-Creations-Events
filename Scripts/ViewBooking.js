@@ -111,12 +111,15 @@ function renderBookingProgress(status, staffAssigned) {
         return '<div class="booking-progress cancelled-progress"><div class="cancel-icon">✕</div><div><strong>Booking Cancelled</strong><p>This booking is no longer active.</p></div></div>';
     }
 
-    const labels = ["Booking Submitted", "Booking Confirmed", "Staff Assigned", "Setup Completed", "Booking Completed"];
+    const labels = ["Booking Submitted", "Payment Received", "Booking Confirmed", "Staff Assigned", "Setup Completed", "Booking Completed"];
     let currentIndex = 0;
-    if (["approved", "setup completed", "completed"].includes(normalized)) currentIndex = 1;
-    if (staffAssigned || ["setup completed", "completed"].includes(normalized)) currentIndex = 2;
-    if (["setup completed", "completed"].includes(normalized)) currentIndex = 3;
-    if (normalized === "completed") currentIndex = 4;
+    // Payment state is rendered separately in the booking details, but the workflow
+    // shows that payment has started before admin confirmation.
+    currentIndex = 1;
+    if (["approved", "setup completed", "completed"].includes(normalized)) currentIndex = 2;
+    if (staffAssigned || ["setup completed", "completed"].includes(normalized)) currentIndex = 3;
+    if (["setup completed", "completed"].includes(normalized)) currentIndex = 4;
+    if (normalized === "completed") currentIndex = 5;
 
     return '<div class="booking-progress">' + labels.map(function (label, index) {
         const completed = index < currentIndex;
@@ -379,6 +382,57 @@ function renderBookings() {
         });
     });
 
+    document.querySelectorAll("[data-pay-balance]").forEach(button => {
+        button.addEventListener("click", async event => {
+            event.stopPropagation();
+            const booking = bookings.find(item => item.id === Number(button.dataset.payBalance));
+            if (!booking) return;
+
+            const outstanding = Number(booking.balanceOutstanding || 0);
+            const raw = window.prompt(
+                "Outstanding balance: R" + formatMoney(outstanding) +
+                "\nEnter the amount you want to pay now:",
+                outstanding.toFixed(2)
+            );
+
+            if (raw === null) return;
+            const amount = Number(raw);
+            if (!Number.isFinite(amount) || amount <= 0 || amount > outstanding) {
+                alert("Enter an amount greater than zero and no more than the outstanding balance.");
+                return;
+            }
+
+            const app = document.getElementById("bookingsApp");
+            const token = document.querySelector('input[name="__RequestVerificationToken"]');
+            const body = new URLSearchParams();
+            body.append("bookingId", booking.id);
+            body.append("amount", amount.toFixed(2));
+            if (token) body.append("__RequestVerificationToken", token.value);
+
+            try {
+                const response = await fetch(app.dataset.payUrl, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8" },
+                    body: body.toString()
+                });
+                const result = await response.json();
+                if (!result.success) {
+                    alert(result.message || "The payment could not be recorded.");
+                    return;
+                }
+
+                booking.amountPaid = Number(result.amountPaid || 0);
+                booking.balanceOutstanding = Number(result.balanceOutstanding || 0);
+                booking.paymentStatus = result.paymentStatus;
+                booking.balanceDueDate = result.balanceDueDate || null;
+                alert(result.message || "Payment recorded.");
+                renderBookings();
+            } catch (error) {
+                alert("We could not record the payment right now. Please try again.");
+            }
+        });
+    });
+
     document
         .querySelectorAll("[data-cancel-booking]")
         .forEach(button => {
@@ -497,6 +551,17 @@ function renderDetails(booking, isPast) {
             : ""
         }
 
+                <div class="detail-box full">
+                    <h4>Payment</h4>
+                    <div class="review-grid">
+                        <span class="label">Payment status</span><strong>${escapeHtml(booking.paymentStatus || "Unpaid")}</strong>
+                        <span class="label">Amount paid</span><span>R${formatMoney(booking.amountPaid)}</span>
+                        <span class="label">Balance outstanding</span><span>R${formatMoney(booking.balanceOutstanding)}</span>
+                        ${booking.balanceDueDate ? '<span class="label">Balance due</span><span>' + new Date(booking.balanceDueDate).toLocaleDateString("en-ZA") + '</span>' : ''}
+                        ${Number(booking.refundAmount || 0) > 0 ? '<span class="label">Refund due</span><span>R' + formatMoney(booking.refundAmount) + '</span>' : ''}
+                    </div>
+                </div>
+
                 <div class="detail-total-row">
 
                     <div>
@@ -549,6 +614,10 @@ function renderDetails(booking, isPast) {
 
                             ${(booking.status || "").toLowerCase() === "setup completed" ? '<button type="button" class="btn btn-primary" data-complete-booking="' + booking.id + '">Confirm Arrival & Complete</button>' : ""}
 
+                            ${Number(booking.balanceOutstanding || 0) > 0 && !["declined","cancelled","completed"].includes((booking.status || "").toLowerCase())
+                                ? '<button type="button" class="btn btn-primary" data-pay-balance="' + booking.id + '">Pay Remaining Balance</button>'
+                                : ""}
+
                             ${["pending", "approved"].includes((booking.status || "Pending").toLowerCase()) ? `
                             <button
                                 type="button"
@@ -590,7 +659,15 @@ async function cancelBooking(id) {
     }
 
     const booking = bookings.find(item => item.id === id);
-    if (booking) booking.status = result.status;
+    if (booking) {
+        booking.status = result.status;
+        booking.cancellationCharge = Number(result.cancellationCharge || 0);
+        booking.refundAmount = Number(result.refundAmount || 0);
+        booking.paymentStatus = result.paymentStatus || booking.paymentStatus;
+    }
+    if (result.refundAmount > 0) {
+        alert(result.message + " Refund due: R" + formatMoney(result.refundAmount));
+    }
     renderBookings();
 }
 
