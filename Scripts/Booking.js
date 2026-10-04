@@ -161,6 +161,22 @@ function isStep1Valid() {
 }
 
 function isStep2Valid() {
+    const hasLatitude = state.form.latitude !== null;
+    const hasLongitude = state.form.longitude !== null;
+    const hasAnyMapSelection = hasLatitude || hasLongitude;
+
+    // Manual address entry is allowed without map coordinates.
+    // If the customer chooses to use the map, that map selection must be
+    // complete, inside the selected service area, and explicitly confirmed.
+    const mapSelectionIsValid =
+        !hasAnyMapSelection ||
+        (
+            hasLatitude &&
+            hasLongitude &&
+            state.form.locationValidated &&
+            state.form.locationConfirmed
+        );
+
     return Boolean(
         state.form.date &&
         state.form.time &&
@@ -168,10 +184,7 @@ function isStep2Valid() {
         state.form.city.trim() &&
         state.form.address &&
         state.form.address.trim() &&
-        state.form.locationValidated &&
-        state.form.locationConfirmed &&
-        state.form.latitude !== null &&
-        state.form.longitude !== null
+        mapSelectionIsValid
     );
 }
 
@@ -418,7 +431,9 @@ function handleAddressTyping() {
     const addressInput = document.getElementById("address");
     if (!addressInput) return;
 
-    // Any manual edit invalidates the previous selected coordinates.
+    // If the customer edits the address manually after using the map,
+    // clear the previous pin so the stored coordinates never describe
+    // a different address.
     state.form.address = addressInput.value;
     state.form.latitude = null;
     state.form.longitude = null;
@@ -431,18 +446,12 @@ function handleAddressTyping() {
     if (latitude) latitude.value = "";
     if (longitude) longitude.value = "";
 
-    updateStep2Button();
-
-    clearTimeout(addressSearchTimer);
-
-    if (addressInput.value.trim().length < 3) {
-        hideAddressSuggestions();
-        return;
+    if (bookingMarker) {
+        bookingMarker = null;
     }
 
-    addressSearchTimer = setTimeout(() => {
-        searchEventAddresses(false);
-    }, 650);
+    showLocationMessage("", "");
+    updateStep2Button();
 }
 
 function getCityMapSettings(city) {
@@ -994,33 +1003,31 @@ function renderBookingStep() {
             <option value="Pietermaritzburg" ${state.form.city === "Pietermaritzburg" ? "selected" : ""}>Pietermaritzburg</option>
             <option value="Mandeni" ${state.form.city === "Mandeni" ? "selected" : ""}>Mandeni</option>
           </select>
-          <small class="muted">Choose the city first. Address search and map pins are then restricted to that service area.</small>
+          <small class="muted">Choose the city first. You can enter the address manually, with the map available as an optional exact-location tool.</small>
         </div>
 
         <div class="form-group full location-section">
           <label class="form-label" for="address">Event Address</label>
-          <div class="address-autocomplete">
-            <input class="form-control" id="address" name="address"
-                   value="${escapeHtml(state.form.address)}"
-                   placeholder="Start typing an address…"
-                   autocomplete="off"
-                   ${state.form.city ? "" : "disabled"}
-                   required>
-            <div id="addressSuggestions" class="address-suggestions" role="listbox"></div>
-          </div>
-          <small class="muted">${state.form.city ? "Search for an address in " + escapeHtml(state.form.city) + ", or pin the location on the map." : "Select a city/town before entering an address."}</small>
+          <input class="form-control" id="address" name="address"
+                 value="${escapeHtml(state.form.address)}"
+                 placeholder="Enter the full event address"
+                 autocomplete="street-address"
+                 ${state.form.city ? "" : "disabled"}
+                 required>
+          <small class="muted">${state.form.city
+              ? "Enter the event address manually. If you prefer, you can use the map below to pin the exact location."
+              : "Select a city/town before entering an address."}</small>
 
           <div class="location-actions">
-            <button type="button" class="btn btn-outline" id="findLocationButton" ${state.form.city ? "" : "disabled"}>🔎 Find Address</button>
-            <button type="button" class="btn btn-primary" id="pinLocationButton" ${state.form.city ? "" : "disabled"}>📍 Pin Location on Map</button>
+            <button type="button" class="btn btn-primary" id="pinLocationButton" ${state.form.city ? "" : "disabled"}>📍 Pin Location on Map <span style="font-weight:400;opacity:.85;">(optional)</span></button>
           </div>
 
           <div id="locationMessage" class="location-message"></div>
 
           <div id="mapContainer" class="booking-map-container" style="display:none;">
             <div id="bookingMap"></div>
-            <p class="map-instruction">Click the map or drag the marker. The selected point must be inside the chosen city service area.</p>
-            <button type="button" class="btn btn-primary" id="confirmLocationButton">Confirm Location</button>
+            <p class="map-instruction">Optional: click the map or drag the marker to set the exact event location. The pin must remain inside the selected city service area.</p>
+            <button type="button" class="btn btn-primary" id="confirmLocationButton">Confirm Map Location</button>
           </div>
 
           <input type="hidden" id="latitude" name="latitude" value="${state.form.latitude ?? ""}">
@@ -1316,7 +1323,6 @@ function attachStepHandlers() {
         });
     });
 
-    document.getElementById("findLocationButton")?.addEventListener("click", findEventAddress);
     document.getElementById("pinLocationButton")?.addEventListener("click", openLocationMap);
     document.getElementById("confirmLocationButton")?.addEventListener("click", confirmEventLocation);
 
@@ -1327,23 +1333,15 @@ function attachStepHandlers() {
         addressInput.addEventListener("keydown", event => {
             if (event.key !== "Enter") return;
 
-            // Never allow Enter in the address field to submit/reload the form.
+            // This is a JavaScript multi-step form. Enter in the address field
+            // must never submit/reload the page and reset the workflow.
             event.preventDefault();
             event.stopPropagation();
 
-            clearTimeout(addressSearchTimer);
-            findEventAddress();
-        });
-
-        addressInput.addEventListener("focus", () => {
-            if (addressInput.value.trim().length >= 3 && !state.form.locationConfirmed) {
-                searchEventAddresses(false);
-            }
+            state.form.address = addressInput.value;
+            updateStep2Button();
         });
     }
-
-    document.removeEventListener("click", handleAddressOutsideClick);
-    document.addEventListener("click", handleAddressOutsideClick);
 }
 
 function handleAddressOutsideClick(event) {
@@ -1608,13 +1606,9 @@ document.addEventListener("DOMContentLoaded", () => {
     const bookingForm = document.getElementById("bookingForm");
     if (bookingForm) {
         bookingForm.addEventListener("submit", event => {
+            // All navigation/submission is controlled by the explicit booking
+            // buttons. Never allow the browser to reload the form implicitly.
             event.preventDefault();
-
-            const activeElement = document.activeElement;
-            if (state.step === 2 && activeElement?.id === "address") {
-                clearTimeout(addressSearchTimer);
-                findEventAddress();
-            }
         });
     }
 
