@@ -3,6 +3,7 @@ using System.Configuration;
 using System.Diagnostics;
 using System.Net;
 using System.Net.Mail;
+using System.Linq;
 
 namespace WebApplication1.Services
 {
@@ -32,10 +33,27 @@ namespace WebApplication1.Services
 
         private static string GetSetting(string environmentVariable, string appSettingKey)
         {
-            string environmentValue = Environment.GetEnvironmentVariable(environmentVariable);
-            if (!string.IsNullOrWhiteSpace(environmentValue))
+            string value = Environment.GetEnvironmentVariable(
+                environmentVariable,
+                EnvironmentVariableTarget.Process);
+
+            if (string.IsNullOrWhiteSpace(value))
             {
-                return environmentValue.Trim();
+                value = Environment.GetEnvironmentVariable(
+                    environmentVariable,
+                    EnvironmentVariableTarget.User);
+            }
+
+            if (string.IsNullOrWhiteSpace(value))
+            {
+                value = Environment.GetEnvironmentVariable(
+                    environmentVariable,
+                    EnvironmentVariableTarget.Machine);
+            }
+
+            if (!string.IsNullOrWhiteSpace(value))
+            {
+                return value.Trim();
             }
 
             string configValue = ConfigurationManager.AppSettings[appSettingKey];
@@ -43,6 +61,43 @@ namespace WebApplication1.Services
                 ? null
                 : configValue.Trim();
         }
+
+        public bool IsConfigured
+        {
+            get
+            {
+                return !string.IsNullOrWhiteSpace(senderEmail) &&
+                       !string.IsNullOrWhiteSpace(appPassword) &&
+                       !string.IsNullOrWhiteSpace(smtpHost);
+            }
+        }
+
+        public string SenderDisplay
+        {
+            get
+            {
+                if (string.IsNullOrWhiteSpace(senderEmail))
+                {
+                    return "(not configured)";
+                }
+
+                int at = senderEmail.IndexOf('@');
+                if (at <= 1)
+                {
+                    return "***";
+                }
+
+                return senderEmail.Substring(0, 1) +
+                       new string('*', Math.Max(3, at - 1)) +
+                       senderEmail.Substring(at);
+            }
+        }
+
+        public string SmtpHost { get { return smtpHost; } }
+
+        public int SmtpPort { get { return smtpPort; } }
+
+        public bool HasPassword { get { return !string.IsNullOrWhiteSpace(appPassword); } }
 
         private bool SendEmail(string recipientEmail, string subject, string body)
         {
@@ -86,7 +141,18 @@ namespace WebApplication1.Services
                     {
                         smtp.EnableSsl = true;
                         smtp.UseDefaultCredentials = false;
-                        smtp.Credentials = new NetworkCredential(senderEmail, appPassword);
+                        string credentialPassword = appPassword;
+
+                        // Google displays app passwords in groups. Ignore whitespace
+                        // when Gmail is the configured SMTP provider.
+                        if (!string.IsNullOrWhiteSpace(smtpHost) &&
+                            smtpHost.IndexOf("gmail", StringComparison.OrdinalIgnoreCase) >= 0)
+                        {
+                            credentialPassword = new string(
+                                appPassword.Where(ch => !char.IsWhiteSpace(ch)).ToArray());
+                        }
+
+                        smtp.Credentials = new NetworkCredential(senderEmail, credentialPassword);
                         smtp.DeliveryMethod = SmtpDeliveryMethod.Network;
                         smtp.Timeout = 20000;
                         smtp.Send(message);
