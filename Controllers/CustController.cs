@@ -1472,6 +1472,31 @@ namespace WebApplication1.Controllers
             return RedirectToAction("Index", "Cust");
         }
 
+        [HttpGet]
+        public JsonResult EmailDiagnostics()
+        {
+            if (Session["CustomerId"] == null)
+            {
+                return Json(new
+                {
+                    success = false,
+                    message = "Please sign in first."
+                }, JsonRequestBehavior.AllowGet);
+            }
+
+            var service = new OtpDeliveryService();
+
+            return Json(new
+            {
+                success = true,
+                configured = service.IsConfigured,
+                sender = service.SenderDisplay,
+                smtpHost = service.SmtpHost,
+                smtpPort = service.SmtpPort,
+                passwordConfigured = service.HasPassword
+            }, JsonRequestBehavior.AllowGet);
+        }
+
         public JsonResult TestCustomerDatabase()
         {
             var customerCount = db.Customers.Count();
