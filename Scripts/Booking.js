@@ -446,10 +446,6 @@ function handleAddressTyping() {
     if (latitude) latitude.value = "";
     if (longitude) longitude.value = "";
 
-    if (bookingMarker) {
-        bookingMarker = null;
-    }
-
     showLocationMessage("", "");
     updateStep2Button();
 }
