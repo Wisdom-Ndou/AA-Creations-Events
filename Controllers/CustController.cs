@@ -991,7 +991,7 @@ namespace WebApplication1.Controllers
             booking.AmountPaid = Math.Round(booking.AmountPaid + amount, 2);
             balance = Math.Max(0m, booking.TotalPrice - booking.AmountPaid);
             booking.PaymentStatus = balance == 0m ? "Fully Paid" : "Partially Paid";
-            booking.BalanceDueDate = balance == 0m ? null : booking.EventDate.Date.AddDays(-1);
+            booking.BalanceDueDate = balance == 0m ? (DateTime?)null : booking.EventDate.Date.AddDays(-1);
             db.SaveChanges();
 
             return Json(new
