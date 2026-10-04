@@ -26,6 +26,8 @@ const state = {
     step: 1,
     submitted: false,
     serverTotalPrice: null,
+    paymentAmount: null,
+    termsAccepted: false,
     form: {
         firstName: "",
         lastName: "",
@@ -40,7 +42,8 @@ const state = {
         packageId: "",
         addOns: []
     },
-    // Step 4 — UI-only. Never sent to the server, never touches the booking payload.
+    // Step 4 card fields remain UI-only. Card data is never sent or stored.
+    // Only the selected business payment amount and T&C acknowledgement are sent.
     banking: {
         cardholderName: "",
         cardNumber: "",     // digits only, formatted for display at render time
@@ -63,6 +66,25 @@ function getSelectedAddOns() {
 function getTotal() {
     const packagePrice = getSelectedPackage()?.price || 0;
     return packagePrice + getSelectedAddOns().reduce((sum, addon) => sum + addon.price, 0);
+}
+
+function getDaysUntilEvent() {
+    if (!state.form.date) return null;
+    const eventDate = new Date(state.form.date + "T00:00:00");
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    return Math.round((eventDate.getTime() - today.getTime()) / 86400000);
+}
+
+function getMinimumPayment() {
+    const total = getTotal();
+    const daysUntil = getDaysUntilEvent();
+    return daysUntil !== null && daysUntil <= 1 ? total : Math.round(total * 50) / 100;
+}
+
+function getSelectedPaymentAmount() {
+    const amount = Number(state.paymentAmount);
+    return Number.isFinite(amount) ? amount : getMinimumPayment();
 }
 
 function escapeHtml(value) {
@@ -141,7 +163,14 @@ function isExpiryValid(value) {
 
 function isStep4Valid() {
     const b = state.banking;
+    const total = getTotal();
+    const minimum = getMinimumPayment();
+    const paymentAmount = getSelectedPaymentAmount();
+
     return Boolean(
+        paymentAmount >= minimum &&
+        paymentAmount <= total &&
+        state.termsAccepted &&
         b.cardholderName.trim().length > 1 &&
         digitsOnly(b.cardNumber).length >= 13 &&
         isExpiryValid(b.expiryDate) &&
@@ -364,15 +393,50 @@ function renderBookingStep() {
 
     if (state.step === 4) {
         const total = getTotal();
+        const minimumPayment = getMinimumPayment();
+        if (state.paymentAmount === null || Number(state.paymentAmount) < minimumPayment || Number(state.paymentAmount) > total) {
+            state.paymentAmount = minimumPayment;
+        }
+        const paymentAmount = getSelectedPaymentAmount();
+        const remainingBalance = Math.max(0, total - paymentAmount);
         const cardDigits = digitsOnly(state.banking.cardNumber);
+        const requiresFullPayment = getDaysUntilEvent() !== null && getDaysUntilEvent() <= 1;
 
         root.innerHTML = `
-      <div class="payment-heading">Banking Details</div>
-      <p class="payment-subtext">This is a simulated payment step for demonstration purposes — no real charge will be made.</p>
+      <div class="payment-heading">Payment & Banking Details</div>
+      <p class="payment-subtext">This project uses a simulated payment step. Card details are never sent or stored.</p>
 
       <div class="order-summary-strip">
-        <span class="summary-label">Estimated Total</span>
+        <span class="summary-label">Booking Total</span>
         <span class="summary-total">R${formatMoney(total)}</span>
+      </div>
+
+      <div class="review-box" style="margin-bottom:18px;">
+        <div class="review-title">Payment Today</div>
+        <div class="review-grid">
+          <span class="label">Minimum required</span><strong>R${formatMoney(minimumPayment)}</strong>
+          <span class="label">Rule</span><span>${requiresFullPayment ? "100% required for same-day/day-before bookings" : "Minimum 50% deposit"}</span>
+        </div>
+        <div class="field-group" style="margin-top:14px;">
+          <label class="field-label" for="paymentAmount">Amount you want to pay now</label>
+          <input class="field-input" id="paymentAmount" name="paymentAmount" type="number"
+                 min="${minimumPayment}" max="${total}" step="0.01"
+                 value="${paymentAmount.toFixed(2)}" ${requiresFullPayment ? "readonly" : ""} required>
+          <small class="muted">Remaining balance after this payment: <strong id="remainingBalanceText">R${formatMoney(remainingBalance)}</strong></small>
+        </div>
+      </div>
+
+      <div class="review-box" style="margin-bottom:18px;">
+        <div class="review-title">Cancellation & Refund Summary</div>
+        <p class="muted" style="line-height:1.6;margin:.4rem 0;">
+          More than 7 days before the event: 10% of the amount paid is retained and 90% is refundable.
+          Seven days or less: 20% is retained and 80% is refundable.
+          If AA Creations & Events cancels, the amount paid is fully refundable, subject to the Terms & Conditions and applicable law.
+        </p>
+        <label style="display:flex;gap:10px;align-items:flex-start;margin-top:12px;">
+          <input type="checkbox" id="termsAccepted" name="termsAccepted" ${state.termsAccepted ? "checked" : ""} style="margin-top:4px;">
+          <span>I understand and accept the cancellation/refund policy and the <a href="/Cust/TermsAndConditions" target="_blank" rel="noreferrer">Terms & Conditions</a> for this booking.</span>
+        </label>
       </div>
 
       <div class="field-group">
@@ -517,6 +581,25 @@ function handleFormInput(event) {
         return;
     }
 
+    // ---- Step 4 payment controls ----
+
+    if (control.name === "paymentAmount") {
+        let amount = Number(control.value);
+        if (!Number.isFinite(amount)) amount = getMinimumPayment();
+        state.paymentAmount = amount;
+        const balance = Math.max(0, getTotal() - amount);
+        const balanceText = document.getElementById("remainingBalanceText");
+        if (balanceText) balanceText.textContent = "R" + formatMoney(balance);
+        updateStep4Button();
+        return;
+    }
+
+    if (control.name === "termsAccepted") {
+        state.termsAccepted = control.checked;
+        updateStep4Button();
+        return;
+    }
+
     // ---- Step 4 banking fields ----
 
     if (control.name === "cardNumber") {
@@ -574,7 +657,7 @@ function handleFormInput(event) {
     }
 }
 
-async function submitBooking() {
+async async function submitBooking() {
     const bookingUrl = document.getElementById("bookingApp").dataset.bookingUrl;
 
     const confirmBtn = document.getElementById("confirmBookingFinal");
@@ -600,6 +683,8 @@ async function submitBooking() {
 
         packageId: state.form.packageId,
         addOns: state.form.addOns,
+        paymentAmount: getSelectedPaymentAmount(),
+        termsAccepted: state.termsAccepted
     };
 
     try {
@@ -625,8 +710,9 @@ async function submitBooking() {
         }
 
         state.serverTotalPrice = Number(result.totalPrice);
+        state.paymentAmount = Number(result.amountPaid);
 
-        renderConfirmation();
+        renderConfirmation(result);
 
     } catch (error) {
         console.error("Booking submission failed:", error);
@@ -643,7 +729,7 @@ async function submitBooking() {
     }
 }
 
-function renderConfirmation() {
+function renderConfirmation(result = {}) {
     const pkg = getSelectedPackage();
     const total = state.serverTotalPrice;
     const root = document.getElementById("bookingApp");
@@ -662,6 +748,9 @@ function renderConfirmation() {
           <div class="summary-mini-row"><span class="summary-mini-label">Date</span><strong>${escapeHtml(state.form.date)}</strong></div>
           <div class="summary-mini-row"><span class="summary-mini-label">Time</span><strong>${escapeHtml(state.form.time)}</strong></div>
           <div class="summary-mini-row"><span class="summary-mini-label">Total</span><strong style="color:var(--primary);">R${formatMoney(total)}</strong></div>
+          <div class="summary-mini-row"><span class="summary-mini-label">Paid now</span><strong>R${formatMoney(result.amountPaid ?? state.paymentAmount)}</strong></div>
+          <div class="summary-mini-row"><span class="summary-mini-label">Balance</span><strong>R${formatMoney(result.balanceOutstanding ?? Math.max(0,total-state.paymentAmount))}</strong></div>
+          <div class="summary-mini-row"><span class="summary-mini-label">Payment status</span><strong>${escapeHtml(result.paymentStatus || "")}</strong></div>
         </div>
 
         <p class="confirmation-note">We'll be in touch via WhatsApp to confirm. Transport fee quoted separately.</p>
