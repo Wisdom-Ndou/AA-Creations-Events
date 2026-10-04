@@ -216,7 +216,20 @@ function hideAddressSuggestions() {
 function selectAddressResult(result) {
     if (!result) return;
 
-    
+    const city = getSelectedCity();
+
+    if (result.inSelectedCity !== true) {
+        clearLocationSelection(false);
+        hideAddressSuggestions();
+
+        showLocationMessage(
+            `That address is outside the ${city} service area. Please choose an address within ${city} or pin another location on the map.`,
+            "error"
+        );
+
+        updateStep2Button();
+        return;
+    }
 
     state.form.address = result.address || "";
     state.form.latitude = Number(result.latitude);
@@ -576,6 +589,79 @@ function openLocationMap() {
         }
     }, 700);
 }
+async function reverseGeocodeMapLocation(lat, lng) {
+    const city = getSelectedCity();
+    const endpoint = getBookingEndpoint("addressReverseUrl");
+
+    if (!city) {
+        clearLocationSelection(false);
+        showLocationMessage("Please select a city/town before choosing a map location.", "error");
+        return;
+    }
+
+    if (!endpoint) {
+        clearLocationSelection(false);
+        showLocationMessage("The map address service is not configured.", "error");
+        return;
+    }
+
+    const url =
+        `${endpoint}?latitude=${encodeURIComponent(lat)}&longitude=${encodeURIComponent(lng)}&city=${encodeURIComponent(city)}`;
+
+    try {
+        const response = await fetch(url, {
+            method: "GET",
+            headers: { "Accept": "application/json" }
+        });
+
+        const result = await response.json();
+
+        if (!response.ok || !result.success) {
+            throw new Error(result.message || "Unable to verify the selected map location.");
+        }
+
+        const addressInput = document.getElementById("address");
+        state.form.address = result.address || "";
+        if (addressInput) addressInput.value = state.form.address;
+
+        if (result.inSelectedCity !== true) {
+            state.form.locationValidated = false;
+            state.form.locationConfirmed = false;
+
+            showLocationMessage(
+                `That map location is outside the ${city} service area. Please move the pin to a location within ${city}.`,
+                "error"
+            );
+
+            updateStep2Button();
+            return;
+        }
+
+        state.form.latitude = Number(result.latitude);
+        state.form.longitude = Number(result.longitude);
+        state.form.locationValidated = true;
+        state.form.locationConfirmed = false;
+
+        showLocationMessage(
+            `✓ Location found inside the ${city} service area. Click Confirm Location to continue.`,
+            "success"
+        );
+
+        updateStep2Button();
+    } catch (error) {
+        console.error("Reverse geocoding failed:", error);
+        state.form.locationValidated = false;
+        state.form.locationConfirmed = false;
+
+        showLocationMessage(
+            error.message || "We could not verify that map location. Please try again.",
+            "error"
+        );
+
+        updateStep2Button();
+    }
+}
+
 function confirmEventLocation() {
     if (!state.form.locationValidated ||
         state.form.latitude === null ||
@@ -642,14 +728,22 @@ async function findEventAddress() {
         return;
     }
 
-    // Prefer the first result that is actually inside the selected city.
-    // Accept the first matching address.
-    // There is no longer a city-boundary restriction.
-    const validResult = results[0];
+    // Only accept a result that falls within the selected city's service area.
+    const validResult = results.find(result => result.inSelectedCity === true);
 
     if (validResult) {
         selectAddressResult(validResult);
+        return;
     }
+
+    clearLocationSelection(false);
+
+    showLocationMessage(
+        `We found matching addresses, but none are inside the ${city} service area. Please refine the address or pin a location within ${city}.`,
+        "error"
+    );
+
+    updateStep2Button();
 }
 
 // ---- Step 4 (banking) helpers ----
