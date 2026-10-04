@@ -3,7 +3,7 @@
     using System;
     using System.Data.Entity.Migrations;
     
-    public partial class AddPendingModelChanges1 : DbMigration
+    public partial class Fixes : DbMigration
     {
         public override void Up()
         {
