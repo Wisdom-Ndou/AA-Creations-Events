@@ -420,6 +420,7 @@
                                    id="email"
                                    name="Cust_Email"
                                    placeholder="nobuzulu@gmail.com"
+                                   aria-describedby="emailError"
                                    required />
 
 
@@ -429,12 +430,10 @@
                             )
                             {
                                 <p class="error-text server-error"
+                                   id="emailError"
                                    aria-live="polite">
 
-                                    @ViewData
-                                    .ModelState["Cust_Email"]
-                                    .Errors[0]
-                                    .ErrorMessage
+                                    @ViewData.ModelState["Cust_Email"].Errors[0].ErrorMessage
 
                                 </p>
                             }
