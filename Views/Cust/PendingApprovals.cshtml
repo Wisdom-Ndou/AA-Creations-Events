@@ -21,6 +21,13 @@
         </a>
     </div>
 
+    @if (TempData["AdminWarning"] != null)
+    {
+        <div class="admin-warning-banner" role="alert">
+            @TempData["AdminWarning"]
+        </div>
+    }
+
     <div class="dashboard-panel">
 
         @if (Model != null && Model.Any())
@@ -81,6 +88,7 @@
 
                                     <form action="@Url.Action("UpdateBookingStatus", "Cust")"
                                           method="post"
+                                          class="pending-booking-action-form"
                                           style="display:inline;">
 
                                         @Html.AntiForgeryToken()
@@ -148,3 +156,113 @@
     </div>
 
 </div>
+
+<div id="pendingBookingModalBackdrop" class="aa-modal-backdrop" role="presentation">
+    <div id="pendingBookingModal" class="aa-modal" role="dialog" aria-modal="true" aria-labelledby="pendingBookingModalTitle">
+        <div class="aa-modal-icon" id="pendingBookingModalIcon">!</div>
+        <h3 id="pendingBookingModalTitle">Booking update</h3>
+        <p id="pendingBookingModalMessage"></p>
+        <div class="aa-modal-actions">
+            <a href="@Url.Action("StaffManagement","Cust")" class="aa-modal-manage-staff" id="pendingBookingModalManageStaff">Manage Staff</a>
+            <button type="button" class="aa-modal-close" id="pendingBookingModalClose">Close</button>
+        </div>
+    </div>
+</div>
+
+<script>
+(function () {
+    const backdrop = document.getElementById('pendingBookingModalBackdrop');
+    const modal = document.getElementById('pendingBookingModal');
+    const title = document.getElementById('pendingBookingModalTitle');
+    const message = document.getElementById('pendingBookingModalMessage');
+    const icon = document.getElementById('pendingBookingModalIcon');
+    const closeButton = document.getElementById('pendingBookingModalClose');
+    const manageStaff = document.getElementById('pendingBookingModalManageStaff');
+
+    function showModal(type, heading, copy, showManageStaff) {
+        modal.className = 'aa-modal ' + type;
+        title.textContent = heading;
+        message.textContent = copy;
+        icon.textContent = type === 'success' ? '✓' : (type === 'warning' ? '!' : '×');
+        manageStaff.classList.toggle('is-visible', Boolean(showManageStaff));
+        backdrop.classList.add('is-open');
+    }
+
+    function closeModal() {
+        backdrop.classList.remove('is-open');
+    }
+
+    closeButton.addEventListener('click', closeModal);
+    backdrop.addEventListener('click', function (event) {
+        if (event.target === backdrop) closeModal();
+    });
+
+    document.querySelectorAll('.pending-booking-action-form').forEach(function (form) {
+        form.addEventListener('submit', async function (event) {
+            event.preventDefault();
+
+            const button = form.querySelector('button[type="submit"]');
+            if (button) button.disabled = true;
+
+            try {
+                const body = new URLSearchParams(new FormData(form));
+
+                const response = await fetch(form.action, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: body.toString()
+                });
+
+                const data = await response.json();
+
+                if (!data.success) {
+                    const noStaff =
+                        data.errorCode === 'NO_AVAILABLE_STAFF' ||
+                        data.errorCode === 'NO_REGISTERED_STAFF';
+
+                    const heading =
+                        data.errorCode === 'NO_AVAILABLE_STAFF'
+                            ? 'No staff currently available'
+                            : (data.errorCode === 'NO_REGISTERED_STAFF'
+                                ? 'No staff registered for this city'
+                                : 'Booking update failed');
+
+                    showModal(
+                        noStaff ? 'warning' : 'error',
+                        heading,
+                        data.message || 'The booking could not be updated.',
+                        noStaff
+                    );
+
+                    if (button) button.disabled = false;
+                    return;
+                }
+
+                showModal(
+                    'success',
+                    'Booking updated',
+                    data.message || 'The booking status was updated successfully.',
+                    false
+                );
+
+                window.setTimeout(function () {
+                    window.location.reload();
+                }, 900);
+            }
+            catch (error) {
+                if (button) button.disabled = false;
+
+                showModal(
+                    'error',
+                    'Something went wrong',
+                    'We could not update this booking. Please check your connection and try again.',
+                    false
+                );
+            }
+        });
+    });
+})();
+</script>
