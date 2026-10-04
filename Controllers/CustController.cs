@@ -3035,35 +3035,73 @@ namespace WebApplication1.Controllers
 
                         if (!taskAlreadyExists)
                         {
-                            // Choose the least-loaded staff member assigned
-                            // to the booking's city.
+                            // Availability is defined the same way as the Admin
+                            // dashboard: a staff member is available only when
+                            // they do not currently have a Pending task.
                             string bookingCity = NormalizeCity(booking.City);
 
-                            var assignedStaff = db.Staffs
+                            var cityStaff = db.Staffs
                                 .Where(s => s.staff_City != null)
                                 .ToList()
                                 .Where(s => NormalizeCity(s.staff_City) == bookingCity)
-                                .Select(s => new
+                                .OrderBy(s => s.staff_ID)
+                                .ToList();
+
+                            if (!cityStaff.Any())
+                            {
+                                transaction.Rollback();
+
+                                var noRegisteredStaffMessage =
+                                    "This booking cannot be approved yet because no staff member is registered for " +
+                                    booking.City +
+                                    ". Register a staff member for this city, then try approving the booking again.";
+
+                                if (!Request.IsAjaxRequest())
                                 {
-                                    Staff = s,
-                                    ActiveTaskCount = db.StaffTasks.Count(t =>
-                                        t.StaffId == s.staff_ID &&
-                                        t.Status == "Pending")
-                                })
-                                .OrderBy(x => x.ActiveTaskCount)
-                                .ThenBy(x => x.Staff.staff_ID)
-                                .Select(x => x.Staff)
-                                .FirstOrDefault();
+                                    TempData["AdminWarning"] = noRegisteredStaffMessage;
+                                    return RedirectToAction("PendingApprovals", "Cust");
+                                }
+
+                                return Json(new
+                                {
+                                    success = false,
+                                    errorCode = "NO_REGISTERED_STAFF",
+                                    city = booking.City,
+                                    message = noRegisteredStaffMessage
+                                });
+                            }
+
+                            var busyStaffIds = new HashSet<int>(
+                                db.StaffTasks
+                                    .Where(t => t.Status == "Pending")
+                                    .Select(t => t.StaffId)
+                                    .Distinct()
+                                    .ToList());
+
+                            var assignedStaff = cityStaff
+                                .FirstOrDefault(s => !busyStaffIds.Contains(s.staff_ID));
 
                             if (assignedStaff == null)
                             {
                                 transaction.Rollback();
 
+                                var noAvailableStaffMessage =
+                                    "This booking cannot be approved yet because all staff members assigned to " +
+                                    booking.City +
+                                    " currently have active tasks. Wait until a staff member becomes available or register another staff member for this city.";
+
+                                if (!Request.IsAjaxRequest())
+                                {
+                                    TempData["AdminWarning"] = noAvailableStaffMessage;
+                                    return RedirectToAction("PendingApprovals", "Cust");
+                                }
+
                                 return Json(new
                                 {
                                     success = false,
-                                    message = "The booking cannot be approved because no staff member is registered for " +
-                                              booking.City + ". Register a staff member for this city first."
+                                    errorCode = "NO_AVAILABLE_STAFF",
+                                    city = booking.City,
+                                    message = noAvailableStaffMessage
                                 });
                             }
 
