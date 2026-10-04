@@ -826,14 +826,25 @@ namespace WebApplication1.Controllers
                         : (amountPaid == minimumPayment ? "Deposit Paid" : "Partially Paid"));
 
                 var customerId = (int)Session["CustomerId"];
+                var customer = db.Customers.FirstOrDefault(x => x.Cust_ID == customerId);
+
+                if (customer == null)
+                {
+                    return Json(new
+                    {
+                        success = false,
+                        requiresLogin = true,
+                        message = "Your customer account could not be found. Please sign in again."
+                    });
+                }
 
                 var booking = new Booking
                 {
                     CustomerId = customerId,
-                    FirstName = request.FirstName,
-                    LastName = request.LastName,
-                    Email = request.Email,
-                    Phone = request.Phone,
+                    FirstName = customer.Cust_FName,
+                    LastName = customer.Cust_LName,
+                    Email = customer.Cust_Email,
+                    Phone = customer.Cust_Phone,
                     Occasion = request.Occasion,
                     EventDate = request.EventDate,
                     EventTime = request.EventTime,
