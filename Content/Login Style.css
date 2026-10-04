@@ -499,3 +499,15 @@ input:focus {
                 text-decoration: underline;
             }
 }
+
+
+.login-success {
+    margin: 14px 0 18px;
+    padding: 12px 14px;
+    border: 1px solid #b9dfca;
+    border-radius: 12px;
+    background: #eefaf3;
+    color: #166534;
+    font-size: 14px;
+    line-height: 1.5;
+}
