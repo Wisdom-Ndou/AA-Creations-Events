@@ -3069,7 +3069,7 @@ namespace WebApplication1.Controllers
                 return RedirectToAction("CustomerComplaints", "Cust", new { bookingId = bookingId });
             }
 
-            db.CustomerComplaints.Add(new CustomerComplaint
+            var complaint = new CustomerComplaint
             {
                 CustomerId = customerId,
                 BookingId = bookingId,
@@ -3078,11 +3078,26 @@ namespace WebApplication1.Controllers
                 Description = description.Trim(),
                 Status = "Submitted",
                 CreatedAt = DateTime.Now
-            });
+            };
 
+            db.CustomerComplaints.Add(complaint);
             db.SaveChanges();
 
-            TempData["CustomerComplaintSuccess"] = "Your complaint has been submitted and linked to this booking.";
+            var complaintEmailService = new OtpDeliveryService();
+            bool complaintEmailSent = complaintEmailService.SendCustomerComplaintConfirmationEmail(
+                booking.Email,
+                booking.FirstName,
+                complaint.ComplaintId,
+                booking.BookingId,
+                complaint.Category,
+                complaint.Subject,
+                complaint.CreatedAt
+            );
+
+            TempData["CustomerComplaintSuccess"] = complaintEmailSent
+                ? "Your complaint has been submitted and a confirmation email has been sent to you."
+                : "Your complaint has been submitted successfully, but we could not send the confirmation email right now.";
+
             return RedirectToAction("CustomerComplaints", "Cust", new { bookingId = bookingId });
         }
 
