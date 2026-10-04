@@ -12,11 +12,11 @@ namespace WebApplication1.Models
         public int Cust_ID { get; set; }
 
         [Required(ErrorMessage = "First Name is required")]
-       // [RegularExpression(@"^[a-zA-Z])+$", ErrorMessage = "First Name must only conatain letters.")]
+        [RegularExpression(@"^[A-Za-z]+$", ErrorMessage = "First Name must only contain letters.")]
         public string Cust_FName { get; set; }
 
         [Required(ErrorMessage = "Last Name is required")]
-       // [RegularExpression(@"^[a-zA-Z])+$", ErrorMessage = "Last Name must only conatain letters.")]
+        [RegularExpression(@"^[A-Za-z]+$", ErrorMessage = "Last Name must only contain letters.")]
         public string Cust_LName { get; set; }
 
         public string Cust_UName { get; set; } //UName is Username
