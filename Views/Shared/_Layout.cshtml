@@ -13,7 +13,7 @@
     bool isStaff = Session["StaffAuthenticated"] != null && (bool)Session["StaffAuthenticated"];
     bool isCustomer = Session["CustomerAuthenticated"] != null && (bool)Session["CustomerAuthenticated"];
 }
-<nav class="desktop-nav @(isAdmin ? "admin-nav" : "")" aria-label="Main navigation">
+<nav class="desktop-nav @(isAdmin ? "admin-nav" : isStaff ? "staff-nav" : "")" aria-label="Main navigation">
     <a href="@(isCustomer ? Url.Action("CustomerDashboard","Cust") : isAdmin ? Url.Action("AdminDashboard","Cust") : isStaff ? Url.Action("StaffDashboard","Cust") : Url.Action("Index","Cust"))" class="logo">AA Creations & Events</a>
     <ul class="nav-links">
         @if (isAdmin)
@@ -28,7 +28,6 @@
         }
         else if (isStaff)
         {
-            <li><a href="@Url.Action("StaffDashboard","Cust")">DASHBOARD</a></li>
             <li><a href="@Url.Action("StaffTasks","Cust")">TASKS & EVENTS</a></li>
             <li><a href="@Url.Action("StaffComplaints","Cust")">COMPLAINTS</a></li>
             <li><a href="@Url.Action("StaffProfile","Cust")">STAFF INFO</a></li>
