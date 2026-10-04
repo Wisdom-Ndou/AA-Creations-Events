@@ -612,6 +612,10 @@ function renderDetails(booking, isPast) {
 
                             </a>
 
+                            <a class="btn btn-outline" href="/Cust/CustomerComplaints?bookingId=${booking.id}">
+                                Submit Complaint
+                            </a>
+
                             ${(booking.status || "").toLowerCase() === "setup completed" ? '<button type="button" class="btn btn-primary" data-complete-booking="' + booking.id + '">Confirm Arrival & Complete</button>' : ""}
 
                             ${Number(booking.balanceOutstanding || 0) > 0 && !["declined","cancelled","completed"].includes((booking.status || "").toLowerCase())
