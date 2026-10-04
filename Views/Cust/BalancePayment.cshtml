@@ -1,0 +1,172 @@
+@using WebApplication1.Models
+@{
+    ViewBag.Title = "Pay Remaining Balance";
+    var booking = ViewBag.Booking as Booking;
+    decimal outstanding = ViewBag.OutstandingBalance == null ? 0m : (decimal)ViewBag.OutstandingBalance;
+}
+
+<link rel="stylesheet" href="~/Content/Bankingdetails.css" />
+
+<div class="payment-page">
+    <header class="payment-header">
+        <p class="eyebrow">Complete Your Payment</p>
+        <h1 class="page-title">Pay Remaining Balance</h1>
+        <p class="page-subtitle">Finish paying for your AA Creations & Events booking.</p>
+    </header>
+
+    <main class="card-panel">
+        @if (ViewBag.PaymentError != null)
+        {
+            <div style="margin-bottom:18px;padding:12px 14px;border-radius:10px;background:#fff0f3;color:#9e1657;font-size:13px;">
+                @ViewBag.PaymentError
+            </div>
+        }
+
+        <div class="card-panel-header">
+            <h2>Booking #@booking.BookingId</h2>
+            <p class="secure-note">This is a simulated payment screen. Card details are not stored.</p>
+        </div>
+
+        <div class="booking-total" style="display:grid;gap:8px;">
+            <div style="display:flex;justify-content:space-between;gap:16px;">
+                <span>Booking Total</span>
+                <strong>R @booking.TotalPrice.ToString("N2")</strong>
+            </div>
+            <div style="display:flex;justify-content:space-between;gap:16px;">
+                <span>Already Paid</span>
+                <strong>R @booking.AmountPaid.ToString("N2")</strong>
+            </div>
+            <div style="display:flex;justify-content:space-between;gap:16px;padding-top:8px;border-top:1px solid #F2C6D9;">
+                <span>Remaining Balance</span>
+                <strong class="booking-total-amount">R @outstanding.ToString("N2")</strong>
+            </div>
+        </div>
+
+        @using (Html.BeginForm("BalancePayment", "Cust", FormMethod.Post, new { id = "balancePaymentForm", novalidate = "novalidate" }))
+        {
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="bookingId" value="@booking.BookingId" />
+
+            <div class="field-group">
+                <label for="cardholderName">Cardholder Name</label>
+                <input type="text" id="cardholderName" name="cardholderName" placeholder="Name as it appears on card" required />
+            </div>
+
+            <div class="field-group">
+                <label for="cardNumber">Card Number</label>
+                <input type="text" id="cardNumber" name="cardNumber" inputmode="numeric" maxlength="19" placeholder="0000 0000 0000 0000" required />
+            </div>
+
+            <div class="field-row">
+                <div class="field-group">
+                    <label for="expiryDate">Expiry Date</label>
+                    <input type="text" id="expiryDate" name="expiryDate" inputmode="numeric" maxlength="5" placeholder="MM/YY" required />
+                </div>
+
+                <div class="field-group">
+                    <label for="cvv">CVV</label>
+                    <input type="text" id="cvv" name="cvv" inputmode="numeric" maxlength="4" placeholder="123" required />
+                </div>
+            </div>
+
+            <div class="section-divider"></div>
+            <div class="billing-heading">Billing Address</div>
+
+            <div class="field-group">
+                <label for="streetAddress">Street Address</label>
+                <input type="text" id="streetAddress" name="streetAddress" placeholder="123 Main Street" required />
+            </div>
+
+            <div class="field-row">
+                <div class="field-group">
+                    <label for="billingCity">City</label>
+                    <input type="text" id="billingCity" name="billingCity" placeholder="Durban" required />
+                </div>
+
+                <div class="field-group">
+                    <label for="postalCode">Postal Code</label>
+                    <input type="text" id="postalCode" name="postalCode" inputmode="numeric" maxlength="4" placeholder="4001" required />
+                </div>
+            </div>
+
+            <div class="trust-badges">
+                <span>🔒 Simulated secure payment</span>
+                <span class="dot">•</span>
+                <span>No card details are stored</span>
+            </div>
+
+            <div class="form-actions">
+                <a class="btn-back" href="@Url.Action("ViewBooking", "Cust")">← Back to My Bookings</a>
+                <button type="submit" class="btn-confirm" id="confirmBalancePayment" disabled>
+                    Pay R @outstanding.ToString("N2")
+                </button>
+            </div>
+        }
+    </main>
+
+    <p class="payment-footer">AA Creations & Events</p>
+</div>
+
+@section scripts {
+<script>
+(function () {
+    var form = document.getElementById("balancePaymentForm");
+    if (!form) return;
+
+    var submit = document.getElementById("confirmBalancePayment");
+    var card = document.getElementById("cardNumber");
+    var expiry = document.getElementById("expiryDate");
+    var cvv = document.getElementById("cvv");
+    var postal = document.getElementById("postalCode");
+
+    function digits(value) {
+        return String(value || "").replace(/\D/g, "");
+    }
+
+    function validate() {
+        var cardDigits = digits(card.value);
+        var cvvDigits = digits(cvv.value);
+        var postalDigits = digits(postal.value);
+        var expiryValid = /^(0[1-9]|1[0-2])\/\d{2}$/.test(expiry.value);
+
+        submit.disabled = !(
+            document.getElementById("cardholderName").value.trim().length > 1 &&
+            cardDigits.length >= 13 &&
+            cardDigits.length <= 16 &&
+            expiryValid &&
+            (cvvDigits.length === 3 || cvvDigits.length === 4) &&
+            document.getElementById("streetAddress").value.trim().length > 0 &&
+            document.getElementById("billingCity").value.trim().length > 0 &&
+            postalDigits.length === 4
+        );
+    }
+
+    card.addEventListener("input", function () {
+        var value = digits(card.value).slice(0, 16);
+        card.value = value.replace(/(.{4})/g, "$1 ").trim();
+        validate();
+    });
+
+    expiry.addEventListener("input", function () {
+        var value = digits(expiry.value).slice(0, 4);
+        expiry.value = value.length >= 3 ? value.slice(0, 2) + "/" + value.slice(2) : value;
+        validate();
+    });
+
+    cvv.addEventListener("input", function () {
+        cvv.value = digits(cvv.value).slice(0, 4);
+        validate();
+    });
+
+    postal.addEventListener("input", function () {
+        postal.value = digits(postal.value).slice(0, 4);
+        validate();
+    });
+
+    form.querySelectorAll("input").forEach(function (input) {
+        input.addEventListener("input", validate);
+        input.addEventListener("change", validate);
+    });
+})();
+</script>
+}
