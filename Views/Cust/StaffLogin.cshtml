@@ -1,0 +1,206 @@
+﻿﻿@{
+    ViewBag.Title = "Staff Login";
+}
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8" />
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0" />
+
+    <title>Staff Login | AA Creations & Events</title>
+
+    <link rel="stylesheet"
+          href="~/Content/Login Style.css" />
+
+</head>
+
+<body>
+
+    <div class="page">
+
+        <!-- LEFT BRAND PANEL -->
+
+        <aside class="brand-panel">
+
+            <div class="brand-mid">
+
+                <div class="badge">
+                    Staff Access
+                </div>
+
+                <h1 class="brand-title">
+
+                    AA Creations<br />
+
+                    <em>Staff Portal</em>
+
+                </h1>
+
+                <div class="divider"></div>
+
+                <p class="brand-desc">
+
+                    Welcome to the AA Creations & Events
+                    staff portal.
+
+                    Sign in to view your assigned
+                    event jobs and customer information.
+
+                </p>
+
+            </div>
+
+        </aside>
+
+
+        <!-- RIGHT LOGIN PANEL -->
+
+        <main class="form-panel">
+
+            <div class="form-wrap">
+
+                <h2 class="form-title">
+                    Staff Sign In
+                </h2>
+
+                <p class="form-subtitle">
+                    Sign in to access your assigned events
+                </p>
+
+
+                @if (!ViewData.ModelState.IsValid)
+                {
+                    <div class="login-error">
+
+                        @Html.ValidationSummary(
+                            false,
+                            "",
+                            new { @class = "text-danger" }
+                        )
+
+                    </div>
+                }
+
+
+                @using (Html.BeginForm(
+                    "StaffLogin",
+                    "Cust",
+                    FormMethod.Post))
+                {
+                    @Html.AntiForgeryToken()
+
+
+                    <div class="field">
+
+                        <label for="email">
+                            Email Address
+                        </label>
+
+                        <input type="email"
+                               id="email"
+                               name="email"
+                               placeholder="staff@aacreations.co.za"
+                               required />
+
+                    </div>
+
+
+                    <div class="field">
+
+                        <label for="password">
+                            Password
+                        </label>
+
+                        <div class="password-row">
+
+                            <input type="password"
+                                   id="password"
+                                   name="password"
+                                   placeholder="••••••••"
+                                   required />
+
+                            <button type="button"
+                                    class="toggle-pass"
+                                    id="togglePass">
+
+                                Show
+
+                            </button>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="options-row">
+
+                        <button type="submit"
+                                class="submit-btn">
+
+                            Staff Sign In
+
+                        </button>
+
+                    </div>
+
+                }
+
+
+                <p class="footer-text">
+
+                    Customer or Admin?
+
+                    <a href="@Url.Action("Login", "Cust")"
+                       class="footer-link">
+
+                        Back to Main Login
+
+                    </a>
+
+                </p>
+
+            </div>
+
+        </main>
+
+    </div>
+
+
+    <script>
+
+        const togglePass =
+            document.getElementById("togglePass");
+
+        const password =
+            document.getElementById("password");
+
+        if (togglePass && password)
+        {
+            togglePass.addEventListener(
+                "click",
+                function ()
+                {
+                    if (password.type === "password")
+                    {
+                        password.type = "text";
+                        togglePass.textContent = "Hide";
+                    }
+                    else
+                    {
+                        password.type = "password";
+                        togglePass.textContent = "Show";
+                    }
+                }
+            );
+        }
+
+    </script>
+
+</body>
+
+</html>

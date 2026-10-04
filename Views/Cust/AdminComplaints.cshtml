@@ -1,0 +1,393 @@
+﻿@model IEnumerable<WebApplication1.Models.StaffComplaint>
+
+@{
+    ViewBag.Title = "Event Issues";
+}
+
+<link rel="stylesheet"
+      href="~/Content/AdminDashboard.css" />
+
+
+<section class="page-head">
+
+    <div class="badge">
+        Admin Access
+    </div>
+
+    <h1>
+        Event <em>Issues</em>
+    </h1>
+
+    <p>
+        Review and manage issues reported by staff members.
+    </p>
+
+</section>
+
+
+<main class="main">
+
+    <!-- ==========================================
+         SUCCESS / ERROR
+         ========================================== -->
+
+    @if (TempData["ComplaintSuccess"] != null)
+    {
+        <div class="alert alert-success">
+            @TempData["ComplaintSuccess"]
+        </div>
+    }
+
+    @if (TempData["ComplaintError"] != null)
+    {
+        <div class="alert alert-danger">
+            @TempData["ComplaintError"]
+        </div>
+    }
+
+
+    <!-- ==========================================
+         SUMMARY
+         ========================================== -->
+
+    <section class="stat-row dashboard-widgets">
+
+        <div class="stat-card">
+
+            <div class="label">
+                Total Issues
+            </div>
+
+            <div class="value">
+                @Model.Count()
+            </div>
+
+            <div class="delta">
+                All staff reports
+            </div>
+
+        </div>
+
+
+        <div class="stat-card">
+
+            <div class="label">
+                Open Issues
+            </div>
+
+            <div class="value">
+                @Model.Count(c => c.Status == "Open")
+            </div>
+
+            <div class="delta">
+                Require attention
+            </div>
+
+        </div>
+
+
+        <div class="stat-card">
+
+            <div class="label">
+                High Priority
+            </div>
+
+            <div class="value">
+                @Model.Count(c =>
+                    c.Status == "Open" &&
+                    c.Priority == "High")
+            </div>
+
+            <div class="delta down">
+                High priority open issues
+            </div>
+
+        </div>
+
+
+        <div class="stat-card">
+
+            <div class="label">
+                Resolved
+            </div>
+
+            <div class="value">
+                @Model.Count(c => c.Status == "Resolved")
+            </div>
+
+            <div class="delta">
+                Completed reports
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- ==========================================
+         COMPLAINTS TABLE
+         ========================================== -->
+
+    <div class="panel">
+
+        <div class="panel-head">
+
+            <div>
+
+                <h2>
+                    Staff Event Issues
+                </h2>
+
+                <p>
+                    Issues reported by staff for approved events.
+                </p>
+
+            </div>
+
+        </div>
+
+
+        <div class="table-wrap">
+
+            <table>
+
+                <thead>
+
+                    <tr>
+                        <th>Staff Member</th>
+                        <th>Event</th>
+                        <th>Issue</th>
+                        <th>Priority</th>
+                        <th>Reported</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                    </tr>
+
+                </thead>
+
+
+                <tbody>
+
+                    @if (Model != null && Model.Any())
+                    {
+                        foreach (var complaint in Model)
+                        {
+                            string priorityClass =
+                                complaint.Priority == "High"
+                                    ? "declined"
+                                    : complaint.Priority == "Medium"
+                                        ? "pending"
+                                        : "approved";
+
+                            string statusClass =
+                                complaint.Status == "Resolved"
+                                    ? "approved"
+                                    : "pending";
+
+
+                            <tr>
+
+                                <!-- STAFF MEMBER -->
+
+                                <td>
+
+                                    @if (complaint.Staff != null)
+                                    {
+                                        <strong>
+                                            @complaint.Staff.staff_FName
+                                            @complaint.Staff.staff_LName
+                                        </strong>
+
+                                        <br />
+
+                                        <small>
+                                            @complaint.Staff.staff_Email
+                                        </small>
+                                    }
+                                    else
+                                    {
+                                        <span>
+                                            Staff #@complaint.StaffId
+                                        </span>
+                                    }
+
+                                </td>
+
+
+                                <!-- EVENT -->
+
+                                <td>
+
+                                    @if (complaint.Booking != null)
+                                    {
+                                        <strong>
+                                            @complaint.Booking.Occasion
+                                        </strong>
+
+                                        <br />
+
+                                        <small>
+                                            Booking #@complaint.BookingId
+                                        </small>
+
+                                        <br />
+
+                                        <small>
+                                            @complaint.Booking.City
+                                        </small>
+                                    }
+                                    else
+                                    {
+                                        <span>
+                                            Booking #@complaint.BookingId
+                                        </span>
+                                    }
+
+                                </td>
+
+
+                                <!-- ISSUE -->
+
+                                <td>
+
+                                    <strong>
+                                        @complaint.Subject
+                                    </strong>
+
+                                    <br />
+
+                                    <small>
+                                        @complaint.Description
+                                    </small>
+
+                                </td>
+
+
+                                <!-- PRIORITY -->
+
+                                <td>
+
+                                    <span class="status @priorityClass">
+                                        <span class="dot"></span>
+                                        @complaint.Priority
+                                    </span>
+
+                                </td>
+
+
+                                <!-- REPORTED DATE -->
+
+                                <td>
+
+                                    @complaint.CreatedAt.ToString("dd MMM yyyy")
+
+                                    <br />
+
+                                    <small>
+                                        @complaint.CreatedAt.ToString("hh:mm tt")
+                                    </small>
+
+                                </td>
+
+
+                                <!-- STATUS -->
+
+                                <td>
+
+                                    <span class="status @statusClass">
+
+                                        <span class="dot"></span>
+
+                                        @complaint.Status
+
+                                    </span>
+
+                                    @if (complaint.ResolvedAt.HasValue)
+                                    {
+                                        <br />
+
+                                        <small>
+                                            Resolved:
+                                            @complaint.ResolvedAt.Value.ToString(
+                                                "dd MMM yyyy HH:mm")
+                                        </small>
+                                    }
+
+                                </td>
+
+
+                                <!-- ACTION -->
+
+                                <td>
+
+                                    @if (complaint.Status == "Open")
+                                    {
+                                        using (Html.BeginForm(
+                                            "ResolveStaffComplaint",
+                                            "Cust",
+                                            FormMethod.Post,
+                                            new { style = "display:inline;" }))
+                                        {
+                                            @Html.AntiForgeryToken()
+
+                                            <input type="hidden"
+                                                   name="complaintId"
+                                                   value="@complaint.ComplaintId" />
+
+                                            <button type="submit"
+                                                    class="approve-btn">
+                                                Mark Resolved
+                                            </button>
+                                        }
+                                    }
+                                    else
+                                    {
+                                        <span class="no-action">
+                                            Resolved ✓
+                                        </span>
+                                    }
+
+                                </td>
+
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+
+                            <td colspan="7"
+                                style="text-align:center; padding:40px;">
+
+                                No staff event issues have been reported.
+
+                            </td>
+
+                        </tr>
+                    }
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+
+    <!-- ==========================================
+         BACK
+         ========================================== -->
+
+    <div style="margin-top:20px;">
+
+        <a href="@Url.Action("AdminDashboard", "Cust")"
+           class="quick-action">
+
+            ← Back to Admin Dashboard
+
+        </a>
+
+    </div>
+
+</main>

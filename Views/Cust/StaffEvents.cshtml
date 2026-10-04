@@ -1,0 +1,531 @@
+﻿@model IEnumerable<WebApplication1.Models.Booking>
+
+@{
+    ViewBag.Title = "Upcoming Events";
+
+    int eventCount = Model != null ? Model.Count() : 0;
+}
+
+<style>
+
+    /* ==========================================
+       PAGE
+       ========================================== */
+
+    .staff-events-page {
+        max-width: 1250px;
+        margin: 0 auto;
+        padding: 45px 25px 70px;
+    }
+
+    /* ==========================================
+       HEADER
+       ========================================== */
+
+    .events-header {
+        margin-bottom: 30px;
+    }
+
+    .events-badge {
+        display: inline-block;
+        padding: 7px 15px;
+        border-radius: 20px;
+        background: #f4e8e2;
+        color: #8a5b4b;
+        font-size: 12px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin-bottom: 15px;
+    }
+
+    .events-header h1 {
+        margin: 0 0 10px;
+        font-size: 42px;
+        color: #222;
+    }
+
+        .events-header h1 em {
+            color: #b27b68;
+            font-style: italic;
+        }
+
+    .events-header p {
+        margin: 0;
+        color: #777;
+        font-size: 15px;
+    }
+
+    /* ==========================================
+       NAVIGATION
+       ========================================== */
+
+    .events-navigation {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 15px;
+        flex-wrap: wrap;
+        margin-bottom: 30px;
+    }
+
+    .back-dashboard {
+        display: inline-block;
+        padding: 11px 18px;
+        background: #222;
+        color: #fff;
+        text-decoration: none;
+        border-radius: 7px;
+        font-size: 14px;
+        font-weight: 600;
+    }
+
+        .back-dashboard:hover {
+            background: #444;
+            color: #fff;
+            text-decoration: none;
+        }
+
+    .staff-info {
+        color: #666;
+        font-size: 14px;
+    }
+
+        .staff-info strong {
+            color: #333;
+        }
+
+    /* ==========================================
+       SUMMARY
+       ========================================== */
+
+    .events-summary {
+        background: #fff;
+        border: 1px solid #eee;
+        border-radius: 12px;
+        padding: 22px;
+        margin-bottom: 30px;
+        box-shadow: 0 5px 18px rgba(0,0,0,.04);
+    }
+
+    .summary-label {
+        color: #888;
+        font-size: 12px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: .6px;
+        margin-bottom: 7px;
+    }
+
+    .summary-number {
+        font-size: 31px;
+        font-weight: 700;
+        color: #222;
+    }
+
+    .summary-description {
+        margin-top: 5px;
+        color: #888;
+        font-size: 13px;
+    }
+
+    /* ==========================================
+       EVENT GRID
+       ========================================== */
+
+    .event-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 22px;
+    }
+
+    .event-card {
+        background: #fff;
+        border: 1px solid #eee;
+        border-radius: 14px;
+        padding: 25px;
+        box-shadow: 0 5px 20px rgba(0,0,0,.04);
+    }
+
+    .event-card-top {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 15px;
+        margin-bottom: 20px;
+    }
+
+    .event-title {
+        margin: 0 0 5px;
+        color: #222;
+        font-size: 21px;
+    }
+
+    .booking-number {
+        color: #999;
+        font-size: 12px;
+    }
+
+    .approved-status {
+        display: inline-block;
+        padding: 6px 11px;
+        border-radius: 20px;
+        background: #e7f6ec;
+        color: #237a42;
+        font-size: 11px;
+        font-weight: 700;
+    }
+
+    /* ==========================================
+       EVENT DETAILS
+       ========================================== */
+
+    .event-details {
+        margin-bottom: 22px;
+    }
+
+    .event-detail-row {
+        display: flex;
+        margin-bottom: 12px;
+        gap: 15px;
+    }
+
+    .event-detail-label {
+        width: 85px;
+        flex-shrink: 0;
+        color: #999;
+        font-size: 12px;
+        font-weight: 700;
+        text-transform: uppercase;
+    }
+
+    .event-detail-value {
+        color: #444;
+        font-size: 14px;
+        word-break: break-word;
+    }
+
+    /* ==========================================
+       BUTTON
+       ========================================== */
+
+    .event-actions {
+        border-top: 1px solid #eee;
+        padding-top: 18px;
+    }
+
+    .view-event-btn {
+        display: inline-block;
+        padding: 10px 16px;
+        background: #b27b68;
+        color: #fff;
+        text-decoration: none;
+        border-radius: 7px;
+        font-size: 13px;
+        font-weight: 700;
+    }
+
+        .view-event-btn:hover {
+            background: #966452;
+            color: #fff;
+            text-decoration: none;
+        }
+
+    /* ==========================================
+       EMPTY STATE
+       ========================================== */
+
+    .empty-events {
+        background: #fff;
+        border: 1px solid #eee;
+        border-radius: 14px;
+        padding: 65px 25px;
+        text-align: center;
+        box-shadow: 0 5px 20px rgba(0,0,0,.04);
+    }
+
+        .empty-events h3 {
+            margin: 0 0 8px;
+            color: #333;
+        }
+
+        .empty-events p {
+            margin: 0;
+            color: #888;
+        }
+
+    /* ==========================================
+       RESPONSIVE
+       ========================================== */
+
+    @@media (max-width: 800px) {
+
+        .event-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .events-header h1 {
+            font-size: 34px;
+        }
+    }
+
+    .event-error-message {
+        background: #fde8e8;
+        color: #b42318;
+        border: 1px solid #f5c2c2;
+        border-radius: 8px;
+        padding: 14px 18px;
+        margin-bottom: 20px;
+        font-size: 14px;
+        font-weight: 600;
+    }
+
+
+</style>
+
+
+<div class="staff-events-page">
+
+    @if (TempData["EventError"] != null)
+    {
+        <div class="event-error-message">
+            @TempData["EventError"]
+        </div>
+    }
+
+    <!-- ==========================================
+         HEADER
+         ========================================== -->
+
+    <section class="events-header">
+
+        <div class="events-badge">
+            Staff Access
+        </div>
+
+        <h1>
+            Upcoming <em>Events</em>
+        </h1>
+
+        <p>
+            Approved upcoming events for your assigned team.
+        </p>
+
+    </section>
+
+
+    <!-- ==========================================
+         NAVIGATION
+         ========================================== -->
+
+    <div class="events-navigation">
+
+        <a href="@Url.Action("StaffDashboard", "Cust")"
+           class="back-dashboard">
+            ← Back to Dashboard
+        </a>
+
+        <div class="staff-info">
+
+            <strong>@ViewBag.StaffName</strong>
+
+            @if (ViewBag.TeamCity != null)
+            {
+                <span> | @ViewBag.TeamCity Team</span>
+            }
+
+        </div>
+
+    </div>
+
+
+    <!-- ==========================================
+         SUMMARY
+         ========================================== -->
+
+    <section class="events-summary">
+
+        <div class="summary-label">
+            Upcoming Team Events
+        </div>
+
+        <div class="summary-number">
+            @eventCount
+        </div>
+
+        <div class="summary-description">
+            Approved events currently scheduled for
+            @ViewBag.TeamCity.
+        </div>
+
+    </section>
+
+
+    <!-- ==========================================
+         EVENTS
+         ========================================== -->
+
+    @if (Model != null && Model.Any())
+    {
+        <section class="event-grid">
+
+            @foreach (var eventItem in Model)
+            {
+                <article class="event-card">
+
+                    <div class="event-card-top">
+
+                        <div>
+
+                            <h2 class="event-title">
+                                @eventItem.Occasion
+                            </h2>
+
+                            <div class="booking-number">
+                                Booking #@eventItem.BookingId
+                            </div>
+
+                        </div>
+
+                        <span class="approved-status">
+                            @eventItem.Status
+                        </span>
+
+                    </div>
+
+
+                    <div class="event-details">
+
+                        <!-- DATE -->
+
+                        <div class="event-detail-row">
+
+                            <div class="event-detail-label">
+                                Date
+                            </div>
+
+                            <div class="event-detail-value">
+                                @eventItem.EventDate.ToString("dd MMMM yyyy")
+                            </div>
+
+                        </div>
+
+
+                        <!-- TIME -->
+
+                        <div class="event-detail-row">
+
+                            <div class="event-detail-label">
+                                Time
+                            </div>
+
+                            <div class="event-detail-value">
+
+                                @if (!string.IsNullOrWhiteSpace(eventItem.EventTime))
+                                {
+                                    @eventItem.EventTime
+                                }
+                                else
+                                {
+                                    <span>Not specified</span>
+                                }
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- CITY -->
+
+                        <div class="event-detail-row">
+
+                            <div class="event-detail-label">
+                                City
+                            </div>
+
+                            <div class="event-detail-value">
+                                @eventItem.City
+                            </div>
+
+                        </div>
+
+
+                        <!-- ADDRESS -->
+
+                        <div class="event-detail-row">
+
+                            <div class="event-detail-label">
+                                Venue
+                            </div>
+
+                            <div class="event-detail-value">
+
+                                @if (!string.IsNullOrWhiteSpace(eventItem.Address))
+                                {
+                                    @eventItem.Address
+                                }
+                                else
+                                {
+                                    <span>Address not specified</span>
+                                }
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- CUSTOMER -->
+
+                        <div class="event-detail-row">
+
+                            <div class="event-detail-label">
+                                Customer
+                            </div>
+
+                            <div class="event-detail-value">
+                                @eventItem.FirstName @eventItem.LastName
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- ==========================================
+                         EVENT ACTIONS
+                         ========================================== -->
+
+                    <div class="event-actions">
+
+                        <a href="@Url.Action(
+                                    "StaffEventDetails",
+                                    "Cust",
+                                    new { id = eventItem.BookingId })"
+                           class="view-event-btn">
+
+                            View Event Details
+
+                        </a>
+
+                    </div>
+
+                </article>
+            }
+
+        </section>
+    }
+    else
+    {
+        <div class="empty-events">
+
+            <h3>No upcoming events</h3>
+
+            <p>
+                There are currently no approved upcoming
+                events for the @ViewBag.TeamCity team.
+            </p>
+
+        </div>
+    }
+
+</div>

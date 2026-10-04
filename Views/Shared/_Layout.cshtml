@@ -1,4 +1,5 @@
-﻿<!DOCTYPE html>
+﻿﻿
+<!DOCTYPE html>
 <html>
 <head>
     <meta charset="utf-8" />
@@ -9,47 +10,47 @@
 </head>
 <body>
 
-        <nav class="desktop-nav" aria-label="Main navigation">
-            <!--- You should probably remove Services & Portfllio buttons as they are alrwady prsent bellow/-->
-            <a href="@Url.Action("Index", "Cust")" class="logo">AA Creations & Events</a>
+    <nav class="desktop-nav" aria-label="Main navigation">
+        <!--- You should probably remove Services & Portfllio buttons as they are alrwady prsent bellow/-->
+        <a href="@Url.Action("Index", "Cust")" class="logo">AA Creations & Events</a>
 
-            <ul class="nav-links">
-                <li><a href="@Url.Action("Portfolio", "Cust")">PORTFOLIO</a></li>
-                <li><a href="@Url.Action("Booking", "Cust")">MAKE A BOOKING</a></li>
-                <li><a href="@Url.Action("ViewBooking", "Cust")">VIEW BOOKING</a></li>
-                <li><a href="@Url.Action("contactus", "Cust")">CONTACT US</a></li>
+        <ul class="nav-links">
+            <li><a href="@Url.Action("Portfolio", "Cust")">PORTFOLIO</a></li>
+            <li><a href="@Url.Action("Booking", "Cust")">MAKE A BOOKING</a></li>
+            <li><a href="@Url.Action("ViewBooking", "Cust")">VIEW BOOKING</a></li>
+            <li><a href="@Url.Action("contactus", "Cust")">CONTACT US</a></li>
 
-                @if (Session["CustomerId"] != null)
-                {
-                    @Html.ActionLink(
-                        "Manage Account",
-                        "ManageAccount",
-                        "Cust",
-                        null,
-                        new { @class = "login-btn" }
-                    )
+            @if (Session["CustomerId"] != null)
+            {
+                @Html.ActionLink(
+                    "Manage Account",
+                    "ManageAccount",
+                    "Cust",
+                    null,
+                    new { @class = "login-btn" }
+                )
 
-                }
-                else
-                {
-                    @Html.ActionLink(
-                        "Login",
-                        "Login",
-                        "Cust",
-                        null,
-                        new { @class = "login-btn" }
-                    )
-                }
+            }
+            else
+            {
+                @Html.ActionLink(
+                    "Login",
+                    "Login",
+                    "Cust",
+                    null,
+                    new { @class = "login-btn" }
+                )
+            }
 
-            </ul>
-            <div class="nav-icons">
-                <div>
-                    <a href="https://shorturl.at/hRi2x" target="_blank"> 🎵 TikTok</a> |
-                    <a href="https://wa.me/27123456789" target="_blank">💬 WhatsApp</a> |
-                    <a href="https://www.instagram.com/aacreation.events?igsi=d2d5OGxkZnFxcDIy&utm_source=qr" target="_blank">📸 Instagram</a>
-                </div>
+        </ul>
+        <div class="nav-icons">
+            <div>
+                <a href="https://shorturl.at/hRi2x" target="_blank"> 🎵 TikTok</a> |
+                <a href="https://wa.me/27123456789" target="_blank">💬 WhatsApp</a> |
+                <a href="https://www.instagram.com/aacreation.events?igsi=d2d5OGxkZnFxcDIy&utm_source=qr" target="_blank">📸 Instagram</a>
             </div>
-        </nav>
+        </div>
+    </nav>
     <div class="container body-content">
         @RenderBody()
         <hr />
@@ -57,6 +58,13 @@
             <p class="quote">"Every celebration deserves to be unforgettable."</p>
             <p>&copy; @DateTime.Now.Year - AA Creations &amp; Events.  All rights reserved.</p>
             <p class="footer-contact">Contact: 073 123 2660 / 069 843 2686</p>
+            <!-- Staff login link added here -->
+            <div class="staff-login-row">
+                <p>
+                    Staff member?
+                    <a href="@Url.Action("StaffLogin", "Cust")">Staff Login</a>
+                </p>
+            </div>
 
         </footer>
     </div>

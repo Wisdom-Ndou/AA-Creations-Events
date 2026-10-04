@@ -657,3 +657,118 @@ tbody tr:hover {
     .status.declined .dot {
         background: #f87171;
     }
+
+/* ==========================================
+   STAFF INFORMATION
+========================================== */
+
+.staff-dashboard-panel {
+    margin-top: 2rem;
+}
+
+.staff-dashboard-actions {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+}
+
+.staff-dashboard-card {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    background: #222;
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    padding: 1rem;
+    color: var(--text-white);
+    text-decoration: none;
+    transition: all 0.25s ease;
+}
+
+    .staff-dashboard-card:hover {
+        border-color: var(--accent-pink);
+        background: rgba(255, 42, 109, 0.08);
+        transform: translateY(-3px);
+        box-shadow: 0 0 15px rgba(255, 42, 109, 0.25);
+    }
+
+.staff-icon {
+    width: 42px;
+    height: 42px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: rgba(255, 42, 109, 0.12);
+    border: 1px solid var(--accent-pink);
+    color: var(--accent-pink);
+    font-size: 1.2rem;
+    font-weight: 700;
+    flex-shrink: 0;
+}
+
+.staff-dashboard-card strong {
+    display: block;
+    color: var(--text-white);
+    font-size: 0.95rem;
+    margin-bottom: 3px;
+}
+
+.staff-dashboard-card small {
+    display: block;
+    color: var(--text-muted);
+    font-size: 0.75rem;
+}
+
+
+@media (max-width: 900px) {
+
+    .staff-dashboard-actions {
+        grid-template-columns: 1fr;
+    }
+}
+
+
+/* ==========================================
+   ASSIGN STAFF TASK BUTTON
+   ========================================== */
+
+.assign-staff-btn {
+    display: inline-block;
+    padding: 8px 13px;
+    border-radius: 6px;
+    background: #b27b68;
+    color: #fff;
+    text-decoration: none;
+    font-size: 12px;
+    font-weight: 700;
+    white-space: nowrap;
+    margin-top: 5px;
+}
+
+    .assign-staff-btn:hover {
+        background: #966452;
+        color: #fff;
+        text-decoration: none;
+    }
+
+.logout-area {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 30px 50px;
+    text-align: right;
+}
+
+.logout-link {
+    display: inline-block;
+    padding: 10px 18px;
+    border: 1px solid #ff2b7a;
+    border-radius: 25px;
+    color: #ff2b7a;
+    text-decoration: none;
+}
+
+    .logout-link:hover {
+        background: #ff2b7a;
+        color: #ffffff;
+    }

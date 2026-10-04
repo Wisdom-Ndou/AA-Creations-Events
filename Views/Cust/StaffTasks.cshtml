@@ -1,0 +1,743 @@
+﻿@model IEnumerable<WebApplication1.Models.StaffTask>
+
+@{
+    ViewBag.Title = "My Tasks";
+
+    int totalTasks = Model != null ? Model.Count() : 0;
+
+    int pendingTasks = Model != null
+        ? Model.Count(t => t.Status == "Pending")
+        : 0;
+
+    int inProgressTasks = Model != null
+        ? Model.Count(t => t.Status == "In Progress")
+        : 0;
+
+    int completedTasks = Model != null
+        ? Model.Count(t => t.Status == "Completed")
+        : 0;
+}
+
+<style>
+
+    /* ==========================================
+       PAGE HEADER
+       ========================================== */
+
+    .staff-task-page {
+        max-width: 1250px;
+        margin: 0 auto;
+        padding: 45px 25px 70px;
+    }
+
+    .task-header {
+        margin-bottom: 35px;
+    }
+
+    .task-badge {
+        display: inline-block;
+        padding: 7px 15px;
+        border-radius: 20px;
+        background: #f4e8e2;
+        color: #8a5b4b;
+        font-size: 12px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin-bottom: 15px;
+    }
+
+    .task-header h1 {
+        font-size: 42px;
+        margin: 0 0 10px;
+        color: #222;
+    }
+
+        .task-header h1 em {
+            font-style: italic;
+            color: #b27b68;
+        }
+
+    .task-header p {
+        color: #777;
+        font-size: 15px;
+        margin: 0;
+    }
+
+
+    /* ==========================================
+       TOP NAVIGATION
+       ========================================== */
+
+    .task-navigation {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 30px;
+        gap: 15px;
+        flex-wrap: wrap;
+    }
+
+    .back-dashboard {
+        display: inline-block;
+        padding: 11px 18px;
+        background: #222;
+        color: white;
+        border-radius: 7px;
+        text-decoration: none;
+        font-size: 14px;
+        font-weight: 600;
+    }
+
+        .back-dashboard:hover {
+            background: #444;
+            color: white;
+            text-decoration: none;
+        }
+
+    .staff-info {
+        color: #666;
+        font-size: 14px;
+    }
+
+        .staff-info strong {
+            color: #333;
+        }
+
+
+    /* ==========================================
+       STATISTICS
+       ========================================== */
+
+    .task-stats {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 18px;
+        margin-bottom: 35px;
+    }
+
+    .task-stat-card {
+        background: white;
+        border: 1px solid #eee;
+        border-radius: 12px;
+        padding: 22px;
+        box-shadow: 0 5px 18px rgba(0,0,0,0.04);
+    }
+
+        .task-stat-card .stat-label {
+            color: #888;
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: .6px;
+            margin-bottom: 10px;
+        }
+
+        .task-stat-card .stat-number {
+            font-size: 30px;
+            font-weight: 700;
+            color: #222;
+        }
+
+
+    /* ==========================================
+       TASK PANEL
+       ========================================== */
+
+    .task-panel {
+        background: white;
+        border: 1px solid #eee;
+        border-radius: 14px;
+        overflow: hidden;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.04);
+    }
+
+    .task-panel-header {
+        padding: 22px 25px;
+        border-bottom: 1px solid #eee;
+    }
+
+        .task-panel-header h2 {
+            margin: 0 0 5px;
+            font-size: 21px;
+            color: #222;
+        }
+
+        .task-panel-header p {
+            margin: 0;
+            color: #888;
+            font-size: 13px;
+        }
+
+
+    /* ==========================================
+       TABLE
+       ========================================== */
+
+    .task-table-wrapper {
+        overflow-x: auto;
+    }
+
+    .task-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+        .task-table th {
+            background: #fafafa;
+            color: #777;
+            padding: 15px 18px;
+            text-align: left;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: .5px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .task-table td {
+            padding: 18px;
+            border-bottom: 1px solid #f1f1f1;
+            vertical-align: middle;
+            color: #444;
+            font-size: 14px;
+        }
+
+        .task-table tr:last-child td {
+            border-bottom: none;
+        }
+
+    .task-name {
+        font-weight: 700;
+        color: #222;
+        margin-bottom: 4px;
+    }
+
+    .task-description {
+        color: #888;
+        font-size: 12px;
+        max-width: 320px;
+    }
+
+
+    /* ==========================================
+       PRIORITY
+       ========================================== */
+
+    .priority {
+        display: inline-block;
+        padding: 5px 10px;
+        border-radius: 20px;
+        font-size: 11px;
+        font-weight: 700;
+    }
+
+    .priority-high {
+        background: #fde8e8;
+        color: #b42318;
+    }
+
+    .priority-medium {
+        background: #fff3d6;
+        color: #9a6700;
+    }
+
+    .priority-low {
+        background: #e7f6ec;
+        color: #237a42;
+    }
+
+
+    /* ==========================================
+       STATUS
+       ========================================== */
+
+    .task-status {
+        display: inline-block;
+        padding: 6px 11px;
+        border-radius: 20px;
+        font-size: 11px;
+        font-weight: 700;
+    }
+
+    .status-pending {
+        background: #f3f3f3;
+        color: #666;
+    }
+
+    .status-progress {
+        background: #e8f1ff;
+        color: #2f65b9;
+    }
+
+    .status-completed {
+        background: #e7f6ec;
+        color: #237a42;
+    }
+
+
+    /* ==========================================
+       EMPTY STATE
+       ========================================== */
+
+    .empty-tasks {
+        padding: 60px 25px;
+        text-align: center;
+    }
+
+        .empty-tasks h3 {
+            color: #333;
+            margin-bottom: 8px;
+        }
+
+        .empty-tasks p {
+            color: #888;
+            margin: 0;
+        }
+
+
+    /* ==========================================
+       RESPONSIVE
+       ========================================== */
+
+    @@media (max-width: 900px) {
+
+        .task-stats {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+
+    @@media (max-width: 550px) {
+
+        .task-stats {
+            grid-template-columns: 1fr;
+        }
+
+        .task-header h1 {
+            font-size: 34px;
+        }
+    }
+
+
+    /* ==========================================
+   TASK ACTION BUTTONS
+   ========================================== */
+
+    .task-action-btn {
+        border: none;
+        border-radius: 6px;
+        padding: 8px 13px;
+        font-size: 12px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: 0.2s ease;
+        white-space: nowrap;
+    }
+
+    .start-btn {
+        background: #e8f1ff;
+        color: #2f65b9;
+    }
+
+        .start-btn:hover {
+            background: #d7e7ff;
+        }
+
+    .complete-btn {
+        background: #e7f6ec;
+        color: #237a42;
+    }
+
+        .complete-btn:hover {
+            background: #d4efdd;
+        }
+
+    .task-finished {
+        color: #237a42;
+        font-size: 12px;
+        font-weight: 700;
+    }
+
+    .task-message {
+        padding: 14px 18px;
+        margin-bottom: 20px;
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: 600;
+    }
+
+    .success-message {
+        background: #e7f6ec;
+        color: #237a42;
+        border: 1px solid #c7e8d2;
+    }
+
+    .error-message {
+        background: #fde8e8;
+        color: #b42318;
+        border: 1px solid #f5c2c2;
+    }
+
+
+</style>
+
+
+<div class="staff-task-page">
+
+
+    @if (TempData["TaskSuccess"] != null)
+    {
+        <div class="task-message success-message">
+            @TempData["TaskSuccess"]
+        </div>
+    }
+
+    @if (TempData["TaskError"] != null)
+    {
+        <div class="task-message error-message">
+            @TempData["TaskError"]
+        </div>
+    }
+
+    <!-- ==========================================
+         PAGE HEADER
+         ========================================== -->
+
+    <section class="task-header">
+
+        <div class="task-badge">
+            Staff Access
+        </div>
+
+        <h1>
+            My <em>To-Do List</em>
+        </h1>
+
+        <p>
+            View and manage the tasks assigned to you.
+        </p>
+
+    </section>
+
+
+    <!-- ==========================================
+         NAVIGATION / STAFF INFORMATION
+         ========================================== -->
+
+    <div class="task-navigation">
+
+        <a href="@Url.Action("StaffDashboard", "Cust")"
+           class="back-dashboard">
+            ← Back to Dashboard
+        </a>
+
+        <div class="staff-info">
+
+            <strong>@ViewBag.StaffName</strong>
+
+            @if (ViewBag.StaffType != null)
+            {
+                <span> | @ViewBag.StaffType</span>
+            }
+
+        </div>
+
+    </div>
+
+
+    <!-- ==========================================
+         TASK STATISTICS
+         ========================================== -->
+
+    <section class="task-stats">
+
+        <div class="task-stat-card">
+            <div class="stat-label">
+                Total Tasks
+            </div>
+
+            <div class="stat-number">
+                @totalTasks
+            </div>
+        </div>
+
+
+        <div class="task-stat-card">
+            <div class="stat-label">
+                Pending
+            </div>
+
+            <div class="stat-number">
+                @pendingTasks
+            </div>
+        </div>
+
+
+        <div class="task-stat-card">
+            <div class="stat-label">
+                In Progress
+            </div>
+
+            <div class="stat-number">
+                @inProgressTasks
+            </div>
+        </div>
+
+
+        <div class="task-stat-card">
+            <div class="stat-label">
+                Completed
+            </div>
+
+            <div class="stat-number">
+                @completedTasks
+            </div>
+        </div>
+
+    </section>
+
+
+    <!-- ==========================================
+         TASK LIST
+         ========================================== -->
+
+    <section class="task-panel">
+
+        <div class="task-panel-header">
+
+            <h2>My Assigned Tasks</h2>
+
+            <p>
+                Tasks assigned specifically to your staff account.
+            </p>
+
+        </div>
+
+
+        @if (Model != null && Model.Any())
+        {
+            <div class="task-table-wrapper">
+
+                <table class="task-table">
+
+                    <thead>
+                        <tr>
+                            <th>Task</th>
+                            <th>Event</th>
+                            <th>Due</th>
+                            <th>Priority</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+
+                        @foreach (var task in Model)
+                        {
+                            string priorityClass = "priority-low";
+
+                            if (!string.IsNullOrWhiteSpace(task.Priority))
+                            {
+                                if (task.Priority.Equals(
+                                    "High",
+                                    StringComparison.OrdinalIgnoreCase))
+                                {
+                                    priorityClass = "priority-high";
+                                }
+                                else if (task.Priority.Equals(
+                                    "Medium",
+                                    StringComparison.OrdinalIgnoreCase))
+                                {
+                                    priorityClass = "priority-medium";
+                                }
+                            }
+
+
+                            string statusClass = "status-pending";
+
+                            if (!string.IsNullOrWhiteSpace(task.Status))
+                            {
+                                if (task.Status.Equals(
+                                    "Completed",
+                                    StringComparison.OrdinalIgnoreCase))
+                                {
+                                    statusClass = "status-completed";
+                                }
+                                else if (task.Status.Equals(
+                                    "In Progress",
+                                    StringComparison.OrdinalIgnoreCase))
+                                {
+                                    statusClass = "status-progress";
+                                }
+                            }
+
+
+                            <tr>
+
+                                <!-- TASK -->
+
+                                <td>
+
+                                    <div class="task-name">
+                                        @task.TaskName
+                                    </div>
+
+                                    @if (!string.IsNullOrWhiteSpace(task.Description))
+                                    {
+                                        <div class="task-description">
+                                            @task.Description
+                                        </div>
+                                    }
+
+                                </td>
+
+
+                                <!-- EVENT -->
+
+                                <td>
+
+                                    @if (task.Booking != null)
+                                    {
+                                        <span>
+                                            @task.Booking.Occasion
+                                        </span>
+                                    }
+                                    else if (task.BookingId.HasValue)
+                                    {
+                                        <span>
+                                            Booking #@task.BookingId
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span>
+                                            General Task
+                                        </span>
+                                    }
+
+                                </td>
+
+
+                                <!-- DUE DATE -->
+
+                                <td>
+
+                                    @task.DueDate.ToString("dd MMM yyyy")
+
+                                    <br />
+
+                                    <small>
+                                        @task.DueDate.ToString("hh:mm tt")
+                                    </small>
+
+                                </td>
+
+
+                                <!-- PRIORITY -->
+
+                                <td>
+
+                                    <span class="priority @priorityClass">
+                                        @task.Priority
+                                    </span>
+
+                                </td>
+
+
+                                <!-- STATUS -->
+
+                                <td>
+
+                                    <span class="task-status @statusClass">
+                                        @task.Status
+                                    </span>
+
+                                </td>
+
+
+                                <!-- ACTIONS -->
+
+                                <td>
+
+                                    @if (task.Status == "Pending")
+                                    {
+                                        using (Html.BeginForm(
+                                            "UpdateStaffTaskStatus",
+                                            "Cust",
+                                            FormMethod.Post,
+                                            new { style = "display:inline;" }))
+                                        {
+                                            @Html.AntiForgeryToken()
+
+                                            <input type="hidden"
+                                                   name="taskId"
+                                                   value="@task.TaskId" />
+
+                                            <input type="hidden"
+                                                   name="newStatus"
+                                                   value="In Progress" />
+
+                                            <button type="submit"
+                                                    class="task-action-btn start-btn">
+                                                Start Task
+                                            </button>
+                                        }
+                                    }
+                                    else if (task.Status == "In Progress")
+                                    {
+                                        using (Html.BeginForm(
+                                            "UpdateStaffTaskStatus",
+                                            "Cust",
+                                            FormMethod.Post,
+                                            new { style = "display:inline;" }))
+                                        {
+                                            @Html.AntiForgeryToken()
+
+                                            <input type="hidden"
+                                                   name="taskId"
+                                                   value="@task.TaskId" />
+
+                                            <input type="hidden"
+                                                   name="newStatus"
+                                                   value="Completed" />
+
+                                            <button type="submit"
+                                                    class="task-action-btn complete-btn">
+                                                Mark Complete
+                                            </button>
+                                        }
+                                    }
+                                    else if (task.Status == "Completed")
+                                    {
+                                        <span class="task-finished">
+                                            Completed ✓
+                                        </span>
+                                    }
+
+                                </td>
+
+                            </tr>
+                        }
+
+                    </tbody>
+
+                </table>
+
+            </div>
+        }
+        else
+        {
+            <div class="empty-tasks">
+
+                <h3>No tasks assigned</h3>
+
+                <p>
+                    You currently have no tasks assigned to your account.
+                </p>
+
+            </div>
+        }
+
+    </section>
+
+</div>

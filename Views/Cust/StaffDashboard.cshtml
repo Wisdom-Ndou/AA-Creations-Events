@@ -1,0 +1,652 @@
+﻿@model WebApplication1.Models.StaffDashboardViewModel
+
+@{
+    ViewBag.Title = "Staff Dashboard";
+}
+
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+
+    <meta charset="utf-8" />
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0" />
+
+    <title>
+        Staff Dashboard | AA Creations & Events
+    </title>
+
+    <link rel="stylesheet"
+          href="~/Content/StaffDashboard.css" />
+
+</head>
+
+<body>
+
+    <!-- ==========================================
+         PAGE HEADER
+         ========================================== -->
+
+    <section class="page-head">
+
+        <div class="badge">
+            Staff Access
+        </div>
+
+        <h1>
+            My <em>Dashboard</em>
+        </h1>
+
+        <p>
+            Welcome back, @Model.StaffMember.staff_FName.
+            Here is your overview for today.
+        </p>
+
+        <div class="staff-team">
+            @Model.StaffMember.staff_Type
+            · @Model.TeamCity
+        </div>
+
+    </section>
+
+
+    <main class="main">
+
+
+        <!-- ==========================================
+             STATISTICS
+             ========================================== -->
+
+        <section class="stat-row">
+
+
+            <!-- TASKS -->
+
+            <div class="stat-card">
+
+                <div class="label">
+                    Tasks Due Today
+                </div>
+
+                <div class="value">
+                    @Model.TodayTasks
+                </div>
+
+                <div class="delta up">
+                    @Model.HighPriorityTasks High Priority
+                </div>
+
+            </div>
+
+
+            <!-- EVENTS -->
+
+            <div class="stat-card">
+
+                <div class="label">
+                    Events This Week
+                </div>
+
+                <div class="value">
+                    @Model.EventsThisWeek
+                </div>
+
+                <div class="delta">
+
+                    @if (Model.Events.Any())
+                    {
+                        var nextEvent = Model.Events.First();
+
+                        <span>
+                            Next:
+                            @nextEvent.EventDate.ToString("dd MMM")
+                        </span>
+                    }
+                    else
+                    {
+                        <span>
+                            No upcoming events
+                        </span>
+                    }
+
+                </div>
+
+            </div>
+
+
+            <!-- HOURS -->
+
+            <div class="stat-card">
+
+                <span class="stat-label">
+                    Hours Logged
+                </span>
+
+                <strong class="stat-value">
+                    @Model.HoursLogged.ToString("0.00")
+                </strong>
+
+            </div>
+
+
+            <!-- COMPLAINTS -->
+
+            <div class="stat-card">
+
+                <div class="label">
+                    Open Complaints
+                </div>
+
+                <div class="value">
+                    @Model.OpenComplaints
+                </div>
+
+                <div class="delta">
+                    Assigned to you
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- ==========================================
+             MAIN CONTENT
+             ========================================== -->
+
+        <section class="content-grid">
+
+
+            <!-- ======================================
+                 MY TASKS
+                 ====================================== -->
+
+            <div class="panel">
+
+                <div class="panel-head">
+
+                    <div>
+
+                        <h2>
+                            My Tasks Today
+                        </h2>
+
+                        <p>
+                            Items assigned specifically to you
+                        </p>
+
+                    </div>
+
+                    <a href="@Url.Action("StaffTasks", "Cust")"
+                       class="panel-link">
+
+                        View All →
+
+                    </a>
+
+                </div>
+
+
+                <div class="table-wrap">
+
+                    @if (Model.Tasks != null &&
+     Model.Tasks.Any())
+                    {
+
+                        <table>
+
+                            <thead>
+
+                                <tr>
+
+                                    <th>
+                                        Task
+                                    </th>
+
+                                    <th>
+                                        Event
+                                    </th>
+
+                                    <th>
+                                        Due Time
+                                    </th>
+
+                                    <th>
+                                        Priority
+                                    </th>
+
+                                </tr>
+
+                            </thead>
+
+
+                            <tbody>
+
+                                @foreach (var task in Model.Tasks.Take(5))
+                                {
+
+                                    <tr>
+
+                                        <td>
+                                            @task.TaskName
+                                        </td>
+
+
+                                        <td>
+
+                                            @if (task.BookingId.HasValue)
+                                            {
+                                                var booking = Model.Events
+                                                    .FirstOrDefault(b =>
+                                                        b.BookingId == task.BookingId.Value);
+
+                                                if (booking != null)
+                                                {
+                                                    @booking.Occasion
+                                                }
+                                                else
+                                                {
+                                                    <span>
+                                                        Assigned Event
+                                                    </span>
+                                                }
+                                            }
+                                            else
+                                            {
+                                                <span>
+                                                    General Task
+                                                </span>
+                                            }
+
+                                        </td>
+
+
+                                        <td>
+                                            @task.DueDate.ToString("hh:mm tt")
+                                        </td>
+
+
+                                        <td>
+
+                                            @{
+                                                string priorityClass =
+                                                    task.Priority != null
+                                                    ? task.Priority.ToLower()
+                                                    : "low";
+                                            }
+
+                                            <span class="status @priorityClass">
+                                                @task.Priority
+                                            </span>
+
+                                        </td>
+
+                                    </tr>
+
+                                }
+
+                            </tbody>
+
+                        </table>
+
+                    }
+                    else
+                    {
+
+                        <div class="empty-state">
+
+                            <h3>
+                                No tasks for today
+                            </h3>
+
+                            <p>
+                                You currently have no outstanding tasks due today.
+                            </p>
+
+                        </div>
+
+                    }
+
+                </div>
+
+            </div>
+
+
+            <!-- ======================================
+                 RIGHT COLUMN
+                 ====================================== -->
+
+            <div class="stack">
+
+
+                <!-- ==================================
+                     ANNOUNCEMENTS
+                     ================================== -->
+
+                <div class="panel">
+
+                    <div class="panel-head">
+
+                        <h2>
+                            Announcements
+                        </h2>
+
+                    </div>
+
+
+                    <div class="announcement-list">
+
+                        <div class="announcement">
+
+                            <p class="announcement-title">
+                                Team Information
+                            </p>
+
+                            <p class="announcement-text">
+
+                                You are currently assigned to
+                                <strong>
+                                    @Model.StaffMember.staff_Type
+                                </strong>.
+
+                            </p>
+
+                        </div>
+
+
+                        <div class="announcement">
+
+                            <p class="announcement-title">
+                                Assigned Area
+                            </p>
+
+                            <p class="announcement-text">
+
+                                Your team's events are currently
+                                associated with
+                                <strong>
+                                    @Model.TeamCity
+                                </strong>.
+
+                            </p>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <!-- ==================================
+                     QUICK ACTIONS
+                     ================================== -->
+
+                <div class="panel">
+
+                    <div class="panel-head">
+
+                        <h2>
+                            Quick Actions
+                        </h2>
+
+                    </div>
+
+
+                    <div class="quick-actions">
+
+
+                        <!-- TASKS -->
+
+                        <a href="@Url.Action("StaffEvents", "Cust")"
+                           class="quick-action">
+                         
+
+                        <div>
+
+                            <strong>
+                                View To-Do List
+                            </strong>
+
+                            <span>
+                              Tasks pending 
+                            </span>
+
+                        </div>
+
+                        <span>
+                            →
+                        </span>
+
+                        </a>
+
+
+                        <!-- EVENT ISSUES -->
+
+                        <a href="@Url.Action("StaffComplaints", "Cust")"
+                           class="quick-action">
+
+                            <div>
+
+                                <strong>
+                                    Report Event Issue
+                                </strong>
+
+                                <span>
+                                    Report an issue with an event
+                                </span>
+
+                            </div>
+
+                            <span>
+                                →
+                            </span>
+
+                        </a>
+
+
+                        <!-- PROFILE -->
+
+                        <a href="@Url.Action("StaffProfile", "Cust")"
+                           class="quick-action">
+
+                            <div>
+
+                                <strong>
+                                    My Profile
+                                </strong>
+
+                                <span>
+                                    View profile
+                                </span>
+
+                            </div>
+
+                            <span>
+                                →
+                            </span>
+
+                        </a>
+
+
+                       
+                        <!-- CLOCK -->
+
+                        <a href="@Url.Action("StaffClockInOut", "Cust")"
+                           class="quick-action">
+
+                            <div>
+
+                                <strong>
+                                    Clock In / Out
+                                </strong>
+
+                                <span>
+                                    Time tracking
+                                </span>
+
+                            </div>
+
+                            <span>
+                                →
+                            </span>
+
+                        </a>
+
+</section>
+
+
+        <!-- ==========================================
+             UPCOMING EVENTS
+             ========================================== -->
+
+        <section class="panel events-panel">
+
+            <div class="panel-head">
+
+                <div>
+
+                    <h2>
+                        Upcoming Events
+                    </h2>
+
+                    <p>
+                        Approved events assigned to your team
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <div class="table-wrap">
+
+                @if (Model.Events.Any())
+                {
+
+                    <table>
+
+                        <thead>
+
+                            <tr>
+
+                                <th>
+                                    Date
+                                </th>
+
+                                <th>
+                                    Event
+                                </th>
+
+                                <th>
+                                    Client
+                                </th>
+
+                                <th>
+                                    Venue
+                                </th>
+
+                                <th>
+                                    Time
+                                </th>
+
+                                <th>
+                                    Status
+                                </th>
+
+                            </tr>
+
+                        </thead>
+
+
+                        <tbody>
+
+                            @foreach (var booking in Model.Events)
+                            {
+
+                                <tr>
+
+                                    <td>
+                                        @booking.EventDate.ToString("dd MMM yyyy")
+                                    </td>
+
+                                    <td>
+                                        @booking.Occasion
+                                    </td>
+
+                                    <td>
+                                        @booking.FirstName
+                                        @booking.LastName
+                                    </td>
+
+                                    <td>
+                                        @booking.Address
+                                    </td>
+
+                                    <td>
+                                        @booking.EventTime
+                                    </td>
+
+                                    <td>
+
+                                        <span class="status approved">
+                                            Approved
+                                        </span>
+
+                                    </td>
+
+                                </tr>
+
+                            }
+
+                        </tbody>
+
+                    </table>
+
+                }
+                else
+                {
+
+                    <div class="empty-state">
+
+                        <h3>
+                            No upcoming events
+                        </h3>
+
+                        <p>
+                            There are currently no approved events
+                            assigned to your team.
+                        </p>
+
+                    </div>
+
+                }
+
+            </div>
+
+        </section>
+
+    </main>
+
+
+    <!-- ==========================================
+         LOGOUT
+         ========================================== -->
+
+    <div class="logout-area">
+
+        <a href="@Url.Action("StaffLogout", "Cust")"
+           class="logout-link">
+
+            Sign Out
+
+        </a>
+
+    </div>
+
+
+</body>
+
+</html>
