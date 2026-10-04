@@ -414,6 +414,7 @@
     <Content Include="Views\Cust\AdminDashboard.cshtml" />
     <Content Include="Views\Cust\AdminStaffComplaints.cshtml" />
     <Content Include="Views\Cust\CustomerComplaints.cshtml" />
+    <Content Include="Views\Cust\CustomerDashboard.cshtml" />
     <Content Include="Views\Cust\AdminCustomerComplaints.cshtml" />
     <Content Include="Views\Cust\AllBookings.cshtml" />
     <Content Include="Views\Cust\UpcomingEvents.cshtml" />
