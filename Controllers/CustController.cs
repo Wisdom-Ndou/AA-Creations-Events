@@ -557,6 +557,96 @@ namespace WebApplication1.Controllers
             return AllowedEventCities.Contains(
                 NormalizeEventCity(city));
         }
+
+        private static bool TryGetEventCityServiceArea(
+            string city,
+            out double centerLatitude,
+            out double centerLongitude,
+            out double radiusKm)
+        {
+            centerLatitude = 0;
+            centerLongitude = 0;
+            radiusKm = 0;
+
+            switch (NormalizeEventCity(city).ToLowerInvariant())
+            {
+                case "durban":
+                    centerLatitude = -29.8587;
+                    centerLongitude = 31.0218;
+                    radiusKm = 60;
+                    return true;
+
+                case "pietermaritzburg":
+                    centerLatitude = -29.6006;
+                    centerLongitude = 30.3794;
+                    radiusKm = 45;
+                    return true;
+
+                case "mandeni":
+                case "emandeni":
+                    centerLatitude = -29.1460;
+                    centerLongitude = 31.4070;
+                    radiusKm = 45;
+                    return true;
+
+                default:
+                    return false;
+            }
+        }
+
+        private static double DegreesToRadians(double degrees)
+        {
+            return degrees * Math.PI / 180.0;
+        }
+
+        private static double CalculateDistanceKm(
+            double latitude1,
+            double longitude1,
+            double latitude2,
+            double longitude2)
+        {
+            const double earthRadiusKm = 6371.0;
+
+            var lat1 = DegreesToRadians(latitude1);
+            var lat2 = DegreesToRadians(latitude2);
+            var deltaLat = DegreesToRadians(latitude2 - latitude1);
+            var deltaLon = DegreesToRadians(longitude2 - longitude1);
+
+            var a =
+                Math.Sin(deltaLat / 2) * Math.Sin(deltaLat / 2) +
+                Math.Cos(lat1) * Math.Cos(lat2) *
+                Math.Sin(deltaLon / 2) * Math.Sin(deltaLon / 2);
+
+            var centralAngle =
+                2 * Math.Atan2(Math.Sqrt(a), Math.Sqrt(1 - a));
+
+            return earthRadiusKm * centralAngle;
+        }
+
+        private static bool IsWithinSelectedCityServiceArea(
+            string city,
+            double latitude,
+            double longitude)
+        {
+            double centerLatitude;
+            double centerLongitude;
+            double radiusKm;
+
+            if (!TryGetEventCityServiceArea(
+                    city,
+                    out centerLatitude,
+                    out centerLongitude,
+                    out radiusKm))
+            {
+                return false;
+            }
+
+            return CalculateDistanceKm(
+                centerLatitude,
+                centerLongitude,
+                latitude,
+                longitude) <= radiusKm;
+        }
         
 
        
@@ -730,7 +820,10 @@ namespace WebApplication1.Controllers
                         latitude = latitude,
                         longitude = longitude,
                         resolvedCity = resolvedCity,
-                        inSelectedCity = true
+                        inSelectedCity = IsWithinSelectedCityServiceArea(
+                            city,
+                            latitude,
+                            longitude)
                     });
                 }
 
@@ -802,7 +895,11 @@ namespace WebApplication1.Controllers
                     address = GetGeocodedLabel(feature),
                     resolvedCity = GetGeocodedCity(feature),
                     latitude = latitude,
-                    longitude = longitude
+                    longitude = longitude,
+                    inSelectedCity = IsWithinSelectedCityServiceArea(
+                        city,
+                        latitude,
+                        longitude)
                 }, JsonRequestBehavior.AllowGet);
             }
             catch (WebException)
@@ -852,8 +949,10 @@ namespace WebApplication1.Controllers
                 return false;
             }
 
-            // No city-radius/location restriction.
-            return true;
+            return IsWithinSelectedCityServiceArea(
+                city,
+                lat,
+                lon);
         }
 
         [HttpPost]
