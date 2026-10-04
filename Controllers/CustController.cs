@@ -1497,6 +1497,46 @@ namespace WebApplication1.Controllers
             }, JsonRequestBehavior.AllowGet);
         }
 
+        [HttpGet]
+        public JsonResult EmailSmtpTest()
+        {
+            if (Session["CustomerId"] == null)
+            {
+                return Json(new
+                {
+                    success = false,
+                    message = "Please sign in first."
+                }, JsonRequestBehavior.AllowGet);
+            }
+
+            int customerId = (int)Session["CustomerId"];
+            var customer = db.Customers.FirstOrDefault(c => c.Cust_ID == customerId);
+
+            if (customer == null)
+            {
+                return Json(new
+                {
+                    success = false,
+                    message = "Customer account could not be found."
+                }, JsonRequestBehavior.AllowGet);
+            }
+
+            var service = new OtpDeliveryService();
+            bool sent = service.SendDiagnosticEmail(customer.Cust_Email);
+
+            return Json(new
+            {
+                success = sent,
+                message = sent
+                    ? "SMTP test email sent successfully."
+                    : service.LastError,
+                diagnostic = sent ? null : service.LastDiagnostic,
+                smtpHost = service.SmtpHost,
+                smtpPort = service.SmtpPort,
+                sender = service.SenderDisplay
+            }, JsonRequestBehavior.AllowGet);
+        }
+
         public JsonResult TestCustomerDatabase()
         {
             var customerCount = db.Customers.Count();
