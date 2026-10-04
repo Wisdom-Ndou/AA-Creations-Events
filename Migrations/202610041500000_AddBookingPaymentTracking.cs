@@ -14,6 +14,13 @@ namespace WebApplication1.Migrations
             AddColumn("dbo.Bookings", "RefundAmount", c => c.Decimal(nullable: false, precision: 18, scale: 2));
             AddColumn("dbo.Bookings", "TermsVersion", c => c.String(maxLength: 30));
             AddColumn("dbo.Bookings", "TermsAcceptedAt", c => c.DateTime());
+
+            // Before payment tracking existed, every saved booking implicitly
+            // represented a fully paid booking. Preserve that legacy meaning.
+            Sql(@"UPDATE dbo.Bookings
+                  SET AmountPaid = TotalPrice,
+                      PaymentStatus = 'Fully Paid'
+                  WHERE AmountPaid = 0");
         }
 
         public override void Down()
