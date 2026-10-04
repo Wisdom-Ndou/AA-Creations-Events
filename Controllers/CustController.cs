@@ -47,10 +47,10 @@ namespace WebApplication1.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         public ActionResult Login(
-        string email,
-        string password,
-     string role,
-     string accessCode)
+    string email,
+    string password,
+    string role,
+    string adminAccessCode)
         {
             // ==========================================
             // CHECK REQUIRED FIELDS
@@ -113,6 +113,8 @@ namespace WebApplication1.Controllers
                     return View();
                 }
 
+                ClearRoleSessions();
+
                 // Store authenticated customer information
                 Session["CustomerId"] =
                     customer.Cust_ID;
@@ -143,7 +145,7 @@ namespace WebApplication1.Controllers
                 string correctAccessCode =
                     ConfigurationManager.AppSettings["AdminAccessCode"];
 
-                if (string.IsNullOrWhiteSpace(accessCode))
+                if (string.IsNullOrWhiteSpace(adminAccessCode))
                 {
                     ModelState.AddModelError(
                         "",
@@ -154,7 +156,10 @@ namespace WebApplication1.Controllers
                 }
 
                 if (string.IsNullOrWhiteSpace(correctAccessCode) ||
-                    accessCode.Trim() != correctAccessCode.Trim())
+                    !string.Equals(
+                        adminAccessCode.Trim(),
+                        correctAccessCode.Trim(),
+                        StringComparison.Ordinal))
                 {
                     ModelState.AddModelError(
                         "",
@@ -208,6 +213,8 @@ namespace WebApplication1.Controllers
                 // ADMIN AUTHENTICATED
                 // ==========================================
 
+                ClearRoleSessions();
+
                 Session["AdminId"] =
                     admin.admin_ID;
 
@@ -254,21 +261,25 @@ namespace WebApplication1.Controllers
                 return View();
             }
 
+            string normalizedEmail = email.Trim();
+
             var customer = db.Customers
-                .FirstOrDefault(c => c.Cust_Email == email);
-
-            if (customer == null)
-            {
-                ViewBag.ErrorMessage =
-                    "No account was found with that email address.";
-
-                return View();
-            }
+                .FirstOrDefault(c => c.Cust_Email == normalizedEmail);
 
             // Start a fresh Forgot Password OTP flow.
             Session.Remove("OtpVerified");
             Session.Remove("OtpPurpose");
-            Session.Remove("TestOtp");
+            Session.Remove("ExpectedOtpPurpose");
+            Session.Remove("OtpCustomerId");
+
+            if (customer == null)
+            {
+                // Do not reveal whether a customer account exists for an email address.
+                TempData["ForgotPasswordNotice"] =
+                    "If an account exists for that email address, password recovery can continue by email.";
+
+                return RedirectToAction("ForgotPassword", "Cust");
+            }
 
             Session["OtpCustomerId"] = customer.Cust_ID;
             return RedirectToAction(
@@ -297,9 +308,9 @@ namespace WebApplication1.Controllers
                 return RedirectToAction("ForgotPassword", "Cust");
             }
 
-            if (deliveryMethod != "Email" && deliveryMethod != "Phone")
+            if (deliveryMethod != "Email")
             {
-                TempData["OtpError"] = "Please select a valid verification method.";
+                TempData["OtpError"] = "Password recovery is currently available by email.";
                 return RedirectToAction("ForgotPasswordMethod", "Cust");
             }
 
@@ -329,30 +340,36 @@ namespace WebApplication1.Controllers
                 FailedAttempts = 0
             };
 
+            // Only the newest unused code for this purpose should remain valid.
+            var previousOtps = db.OtpVerifications
+                .Where(o => o.CustomerId == customer.Cust_ID &&
+                            o.Purpose == "ForgotPassword" &&
+                            !o.IsUsed)
+                .ToList();
+
+            foreach (var previousOtp in previousOtps)
+            {
+                previousOtp.IsUsed = true;
+            }
+
             db.OtpVerifications.Add(otpVerification);
             db.SaveChanges();
+            Session["ExpectedOtpPurpose"] = "ForgotPassword";
 
             var deliveryService = new OtpDeliveryService();
 
-            bool sent;
-
-            if (deliveryMethod == "Email")
-            {
-                sent = deliveryService.SendOtpByEmail(
-                    customer.Cust_Email,
-                    otp
-                );
-            }
-            else
-            {
-                sent = deliveryService.SendOtpByPhone(
-                    customer.Cust_Phone,
-                    otp
-                );
-            }
+            bool sent = deliveryService.SendOtpByEmail(
+                customer.Cust_Email,
+                otp
+            );
 
             if (!sent)
             {
+                // A code that was never delivered must never remain usable.
+                otpVerification.IsUsed = true;
+                db.SaveChanges();
+                Session.Remove("ExpectedOtpPurpose");
+
                 TempData["OtpError"] =
                     "We could not send the verification code.";
 
@@ -361,9 +378,6 @@ namespace WebApplication1.Controllers
                     "Cust"
                 );
             }
-
-            // TEMPORARY TESTING ONLY
-            Session["TestOtp"] = otp;
 
             return RedirectToAction(
                 "VerifyOtp",
@@ -374,54 +388,120 @@ namespace WebApplication1.Controllers
         [HttpGet]
         public ActionResult Customerregister()
         {
+            var currentTerms = GetCurrentTerms();
+            ViewBag.CurrentTerms = currentTerms;
+            ViewBag.TermsVersion = currentTerms == null ? null : currentTerms.Version;
+            return View();
+        }
+
+        [HttpGet]
+        public ActionResult TermsAndConditions()
+        {
+            ViewBag.CurrentTerms = GetCurrentTerms();
             return View();
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Customerregister(Customer obj)
+        public ActionResult Customerregister(
+            Customer obj,
+            bool termsAccepted,
+            string termsVersion,
+            string cookiePreference)
         {
-            // Password policy validation
+            var currentTerms = GetCurrentTerms();
+            ViewBag.CurrentTerms = currentTerms;
+            ViewBag.TermsVersion = currentTerms == null ? null : currentTerms.Version;
+
+            if (currentTerms == null)
+            {
+                ModelState.AddModelError("", "The Terms & Conditions are currently unavailable. Please try again later.");
+                return View(obj);
+            }
+
+            if (!termsAccepted)
+            {
+                ModelState.AddModelError("", "You must agree to the Terms & Conditions before creating an account.");
+                return View(obj);
+            }
+
+            if (!string.Equals(termsVersion, currentTerms.Version, StringComparison.OrdinalIgnoreCase))
+            {
+                ModelState.AddModelError("", "The Terms & Conditions have been updated. Please review and accept the latest version.");
+                return View(obj);
+            }
+
+            if (cookiePreference != "necessary" && cookiePreference != "all")
+            {
+                cookiePreference = "necessary";
+            }
+
             if (string.IsNullOrWhiteSpace(obj.Cust_Passw) ||
                 obj.Cust_Passw.Length < 6 ||
                 obj.Cust_Passw.Length > 15 ||
                 !obj.Cust_Passw.Any(char.IsLetter) ||
                 !obj.Cust_Passw.Any(char.IsDigit))
             {
-                ModelState.AddModelError(
-                    "Cust_Passw",
-                    "Password must be 6 to 15 characters long and contain at least one letter and one number."
-                );
-
+                ModelState.AddModelError("Cust_Passw",
+                    "Password must be 6 to 15 characters long and contain at least one letter and one number.");
                 return View(obj);
             }
 
-            // Check whether email is already registered
-            if (db.Customers.Any(c => c.Cust_Email == obj.Cust_Email))
+            if (db.Customers.Any(x => x.Cust_Email == obj.Cust_Email))
             {
-                ModelState.AddModelError(
-                    "Cust_Email",
-                    "An account with this email address already exists."
-                );
-
+                ModelState.AddModelError("Cust_Email", "An account with this email address already exists.");
                 return View(obj);
             }
 
-            // Hash password
-            obj.Cust_Passw = Crypto.HashPassword(obj.Cust_Passw);
+            using (var transaction = db.Database.BeginTransaction())
+            {
+                try
+                {
+                    obj.Cust_Passw = Crypto.HashPassword(obj.Cust_Passw);
+                    obj.CreatedAt = DateTime.Now;
 
-            // Ensure CreatedAt is a valid SQL datetime value
-            obj.CreatedAt = DateTime.Now;
+                    db.Customers.Add(obj);
+                    db.SaveChanges();
 
-            // Persist
-            db.Customers.Add(obj);
-            db.SaveChanges();
+                    db.CustomerAgreements.Add(new CustomerAgreement
+                    {
+                        CustomerId = obj.Cust_ID,
+                        TermsAccepted = true,
+                        TermsVersion = currentTerms.Version,
+                        AcceptedAt = DateTime.Now,
+                        CookiePreference = cookiePreference
+                    });
 
-            TempData["RegistrationSuccess"] =
-                "Your registration was successful. You can now sign in and start booking.";
+                    db.SaveChanges();
+                    transaction.Commit();
+                }
+                catch
+                {
+                    transaction.Rollback();
+                    throw;
+                }
+            }
 
-            // Redirect back to registration (existing behavior) or to Login if preferred
+            var registrationEmailService = new OtpDeliveryService();
+            bool registrationEmailSent = registrationEmailService.SendRegistrationEmail(
+                obj.Cust_Email,
+                obj.Cust_FName
+            );
+
+            TempData["RegistrationSuccess"] = registrationEmailSent
+                ? "Your registration was successful. A confirmation email has been sent to you."
+                : "Your registration was successful. You can now sign in and start booking.";
+
             return RedirectToAction("Customerregister", "Cust");
+        }
+
+        private TermsAndConditions GetCurrentTerms()
+        {
+            return db.TermsAndConditions
+                .Where(t => t.IsActive)
+                .OrderByDescending(t => t.EffectiveDate)
+                .ThenByDescending(t => t.Terms_ID)
+                .FirstOrDefault();
         }
 
 
@@ -441,7 +521,26 @@ namespace WebApplication1.Controllers
             bool? termsAccepted,
             string adminAccessCode)
         {
-            // existing validation omitted for brevity...
+            string configuredAccessCode = ConfigurationManager.AppSettings["AdminAccessCode"];
+
+            if (string.IsNullOrWhiteSpace(firstName) ||
+                string.IsNullOrWhiteSpace(lastName) ||
+                string.IsNullOrWhiteSpace(email) ||
+                string.IsNullOrWhiteSpace(password) ||
+                password != confirm ||
+                string.IsNullOrWhiteSpace(adminAccessCode) ||
+                string.IsNullOrWhiteSpace(configuredAccessCode) ||
+                !string.Equals(adminAccessCode.Trim(), configuredAccessCode.Trim(), StringComparison.Ordinal))
+            {
+                ModelState.AddModelError("", "Please provide valid admin registration details and authorization code.");
+                return View();
+            }
+
+            if (db.Admins.Any(a => a.admin_Email == email.Trim()))
+            {
+                ModelState.AddModelError("", "An administrator with this email address already exists.");
+                return View();
+            }
 
             var admin = new Admin
             {
@@ -536,6 +635,22 @@ namespace WebApplication1.Controllers
 
             try
             {
+                var allowedCities = new[] { "Durban", "Pietermaritzburg", "Mandeni" };
+                var requestedCity = (request.City ?? "").Trim();
+
+                if (!allowedCities.Any(city =>
+                    city.Equals(requestedCity, StringComparison.OrdinalIgnoreCase)))
+                {
+                    return Json(new
+                    {
+                        success = false,
+                        message = "Please select Durban, Pietermaritzburg or Mandeni."
+                    });
+                }
+
+                request.City = allowedCities.First(city =>
+                    city.Equals(requestedCity, StringComparison.OrdinalIgnoreCase));
+
                 // Find the package in the database
                 var package = db.Packages
                     .FirstOrDefault(p => p.PackageId == request.PackageId);
@@ -609,23 +724,24 @@ namespace WebApplication1.Controllers
                     });
                 }
 
-                // Save everything as one transaction
-                using (var transaction = db.Database.BeginTransaction())
-                {
-                    try
-                    {
-                        db.Bookings.Add(booking);
+                // Save the booking first. Staff work is created only after
+                // an administrator approves the booking.
+                db.Bookings.Add(booking);
+                db.SaveChanges();
 
-                        db.SaveChanges();
-
-                        transaction.Commit();
-                    }
-                    catch
-                    {
-                        transaction.Rollback();
-                        throw;
-                    }
-                }
+                // Send a receipt/booking-received email after the booking is safely stored.
+                // A delivery failure does not roll back the booking.
+                var bookingEmailService = new OtpDeliveryService();
+                bookingEmailService.SendBookingConfirmationEmail(
+                    booking.Email,
+                    booking.FirstName,
+                    booking.BookingId,
+                    booking.Occasion,
+                    booking.EventDate,
+                    booking.EventTime,
+                    booking.City,
+                    booking.TotalPrice
+                );
 
                 return Json(new
                 {
@@ -659,21 +775,92 @@ namespace WebApplication1.Controllers
                     .Include("BookingAddOns.AddOn")
                     .OrderByDescending(b => b.EventDate)
                     .ToList();
+
+                var bookingIds = bookings.Select(b => b.BookingId).ToList();
+                ViewBag.AssignedBookingIds = db.StaffTasks
+                    .Where(t => t.BookingId.HasValue && bookingIds.Contains(t.BookingId.Value))
+                    .Select(t => t.BookingId.Value)
+                    .Distinct()
+                    .ToList();
+            }
+            else
+            {
+                ViewBag.AssignedBookingIds = new List<int>();
             }
 
             return View(bookings);
         }
 
-        public JsonResult TestDatabase()
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public JsonResult CancelCustomerBooking(int bookingId)
         {
-            int bookingCount = db.Bookings.Count();
+            if (Session["CustomerId"] == null)
+                return Json(new { success = false, requiresLogin = true, message = "Please sign in first." });
 
-            return Json(new
+            int customerId = (int)Session["CustomerId"];
+            var booking = db.Bookings.FirstOrDefault(b => b.BookingId == bookingId && b.CustomerId == customerId);
+
+            if (booking == null)
+                return Json(new { success = false, message = "Booking could not be found." });
+
+            string current = (booking.Status ?? "Pending").Trim();
+            if (current.Equals("Setup Completed", StringComparison.OrdinalIgnoreCase) ||
+                current.Equals("Completed", StringComparison.OrdinalIgnoreCase) ||
+                current.Equals("Declined", StringComparison.OrdinalIgnoreCase) ||
+                current.Equals("Cancelled", StringComparison.OrdinalIgnoreCase))
+                return Json(new { success = false, message = "This booking can no longer be cancelled online." });
+
+            booking.Status = "Cancelled";
+
+            var pendingTasks = db.StaffTasks
+                .Where(t => t.BookingId == bookingId && t.Status == "Pending")
+                .ToList();
+
+            foreach (var task in pendingTasks)
             {
-                success = true,
-                bookingCount = bookingCount,
-                message = "Database connection is working."
-            }, JsonRequestBehavior.AllowGet);
+                task.Status = "Cancelled";
+                task.CompletionReason = "Booking cancelled by customer.";
+                task.CompletedAt = DateTime.Now;
+            }
+
+            db.SaveChanges();
+            return Json(new { success = true, status = booking.Status, message = "Booking cancelled." });
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public JsonResult CompleteCustomerBooking(int bookingId)
+        {
+            if (Session["CustomerId"] == null)
+            {
+                return Json(new { success = false, requiresLogin = true, message = "Please sign in first." });
+            }
+
+            int customerId = (int)Session["CustomerId"];
+
+            var booking = db.Bookings.FirstOrDefault(b =>
+                b.BookingId == bookingId &&
+                b.CustomerId == customerId);
+
+            if (booking == null)
+            {
+                return Json(new { success = false, message = "Booking could not be found." });
+            }
+
+            if (!string.Equals(booking.Status, "Setup Completed", StringComparison.OrdinalIgnoreCase))
+            {
+                return Json(new
+                {
+                    success = false,
+                    message = "The booking can only be completed after staff have finished the venue setup."
+                });
+            }
+
+            booking.Status = "Completed";
+            db.SaveChanges();
+
+            return Json(new { success = true, status = booking.Status, message = "Booking marked as completed." });
         }
 
         [HttpGet]
@@ -819,9 +1006,9 @@ namespace WebApplication1.Controllers
                 return RedirectToAction("Login", "Cust");
             }
 
-            if (deliveryMethod != "Email" && deliveryMethod != "Phone")
+            if (deliveryMethod != "Email")
             {
-                TempData["OtpError"] = "Invalid OTP delivery method.";
+                TempData["OtpError"] = "Password verification is currently available by email.";
                 return RedirectToAction("ManageAccount", "Cust");
             }
 
@@ -845,45 +1032,41 @@ namespace WebApplication1.Controllers
                 FailedAttempts = 0
             };
 
+            // Only the newest unused code for this purpose should remain valid.
+            var previousOtps = db.OtpVerifications
+                .Where(o => o.CustomerId == customer.Cust_ID &&
+                            o.Purpose == purpose &&
+                            !o.IsUsed)
+                .ToList();
+
+            foreach (var previousOtp in previousOtps)
+            {
+                previousOtp.IsUsed = true;
+            }
+
             db.OtpVerifications.Add(otpVerification);
             db.SaveChanges();
+            Session["ExpectedOtpPurpose"] = purpose;
 
             var deliveryService = new OtpDeliveryService();
 
-            bool sent;
-
-            if (deliveryMethod == "Email")
-            {
-                sent = deliveryService.SendOtpByEmail(
-                    customer.Cust_Email,
-                    otp
-                );
-            }
-            else
-            {
-                sent = deliveryService.SendOtpByPhone(
-                    customer.Cust_Phone,
-                    otp
-                );
-            }
+            bool sent = deliveryService.SendOtpByEmail(
+                customer.Cust_Email,
+                otp
+            );
 
             if (!sent)
             {
+                // A code that was never delivered must never remain usable.
+                otpVerification.IsUsed = true;
+                db.SaveChanges();
+                Session.Remove("ExpectedOtpPurpose");
+
                 TempData["OtpError"] =
                     "We could not send the verification code.";
 
                 return RedirectToAction("ManageAccount", "Cust");
             }
-
-            /*
-             * TEMPORARY TESTING ONLY
-             *
-             * Remove this once actual email/SMS delivery is connected.
-             */
-            // TEMPORARY TESTING ONLY
-            // Store the plaintext OTP in session so it remains visible
-            // if the user enters the wrong code.
-            Session["TestOtp"] = otp;
 
             return RedirectToAction("VerifyOtp", "Cust");
         }
@@ -901,8 +1084,6 @@ namespace WebApplication1.Controllers
             {
                 return RedirectToAction("Login", "Cust");
             }
-
-            ViewBag.TestOtp = Session["TestOtp"];
 
             return View();
         }
@@ -927,8 +1108,6 @@ namespace WebApplication1.Controllers
                 return RedirectToAction("Login", "Cust");
             }
 
-            ViewBag.TestOtp = Session["TestOtp"];
-
             if (string.IsNullOrWhiteSpace(otp))
             {
                 ModelState.AddModelError(
@@ -939,9 +1118,18 @@ namespace WebApplication1.Controllers
                 return View();
             }
 
+            string expectedPurpose = Session["ExpectedOtpPurpose"] as string;
+
+            if (string.IsNullOrWhiteSpace(expectedPurpose))
+            {
+                ModelState.AddModelError("", "The verification session has expired. Please request a new code.");
+                return View();
+            }
+
             var verification = db.OtpVerifications
                 .Where(o =>
                     o.CustomerId == customerId &&
+                    o.Purpose == expectedPurpose &&
                     !o.IsUsed &&
                     o.ExpiresAt > DateTime.Now)
                 .OrderByDescending(o => o.CreatedAt)
@@ -959,6 +1147,10 @@ namespace WebApplication1.Controllers
 
             if (verification.FailedAttempts >= 5)
             {
+                verification.IsUsed = true;
+                db.SaveChanges();
+                Session.Remove("ExpectedOtpPurpose");
+
                 ModelState.AddModelError(
                     "",
                     "Too many incorrect attempts. Please request a new code."
@@ -976,11 +1168,19 @@ namespace WebApplication1.Controllers
             {
                 verification.FailedAttempts++;
 
+                if (verification.FailedAttempts >= 5)
+                {
+                    verification.IsUsed = true;
+                    Session.Remove("ExpectedOtpPurpose");
+                }
+
                 db.SaveChanges();
 
                 ModelState.AddModelError(
                     "",
-                    "Incorrect verification code."
+                    verification.FailedAttempts >= 5
+                        ? "Too many incorrect attempts. Please request a new code."
+                        : "Incorrect verification code."
                 );
 
                 return View();
@@ -990,11 +1190,9 @@ namespace WebApplication1.Controllers
 
             db.SaveChanges();
 
-            // Remove the test OTP now that it has been successfully used.
-            Session.Remove("TestOtp");
-
             Session["OtpVerified"] = true;
             Session["OtpPurpose"] = verification.Purpose;
+            Session.Remove("ExpectedOtpPurpose");
 
             // FORGOT PASSWORD
             if (verification.Purpose == "ForgotPassword")
@@ -1170,7 +1368,6 @@ namespace WebApplication1.Controllers
             Session.Remove("OtpVerified");
             Session.Remove("OtpPurpose");
             Session.Remove("OtpCustomerId");
-            Session.Remove("TestOtp");
 
             TempData["AccountSuccess"] =
                 "Your password has been changed successfully.";
@@ -1249,6 +1446,15 @@ namespace WebApplication1.Controllers
                     .Sum() ?? 0m;
 
             // ---------------------------------------------------------
+            // STAFF AVAILABILITY
+            // A staff member is busy while they have at least one pending task.
+            // ---------------------------------------------------------
+            int totalStaff = db.Staffs.Count();
+            int busyStaff = db.Staffs.Count(s =>
+                db.StaffTasks.Any(t => t.StaffId == s.staff_ID && t.Status == "Pending"));
+            int availableStaff = totalStaff - busyStaff;
+
+            // ---------------------------------------------------------
             // RECENT BOOKINGS
             // ---------------------------------------------------------
             var recentBookings = db.Bookings
@@ -1320,6 +1526,10 @@ namespace WebApplication1.Controllers
 
                 ConfirmedRevenue = confirmedRevenue,
 
+                TotalStaff = totalStaff,
+                AvailableStaff = availableStaff,
+                BusyStaff = busyStaff,
+
                 RecentBookings = recentBookings,
 
                 RecentActivities = recentActivities,
@@ -1349,7 +1559,8 @@ namespace WebApplication1.Controllers
         // ==========================================
 
         [HttpPost]
-        public JsonResult UpdateBookingStatus(int bookingId, string status)
+        [ValidateAntiForgeryToken]
+        public ActionResult UpdateBookingStatus(int bookingId, string status)
         {
             // Check admin authentication
             if (Session["AdminId"] == null ||
@@ -1406,6 +1617,19 @@ namespace WebApplication1.Controllers
                 });
             }
 
+            string currentStatus = (booking.Status ?? "Pending").Trim();
+            if (currentStatus.Equals("Declined", StringComparison.OrdinalIgnoreCase) ||
+                currentStatus.Equals("Cancelled", StringComparison.OrdinalIgnoreCase) ||
+                currentStatus.Equals("Setup Completed", StringComparison.OrdinalIgnoreCase) ||
+                currentStatus.Equals("Completed", StringComparison.OrdinalIgnoreCase))
+            {
+                return Json(new
+                {
+                    success = false,
+                    message = "This booking has reached a final workflow stage and its approval status can no longer be changed."
+                });
+            }
+
 
             // Convert to display format
             string newStatus;
@@ -1424,19 +1648,127 @@ namespace WebApplication1.Controllers
             }
 
 
-            // Update database
-            booking.Status = newStatus;
+            // Update database.
+            //
+            // A staff task is created only when the booking becomes Approved.
+            // This prevents staff from receiving work for bookings that are
+            // still awaiting admin review.
+            using (var transaction = db.Database.BeginTransaction())
+            {
+                try
+                {
+                    booking.Status = newStatus;
 
-            db.SaveChanges();
+                    if (newStatus == "Approved")
+                    {
+                        bool taskAlreadyExists = db.StaffTasks
+                            .Any(t => t.BookingId == booking.BookingId);
 
+                        if (!taskAlreadyExists)
+                        {
+                            // Choose the least-loaded staff member assigned
+                            // to the booking's city.
+                            string bookingCity = NormalizeCity(booking.City);
+
+                            var assignedStaff = db.Staffs
+                                .Where(s => s.staff_City != null)
+                                .ToList()
+                                .Where(s => NormalizeCity(s.staff_City) == bookingCity)
+                                .Select(s => new
+                                {
+                                    Staff = s,
+                                    ActiveTaskCount = db.StaffTasks.Count(t =>
+                                        t.StaffId == s.staff_ID &&
+                                        t.Status == "Pending")
+                                })
+                                .OrderBy(x => x.ActiveTaskCount)
+                                .ThenBy(x => x.Staff.staff_ID)
+                                .Select(x => x.Staff)
+                                .FirstOrDefault();
+
+                            if (assignedStaff == null)
+                            {
+                                transaction.Rollback();
+
+                                return Json(new
+                                {
+                                    success = false,
+                                    message = "The booking cannot be approved because no staff member is registered for " +
+                                              booking.City + ". Register a staff member for this city first."
+                                });
+                            }
+
+                            db.StaffTasks.Add(new StaffTask
+                            {
+                                StaffId = assignedStaff.staff_ID,
+                                BookingId = booking.BookingId,
+                                TaskName = "Decorate event for " +
+                                           booking.FirstName + " " +
+                                           booking.LastName,
+                                Description = "Complete the event decoration setup at " +
+                                              booking.Address + ", " +
+                                              booking.City + " for the " +
+                                              booking.Occasion + ".",
+                                DueDate = booking.EventDate,
+                                Priority = "High",
+                                Status = "Pending",
+                                CreatedAt = DateTime.Now
+                            });
+                        }
+                    }
+                    else if (newStatus == "Declined")
+                    {
+                        // Do not leave an active staff task behind if a booking
+                        // is declined.
+                        var existingTasks = db.StaffTasks
+                            .Where(t => t.BookingId == booking.BookingId &&
+                                        t.Status == "Pending")
+                            .ToList();
+
+                        foreach (var task in existingTasks)
+                        {
+                            task.Status = "Unable";
+                            task.CompletionReason = "Booking was declined by the administrator.";
+                            task.CompletedAt = DateTime.Now;
+                        }
+                    }
+
+                    db.SaveChanges();
+                    transaction.Commit();
+                }
+                catch (Exception ex)
+                {
+                    transaction.Rollback();
+
+                    // Return the error as JSON so the caller can diagnose
+                    // why the staff task was not created.
+                    return Json(new
+                    {
+                        success = false,
+                        message = "An error occurred while creating the staff task: " + ex.Message
+                    });
+                }
+            }
+
+            if (!Request.IsAjaxRequest())
+            {
+                TempData["AdminSuccess"] = newStatus == "Approved"
+                    ? "Booking approved and staff task assigned successfully."
+                    : "Booking status updated successfully.";
+
+                return RedirectToAction("AdminDashboard", "Cust");
+            }
 
             return Json(new
             {
                 success = true,
                 bookingId = booking.BookingId,
                 status = newStatus,
-                message = "Booking status updated successfully."
+                message = newStatus == "Approved"
+                    ? "Booking approved and staff task assigned successfully."
+                    : "Booking status updated successfully."
             });
+
         }
 
         // ==========================================
@@ -1492,7 +1824,7 @@ namespace WebApplication1.Controllers
                 .Where(b =>
                     b.EventDate >= today &&
                     b.Status != null &&
-                    b.Status.ToLower() == "confirmed")
+                    b.Status.ToLower() == "approved")
                 .OrderBy(b => b.EventDate)
                 .ToList();
 
@@ -1504,7 +1836,7 @@ namespace WebApplication1.Controllers
             var cancelledBookings = allBookings
                 .Where(b =>
                     b.Status != null &&
-                    b.Status.ToLower() == "cancelled")
+                    b.Status.ToLower() == "declined")
                 .OrderByDescending(b => b.CreatedAt)
                 .ToList();
 
@@ -1608,7 +1940,15 @@ namespace WebApplication1.Controllers
                 return RedirectToAction("Login", "Cust");
             }
 
-            return View();
+            // Use the same persisted booking status that drives the dashboard count.
+            // Older/null statuses are treated as pending for compatibility.
+            var pendingBookings = db.Bookings
+                .Where(b => string.IsNullOrEmpty(b.Status) || b.Status == "Pending")
+                .OrderBy(b => b.EventDate)
+                .ThenBy(b => b.CreatedAt)
+                .ToList();
+
+            return View(pendingBookings);
         }
 
 
@@ -1815,26 +2155,635 @@ namespace WebApplication1.Controllers
 
         public ActionResult StaffDashboard()
         {
-            return View();
+            if (!IsStaffAuthenticated())
+            {
+                return RedirectToAction("StaffLogin", "Cust");
+            }
+
+            int staffId = (int)Session["StaffId"];
+            DateTime today = DateTime.Today;
+            DateTime tomorrow = today.AddDays(1);
+            DateTime weekEnd = today.AddDays(7);
+
+            var staff = db.Staffs.FirstOrDefault(s => s.staff_ID == staffId);
+            if (staff == null)
+            {
+                ClearRoleSessions();
+                return RedirectToAction("StaffLogin", "Cust");
+            }
+
+            var allTasks = db.StaffTasks
+                .Where(t => t.StaffId == staffId)
+                .Include("Booking")
+                .OrderBy(t => t.DueDate)
+                .ThenByDescending(t => t.CreatedAt)
+                .ToList();
+
+            var todayTasks = allTasks
+                .Where(t => t.Status == "Pending" && t.DueDate >= today && t.DueDate < tomorrow)
+                .ToList();
+
+            var upcomingEvents = allTasks
+                .Where(t => t.Booking != null &&
+                            t.Booking.EventDate >= today &&
+                            t.Booking.EventDate < weekEnd &&
+                            t.Booking.Status == "Approved")
+                .GroupBy(t => t.BookingId)
+                .Select(g => g.First().Booking)
+                .OrderBy(b => b.EventDate)
+                .Select(b => new StaffEventDashboardItem
+                {
+                    BookingId = b.BookingId,
+                    Occasion = b.Occasion,
+                    EventDate = b.EventDate,
+                    EventTime = b.EventTime,
+                    Address = b.Address,
+                    City = b.City,
+                    Status = b.Status
+                })
+                .ToList();
+
+            var model = new StaffDashboardViewModel
+            {
+                StaffMember = staff,
+                TeamCity = staff.staff_City,
+                TodayTasks = todayTasks.Count,
+                HighPriorityTasks = allTasks.Count(t => t.Status == "Pending" && t.Priority == "High"),
+                EventsThisWeek = upcomingEvents.Count,
+                OpenComplaints = db.StaffComplaints.Count(x => x.StaffId == staffId && x.Status == "Open"),
+                HoursLogged = null,
+                TasksDueToday = todayTasks,
+                UpcomingEvents = upcomingEvents
+            };
+
+            return View(model);
         }
 
         public ActionResult StaffTasks()
         {
-            return View();
+            if (!IsStaffAuthenticated())
+            {
+                return RedirectToAction("StaffLogin", "Cust");
+            }
+
+            int staffId = (int)Session["StaffId"];
+
+            var tasks = db.StaffTasks
+                .Where(t => t.StaffId == staffId)
+                .Include("Booking")
+                .OrderBy(t => t.Status == "Pending" ? 0 : 1)
+                .ThenBy(t => t.DueDate)
+                .ToList();
+
+            return View(tasks);
         }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public ActionResult UpdateStaffTask(int taskId, string status, string completionReason)
+        {
+            if (!IsStaffAuthenticated())
+            {
+                return RedirectToAction("StaffLogin", "Cust");
+            }
+
+            int staffId = (int)Session["StaffId"];
+
+            var task = db.StaffTasks
+                .FirstOrDefault(t => t.TaskId == taskId && t.StaffId == staffId);
+
+            if (task == null)
+            {
+                TempData["StaffTaskError"] = "The task could not be found.";
+                return RedirectToAction("StaffTasks", "Cust");
+            }
+
+            if (!string.Equals(task.Status, "Pending", StringComparison.OrdinalIgnoreCase))
+            {
+                TempData["StaffTaskError"] = "This task has already reached a final status and cannot be changed.";
+                return RedirectToAction("StaffTasks", "Cust");
+            }
+
+            if (status == "Completed")
+            {
+                task.Status = "Completed";
+                task.CompletionReason = null;
+                task.CompletedAt = DateTime.Now;
+
+                // Completing the decoration task means the venue setup is ready.
+                // Keep the booking itself open until the customer confirms arrival/completion.
+                if (task.BookingId.HasValue)
+                {
+                    var relatedBooking = db.Bookings
+                        .FirstOrDefault(b => b.BookingId == task.BookingId.Value);
+
+                    if (relatedBooking != null &&
+                        !string.Equals(relatedBooking.Status, "Declined", StringComparison.OrdinalIgnoreCase) &&
+                        !string.Equals(relatedBooking.Status, "Cancelled", StringComparison.OrdinalIgnoreCase) &&
+                        !string.Equals(relatedBooking.Status, "Completed", StringComparison.OrdinalIgnoreCase))
+                    {
+                        relatedBooking.Status = "Setup Completed";
+                    }
+                }
+            }
+            else if (status == "Unable")
+            {
+                if (string.IsNullOrWhiteSpace(completionReason))
+                {
+                    TempData["StaffTaskError"] = "Please provide a reason when a task cannot be completed.";
+                    return RedirectToAction("StaffTasks", "Cust");
+                }
+
+                task.Status = "Unable";
+                task.CompletionReason = completionReason.Trim();
+                task.CompletedAt = DateTime.Now;
+            }
+            else
+            {
+                TempData["StaffTaskError"] = "Invalid task status.";
+                return RedirectToAction("StaffTasks", "Cust");
+            }
+
+            db.SaveChanges();
+
+            TempData["StaffTaskSuccess"] = "Task status updated successfully.";
+            return RedirectToAction("StaffTasks", "Cust");
+        }
+
+        [HttpGet]
+        public ActionResult AdminStaffComplaints()
+        {
+            if (Session["AdminId"] == null ||
+                Session["AdminAuthenticated"] == null ||
+                !(bool)Session["AdminAuthenticated"])
+            {
+                return RedirectToAction("Login", "Cust");
+            }
+
+            var complaints = db.StaffComplaints
+                .Include("Staff")
+                .Include("Booking")
+                .OrderBy(cmp => cmp.Status == "Open" ? 0 : 1)
+                .ThenByDescending(cmp => cmp.CreatedAt)
+                .ToList();
+
+            return View(complaints);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public ActionResult RespondToStaffComplaint(int complaintId, string adminResponse, string status)
+        {
+            if (Session["AdminId"] == null ||
+                Session["AdminAuthenticated"] == null ||
+                !(bool)Session["AdminAuthenticated"])
+            {
+                return RedirectToAction("Login", "Cust");
+            }
+
+            var complaint = db.StaffComplaints.FirstOrDefault(cmp => cmp.ComplaintId == complaintId);
+            if (complaint == null)
+            {
+                return HttpNotFound();
+            }
+
+            if (string.IsNullOrWhiteSpace(adminResponse))
+            {
+                TempData["ComplaintAdminError"] = "A response is required.";
+                return RedirectToAction("AdminStaffComplaints");
+            }
+
+            complaint.AdminResponse = adminResponse.Trim();
+            complaint.Status = status == "Resolved" ? "Resolved" : "Open";
+            complaint.ResolvedAt = complaint.Status == "Resolved" ? (DateTime?)DateTime.Now : null;
+            db.SaveChanges();
+
+            TempData["ComplaintAdminSuccess"] = "Complaint updated successfully.";
+            return RedirectToAction("AdminStaffComplaints");
+        }
+
         public ActionResult StaffComplaints()
         {
-           
+            if (!IsStaffAuthenticated())
+            {
+                return RedirectToAction("StaffLogin", "Cust");
+            }
 
-                return View();
-            
+            int staffId = (int)Session["StaffId"];
+
+
+            var complaints = db.StaffComplaints
+                .Where(c => c.StaffId == staffId)
+                .Include("Booking")
+                .OrderByDescending(c => c.CreatedAt)
+                .ToList();
+
+            ViewBag.StaffTasks = db.StaffTasks
+                .Where(t => t.StaffId == staffId && t.BookingId != null)
+                .Include("Booking")
+                .OrderByDescending(t => t.CreatedAt)
+                .ToList();
+
+            return View(complaints);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public ActionResult CreateStaffComplaint(
+            string title,
+            string description,
+            string priority,
+            int? bookingId)
+        {
+            if (!IsStaffAuthenticated())
+            {
+                return RedirectToAction("StaffLogin", "Cust");
+            }
+
+            if (string.IsNullOrWhiteSpace(title) ||
+                string.IsNullOrWhiteSpace(description))
+            {
+                TempData["ComplaintError"] = "A title and description are required.";
+                return RedirectToAction("StaffComplaints", "Cust");
+            }
+
+            if (priority != "Low" && priority != "Medium" && priority != "High")
+            {
+                priority = "Medium";
+            }
+
+            int staffId = (int)Session["StaffId"];
+
+            if (bookingId.HasValue &&
+                !db.StaffTasks.Any(t =>
+                    t.StaffId == staffId &&
+                    t.BookingId == bookingId.Value))
+            {
+                TempData["ComplaintError"] = "You can only link a complaint to one of your assigned bookings.";
+                return RedirectToAction("StaffComplaints", "Cust");
+            }
+
+            db.StaffComplaints.Add(new StaffComplaint
+            {
+                StaffId = staffId,
+                BookingId = bookingId,
+                Title = title.Trim(),
+                Description = description.Trim(),
+                Priority = priority,
+                Status = "Open",
+                CreatedAt = DateTime.Now
+            });
+
+            db.SaveChanges();
+
+            TempData["ComplaintSuccess"] = "Complaint submitted successfully.";
+            return RedirectToAction("StaffComplaints", "Cust");
         }
 
         public ActionResult StaffProfile()
         {
+            if (!IsStaffAuthenticated())
+            {
+                return RedirectToAction("StaffLogin", "Cust");
+            }
+
+            int staffId = (int)Session["StaffId"];
+            var staff = db.Staffs.FirstOrDefault(s => s.staff_ID == staffId);
+
+            if (staff == null)
+            {
+                return RedirectToAction("StaffLogin", "Cust");
+            }
+
+            return View(staff);
+        }
+
+        private bool IsStaffAuthenticated()
+        {
+            return Session["StaffId"] != null &&
+                   Session["StaffAuthenticated"] != null &&
+                   (bool)Session["StaffAuthenticated"];
+        }
+
+        private void ClearRoleSessions()
+        {
+            Session.Remove("CustomerId");
+            Session.Remove("CustomerEmail");
+            Session.Remove("CustomerFirstName");
+            Session.Remove("CustomerAuthenticated");
+
+            Session.Remove("StaffId");
+            Session.Remove("StaffEmail");
+            Session.Remove("StaffFirstName");
+            Session.Remove("StaffAuthenticated");
+
+            Session.Remove("AdminId");
+            Session.Remove("AdminEmail");
+            Session.Remove("AdminFirstName");
+            Session.Remove("AdminAuthenticated");
+        }
+
+        [HttpGet]
+        public ActionResult StaffLogin()
+        {
+            if (IsStaffAuthenticated())
+            {
+                return RedirectToAction("StaffDashboard", "Cust");
+            }
+
             return View();
         }
 
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public ActionResult StaffLogin(string email, string password)
+        {
+            if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(password))
+            {
+                ModelState.AddModelError("", "Please enter your email address and password.");
+                return View();
+            }
+
+            var staff = db.Staffs.FirstOrDefault(s => s.staff_Email == email.Trim());
+
+            if (staff == null)
+            {
+                ModelState.AddModelError("", "Invalid email address or password.");
+                return View();
+            }
+
+            bool passwordValid = false;
+
+            try
+            {
+                passwordValid = Crypto.VerifyHashedPassword(staff.staff_Passw, password);
+            }
+            catch
+            {
+                passwordValid = false;
+            }
+
+            if (!passwordValid)
+            {
+                ModelState.AddModelError("", "Invalid email address or password.");
+                return View();
+            }
+
+            ClearRoleSessions();
+
+            Session["StaffId"] = staff.staff_ID;
+            Session["StaffEmail"] = staff.staff_Email;
+            Session["StaffFirstName"] = staff.staff_FName;
+            Session["StaffAuthenticated"] = true;
+
+            return RedirectToAction("StaffDashboard", "Cust");
+        }
+
+        [HttpGet]
+        public ActionResult StaffLogout()
+        {
+            Session.Remove("StaffId");
+            Session.Remove("StaffEmail");
+            Session.Remove("StaffFirstName");
+            Session.Remove("StaffAuthenticated");
+
+            return RedirectToAction("Login", "Cust");
+        }
+
+        [HttpGet]
+        public ActionResult FinancialOverview()
+        {
+            if (Session["AdminId"] == null || Session["AdminAuthenticated"] == null || !(bool)Session["AdminAuthenticated"])
+                return RedirectToAction("Login", "Cust");
+
+            decimal income = db.Bookings
+                .Where(b => b.Status == "Approved" || b.Status == "Setup Completed" || b.Status == "Completed")
+                .Select(b => (decimal?)b.TotalPrice)
+                .Sum() ?? 0m;
+
+            var expenses = db.Expenditures.OrderByDescending(e => e.ExpenseDate).ToList();
+            decimal expenditure = expenses.Select(e => e.Amount).DefaultIfEmpty(0m).Sum();
+
+            return View(new FinancialOverviewViewModel
+            {
+                Income = income,
+                TotalExpenditure = expenditure,
+                Expenditures = expenses
+            });
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public ActionResult AddExpenditure(string description, decimal amount, DateTime expenseDate, string category)
+        {
+            if (Session["AdminId"] == null || Session["AdminAuthenticated"] == null || !(bool)Session["AdminAuthenticated"])
+                return RedirectToAction("Login", "Cust");
+
+            if (string.IsNullOrWhiteSpace(description) || amount <= 0)
+            {
+                TempData["FinanceError"] = "Enter a description and an expenditure amount greater than zero.";
+                return RedirectToAction("FinancialOverview");
+            }
+
+            db.Expenditures.Add(new Expenditure
+            {
+                Description = description.Trim(),
+                Amount = amount,
+                ExpenseDate = expenseDate,
+                Category = string.IsNullOrWhiteSpace(category) ? "General" : category.Trim(),
+                CreatedAt = DateTime.Now
+            });
+            db.SaveChanges();
+            TempData["FinanceSuccess"] = "Expenditure recorded.";
+            return RedirectToAction("FinancialOverview");
+        }
+
+        [HttpGet]
+        public ActionResult StaffManagement()
+        {
+            if (Session["AdminId"] == null || Session["AdminAuthenticated"] == null || !(bool)Session["AdminAuthenticated"])
+                return RedirectToAction("Login", "Cust");
+
+            var staff = db.Staffs.OrderBy(s => s.staff_City).ThenBy(s => s.staff_FName).ToList();
+            var pendingCounts = db.StaffTasks
+                .Where(t => t.Status == "Pending")
+                .GroupBy(t => t.StaffId)
+                .ToDictionary(g => g.Key, g => g.Count());
+
+            ViewBag.PendingTaskCounts = pendingCounts;
+            return View(staff);
+        }
+
+        [HttpGet]
+        public ActionResult EditStaff(int id)
+        {
+            if (Session["AdminId"] == null || Session["AdminAuthenticated"] == null || !(bool)Session["AdminAuthenticated"])
+                return RedirectToAction("Login", "Cust");
+
+            var staff = db.Staffs.FirstOrDefault(s => s.staff_ID == id);
+            if (staff == null) return HttpNotFound();
+            return View(staff);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public ActionResult EditStaff(Staff model)
+        {
+            if (Session["AdminId"] == null || Session["AdminAuthenticated"] == null || !(bool)Session["AdminAuthenticated"])
+                return RedirectToAction("Login", "Cust");
+
+            var staff = db.Staffs.FirstOrDefault(s => s.staff_ID == model.staff_ID);
+            if (staff == null) return HttpNotFound();
+
+            // Password is optional when editing an existing staff account.
+            ModelState.Remove("staff_Passw");
+
+            if (string.IsNullOrWhiteSpace(model.staff_FName) || string.IsNullOrWhiteSpace(model.staff_LName) ||
+                string.IsNullOrWhiteSpace(model.staff_Email) || string.IsNullOrWhiteSpace(model.staff_Phone) ||
+                string.IsNullOrWhiteSpace(model.staff_Type))
+            {
+                ModelState.AddModelError("", "Please complete all staff details.");
+                return View(model);
+            }
+
+            string editedEmail = model.staff_Email.Trim();
+            if (db.Staffs.Any(s => s.staff_ID != model.staff_ID && s.staff_Email == editedEmail))
+            {
+                ModelState.AddModelError("staff_Email", "A staff account with this email already exists.");
+                return View(model);
+            }
+
+            // Team is the source of truth for staff assignment. Derive the city
+            // server-side so a tampered form cannot save a mismatched team/city pair.
+            if (model.staff_Type == "Team Dbn")
+            {
+                model.staff_City = "Durban";
+            }
+            else if (model.staff_Type == "Team Peter")
+            {
+                model.staff_City = "Pietermaritzburg";
+            }
+            else if (model.staff_Type == "Team Mdn")
+            {
+                model.staff_City = "Mandeni";
+            }
+            else
+            {
+                ModelState.AddModelError("staff_Type", "Select a valid staff team.");
+                return View(model);
+            }
+
+            staff.staff_FName = model.staff_FName.Trim();
+            staff.staff_LName = model.staff_LName.Trim();
+            staff.staff_Email = editedEmail;
+            staff.staff_Phone = model.staff_Phone.Trim();
+            staff.staff_Type = model.staff_Type;
+            staff.staff_City = model.staff_City;
+
+            // Keep the existing password unless the admin deliberately supplies a replacement.
+            if (!string.IsNullOrWhiteSpace(model.staff_Passw))
+                staff.staff_Passw = Crypto.HashPassword(model.staff_Passw);
+
+            db.SaveChanges();
+            TempData["StaffManagementSuccess"] = "Staff details updated.";
+            return RedirectToAction("StaffManagement");
+        }
+
+        [HttpGet]
+        public ActionResult RegisterStaff()
+        {
+            if (Session["AdminId"] == null ||
+                Session["AdminAuthenticated"] == null ||
+                !(bool)Session["AdminAuthenticated"])
+            {
+                return RedirectToAction("Login", "Cust");
+            }
+
+            return View(new Staff());
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public ActionResult RegisterStaff(
+            [Bind(Include = "staff_FName,staff_LName,staff_Email,staff_Passw,staff_Phone,staff_Type")]
+            Staff staff)
+        {
+            if (Session["AdminId"] == null ||
+                Session["AdminAuthenticated"] == null ||
+                !(bool)Session["AdminAuthenticated"])
+            {
+                return RedirectToAction("Login", "Cust");
+            }
+
+            // City is derived from the selected team below, so it is intentionally
+            // not posted by the form and must not fail model validation here.
+            ModelState.Remove("staff_City");
+
+            if (!ModelState.IsValid)
+            {
+                return View(staff);
+            }
+
+            // Team is the source of truth for assignment on registration too.
+            if (staff.staff_Type == "Team Dbn")
+            {
+                staff.staff_City = "Durban";
+            }
+            else if (staff.staff_Type == "Team Peter")
+            {
+                staff.staff_City = "Pietermaritzburg";
+            }
+            else if (staff.staff_Type == "Team Mdn")
+            {
+                staff.staff_City = "Mandeni";
+            }
+            else
+            {
+                ModelState.AddModelError("staff_Type", "Select a valid staff team.");
+                return View(staff);
+            }
+
+            staff.staff_FName = staff.staff_FName.Trim();
+            staff.staff_LName = staff.staff_LName.Trim();
+            staff.staff_Email = staff.staff_Email.Trim();
+
+            if (db.Staffs.Any(s => s.staff_Email == staff.staff_Email))
+            {
+                ModelState.AddModelError(
+                    "staff_Email",
+                    "A staff account with this email already exists."
+                );
+
+                return View(staff);
+            }
+
+            staff.staff_Passw = Crypto.HashPassword(staff.staff_Passw);
+
+            db.Staffs.Add(staff);
+            db.SaveChanges();
+
+            return RedirectToAction("AdminDashboard", "Cust");
+        }
+        private string NormalizeCity(string city)
+        {
+            if (string.IsNullOrWhiteSpace(city))
+            {
+                return string.Empty;
+            }
+
+            string value = city.Trim().ToLowerInvariant();
+
+            if (value == "dbn" || value == "durban" || value.Contains("ethekwini"))
+                return "durban";
+
+            if (value == "pmb" || value == "pietermaritzburg" || value.Contains("msunduzi"))
+                return "pietermaritzburg";
+
+            if (value == "mandeni" || value.Contains("mandeni local municipality"))
+                return "mandeni";
+
+            return value;
+        }
 
     }
 

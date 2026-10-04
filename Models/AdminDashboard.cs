@@ -22,6 +22,10 @@ namespace WebApplication1.Models
 
         public decimal ConfirmedRevenue { get; set; }
 
+        public int TotalStaff { get; set; }
+        public int AvailableStaff { get; set; }
+        public int BusyStaff { get; set; }
+
 
         // ===============================
         // CUSTOMER STATISTICS

@@ -33,5 +33,10 @@ namespace WebApplication1.Models
         [StringLength(50)]
         public string staff_Type { get; set; }
 
+        // Municipality/city this staff member is responsible for.
+        [Required(ErrorMessage = "City is required")]
+        [StringLength(100)]
+        public string staff_City { get; set; }
+
     }
 }

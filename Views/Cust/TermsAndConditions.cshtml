@@ -1,0 +1,20 @@
+@{
+    ViewBag.Title = "Terms & Conditions";
+    var currentTerms = ViewBag.CurrentTerms as WebApplication1.Models.TermsAndConditions;
+}
+
+<div class="aa-terms-page">
+    <div class="aa-terms-container">
+        <h1>Terms &amp; Conditions</h1>
+        @if (currentTerms != null)
+        {
+            <p><strong>Version:</strong> @currentTerms.Version<br />
+               <strong>Effective:</strong> @currentTerms.EffectiveDate.ToString("dd MMMM yyyy")</p>
+            <div class="aa-terms-content">@Html.Raw(currentTerms.Content)</div>
+        }
+        else
+        {
+            <p>The Terms &amp; Conditions are currently unavailable. Please try again later.</p>
+        }
+    </div>
+</div>

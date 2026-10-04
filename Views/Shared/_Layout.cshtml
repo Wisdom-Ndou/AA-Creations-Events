@@ -1,76 +1,80 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html>
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>@ViewBag.Title - My ASP.NET Application</title>
+    <title>@ViewBag.Title - AA Creations & Events</title>
     @Styles.Render("~/Content/css")
     @Scripts.Render("~/bundles/modernizr")
 </head>
 <body>
+@{
+    bool isAdmin = Session["AdminAuthenticated"] != null && (bool)Session["AdminAuthenticated"];
+    bool isStaff = Session["StaffAuthenticated"] != null && (bool)Session["StaffAuthenticated"];
+    bool isCustomer = Session["CustomerAuthenticated"] != null && (bool)Session["CustomerAuthenticated"];
+}
+<nav class="desktop-nav" aria-label="Main navigation">
+    <a href="@Url.Action("Index", "Cust")" class="logo">AA Creations & Events</a>
+    <ul class="nav-links">
+        @if (isAdmin)
+        {
+            <li><a href="@Url.Action("AdminDashboard","Cust")">DASHBOARD</a></li>
+            <li><a href="@Url.Action("AllBookings","Cust")">BOOKINGS</a></li>
+            <li><a href="@Url.Action("UpcomingEvents","Cust")">UPCOMING EVENTS</a></li>
+            <li><a href="@Url.Action("StaffManagement","Cust")">STAFF</a></li>
+            <li><a href="@Url.Action("FinancialOverview","Cust")">FINANCE</a></li>
+            <li><a href="@Url.Action("AdminStaffComplaints","Cust")">COMPLAINTS</a></li>
+            <li><a href="@Url.Action("AdminLogout","Cust")" class="login-btn">SIGN OUT</a></li>
+        }
+        else if (isStaff)
+        {
+            <li><a href="@Url.Action("StaffDashboard","Cust")">DASHBOARD</a></li>
+            <li><a href="@Url.Action("StaffTasks","Cust")">TASKS & EVENTS</a></li>
+            <li><a href="@Url.Action("StaffComplaints","Cust")">COMPLAINTS</a></li>
+            <li><a href="@Url.Action("StaffProfile","Cust")">STAFF INFO</a></li>
+            <li><a href="@Url.Action("StaffLogout","Cust")" class="login-btn">SIGN OUT</a></li>
+        }
+        else
+        {
+            <li><a href="@Url.Action("Portfolio", "Cust")">PORTFOLIO</a></li>
+            <li><a href="@Url.Action("Booking", "Cust")">MAKE A BOOKING</a></li>
 
-        <nav class="desktop-nav" aria-label="Main navigation">
-            <!--- You should probably remove Services & Portfllio buttons as they are alrwady prsent bellow/-->
-            <a href="@Url.Action("Index", "Cust")" class="logo">AA Creations & Events</a>
-
-            <ul class="nav-links">
-                <li><a href="@Url.Action("Portfolio", "Cust")">PORTFOLIO</a></li>
-                <li><a href="@Url.Action("Booking", "Cust")">MAKE A BOOKING</a></li>
-                <li><a href="@Url.Action("ViewBooking", "Cust")">VIEW BOOKING</a></li>
+            if (isCustomer)
+            {
+                <li><a href="@Url.Action("ViewBooking","Cust")">VIEW BOOKING</a></li>
                 <li><a href="@Url.Action("contactus", "Cust")">CONTACT US</a></li>
+                <li><a href="@Url.Action("ManageAccount","Cust")" class="login-btn">MANAGE ACCOUNT</a></li>
+                <li>
+                    @using (Html.BeginForm("Logout", "Cust", FormMethod.Post, new { style = "display:inline" }))
+                    {
+                        @Html.AntiForgeryToken()
+                        <button type="submit" class="login-btn" style="border:0;cursor:pointer;">SIGN OUT</button>
+                    }
+                </li>
+            }
+            else
+            {
+                <li><a href="@Url.Action("contactus", "Cust")">CONTACT US</a></li>
+                <li><a href="@Url.Action("Login","Cust")" class="login-btn">LOGIN</a></li>
+                <li><a href="@Url.Action("Customerregister","Cust")">REGISTER</a></li>
+            }
+        }
+    </ul>
+</nav>
 
-                @if (Session["CustomerId"] != null)
-                {
-                    @Html.ActionLink(
-                        "Manage Account",
-                        "ManageAccount",
-                        "Cust",
-                        null,
-                        new { @class = "login-btn" }
-                    )
+<div class="container body-content">
+    @RenderBody()
+    <hr />
+    <footer>
+        <p class="quote">"Every celebration deserves to be unforgettable."</p>
+        <p>&copy; @DateTime.Now.Year - AA Creations &amp; Events. All rights reserved.</p>
+        <p class="footer-contact">Contact: 073 123 2660 / 069 843 2686</p>
+    </footer>
+</div>
 
-                }
-                else
-                {
-                    @Html.ActionLink(
-                        "Login",
-                        "Login",
-                        "Cust",
-                        null,
-                        new { @class = "login-btn" }
-                    )
-                }
-
-            </ul>
-            <div class="nav-icons">
-                <div>
-                    <a href="https://shorturl.at/hRi2x" target="_blank"> 🎵 TikTok</a> |
-                    <a href="https://wa.me/27123456789" target="_blank">💬 WhatsApp</a> |
-                    <a href="https://www.instagram.com/aacreation.events?igsi=d2d5OGxkZnFxcDIy&utm_source=qr" target="_blank">📸 Instagram</a>
-                </div>
-            </div>
-        </nav>
-        <div class="container body-content">
-            @RenderBody()
-            <hr />
-            <!-- Staff login link added here -->
-            <div class="staff-login-row">
-                <p>
-                    Staff member?
-                    <a href="@Url.Action("StaffLogin", "Cust")">Staff Login</a>
-                </p>
-            </div>
-            <footer>
-                <p class="quote">"Every celebration deserves to be unforgettable."</p>
-                <p>&copy; @DateTime.Now.Year - AA Creations &amp; Events.  All rights reserved.</p>
-                <p class="footer-contact">Contact: 073 123 2660 / 069 843 2686</p>
-
-            </footer>
-        </div>
-
-    @Scripts.Render("~/bundles/jquery")
-    @Scripts.Render("~/bundles/bootstrap")
-    @RenderSection("scripts", required: false)
-    <script type="module" src="~/Scripts/firebase-config.js"></script>
+@Scripts.Render("~/bundles/jquery")
+@Scripts.Render("~/bundles/bootstrap")
+@RenderSection("scripts", required: false)
+<script type="module" src="~/Scripts/firebase-config.js"></script>
 </body>
 </html>

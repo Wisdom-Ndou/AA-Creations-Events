@@ -80,6 +80,7 @@ function getStatusClass(status) {
     switch ((status || "").toLowerCase()) {
 
         case "confirmed":
+        case "approved":
             return "confirmed";
 
         case "preparing":
@@ -88,9 +89,13 @@ function getStatusClass(status) {
         case "in progress":
             return "in-progress";
 
+        case "setup completed":
+            return "in-progress";
+
         case "completed":
             return "completed";
 
+        case "declined":
         case "cancelled":
             return "cancelled";
 
@@ -99,91 +104,45 @@ function getStatusClass(status) {
     }
 }
 
-function renderBookingProgress(status) {
+function renderBookingProgress(status, staffAssigned) {
+    const normalized = (status || "Pending").toLowerCase();
 
-    const steps = [
-        { key: "Pending", label: "Booking Submitted" },
-        { key: "Confirmed", label: "Booking Confirmed" },
-        { key: "Preparing", label: "Preparing Decorations" },
-        { key: "In Progress", label: "Setup In Progress" },
-        { key: "Completed", label: "Completed" }
-    ];
-
-    const current = (status || "Pending").toLowerCase();
-
-    if (current === "cancelled") {
-        return `
-            <div class="booking-progress cancelled-progress">
-
-                <div class="cancel-icon">✕</div>
-
-                <div>
-                    <strong>Booking Cancelled</strong>
-                    <p>This booking has been cancelled.</p>
-                </div>
-
-            </div>
-        `;
+    if (normalized === "declined" || normalized === "cancelled") {
+        return '<div class="booking-progress cancelled-progress"><div class="cancel-icon">✕</div><div><strong>Booking Cancelled</strong><p>This booking is no longer active.</p></div></div>';
     }
 
-    let currentIndex = steps.findIndex(
-        step => step.key.toLowerCase() === current
-    );
+    const labels = ["Booking Submitted", "Booking Confirmed", "Staff Assigned", "Setup Completed", "Booking Completed"];
+    let currentIndex = 0;
+    if (["approved", "setup completed", "completed"].includes(normalized)) currentIndex = 1;
+    if (staffAssigned || ["setup completed", "completed"].includes(normalized)) currentIndex = 2;
+    if (["setup completed", "completed"].includes(normalized)) currentIndex = 3;
+    if (normalized === "completed") currentIndex = 4;
 
-    if (currentIndex === -1) currentIndex = 0;
-
-    return `
-        <div class="booking-progress">
-
-            ${steps.map((step, index) => {
-
+    return '<div class="booking-progress">' + labels.map(function (label, index) {
         const completed = index < currentIndex;
         const active = index === currentIndex;
+        return '<div class="progress-row"><div class="progress-circle ' +
+            (completed ? "completed " : "") + (active ? "active" : "") + '">' +
+            (completed ? "✓" : index + 1) +
+            '</div><div class="progress-content"><div class="progress-title">' + label + '</div>' +
+            (active ? '<div class="progress-current">Current Status</div>' : '') +
+            '</div></div>' +
+            (index !== labels.length - 1 ? '<div class="progress-line ' + (completed ? "completed" : "") + '"></div>' : '');
+    }).join("") + '</div>';
+}
 
-        return `
-                    <div class="progress-row">
-
-                        <div class="progress-circle
-                            ${completed ? "completed" : ""}
-                            ${active ? "active" : ""}">
-
-                            ${completed ? "✓" : index + 1}
-
-                        </div>
-
-                        <div class="progress-content">
-
-                            <div class="progress-title">
-                                ${step.label}
-                            </div>
-
-                            ${active ? `
-                                <div class="progress-current">
-                                    Current Status
-                                </div>
-                            ` : ""}
-
-                        </div>
-
-                    </div>
-
-                    ${index !== steps.length - 1
-                ? `<div class="progress-line ${completed ? "completed" : ""}"></div>`
-                : ""
-            }
-
-                `;
-
-    }).join("")}
-
-        </div>
-    `;
+function getLocalToday() {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, "0");
+    const day = String(now.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
 }
 
 function getVisibleBookings() {
 
     const today =
-        new Date().toISOString().split("T")[0];
+        getLocalToday();
 
     const filtered = bookings.filter(booking => {
 
@@ -215,7 +174,7 @@ function renderBookings() {
         document.getElementById("bookingCount");
 
     const today =
-        new Date().toISOString().split("T")[0];
+        getLocalToday();
 
     const visible =
         getVisibleBookings();
@@ -395,6 +354,31 @@ function renderBookings() {
 
         });
 
+    document.querySelectorAll("[data-complete-booking]").forEach(button => {
+        button.addEventListener("click", async event => {
+            event.stopPropagation();
+            const app = document.getElementById("bookingsApp");
+            const token = document.querySelector('input[name="__RequestVerificationToken"]');
+            const body = new URLSearchParams();
+            body.append("bookingId", button.dataset.completeBooking);
+            if (token) body.append("__RequestVerificationToken", token.value);
+
+            const response = await fetch(app.dataset.completeUrl, {
+                method: "POST",
+                headers: { "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8" },
+                body: body.toString()
+            });
+            const result = await response.json();
+            if (!result.success) {
+                alert(result.message || "The booking could not be completed.");
+                return;
+            }
+            const booking = bookings.find(item => item.id === Number(button.dataset.completeBooking));
+            if (booking) booking.status = result.status;
+            renderBookings();
+        });
+    });
+
     document
         .querySelectorAll("[data-cancel-booking]")
         .forEach(button => {
@@ -426,7 +410,7 @@ function renderDetails(booking, isPast) {
                 Booking Progress
             </h4>
 
-            ${renderBookingProgress(booking.status)}
+            ${renderBookingProgress(booking.status, booking.staffAssigned)}
 
             <div class="details-grid">
 
@@ -563,6 +547,9 @@ function renderDetails(booking, isPast) {
 
                             </a>
 
+                            ${(booking.status || "").toLowerCase() === "setup completed" ? '<button type="button" class="btn btn-primary" data-complete-booking="' + booking.id + '">Confirm Arrival & Complete</button>' : ""}
+
+                            ${["pending", "approved"].includes((booking.status || "Pending").toLowerCase()) ? `
                             <button
                                 type="button"
                                 class="btn btn-outline cancel"
@@ -570,7 +557,7 @@ function renderDetails(booking, isPast) {
 
                                 Cancel
 
-                            </button>
+                            </button>` : ""}
 
                         </div>
                       `
@@ -581,10 +568,30 @@ function renderDetails(booking, isPast) {
     `;
 }
 
-function cancelBooking(id) {
+async function cancelBooking(id) {
+    if (!confirm("Cancel this booking? This action cannot be undone.")) return;
 
-    alert("This feature will be implemented soon. Please contact us via WhatsApp for cancellation.");
+    const app = document.getElementById("bookingsApp");
+    const token = document.querySelector('input[name="__RequestVerificationToken"]');
+    const body = new URLSearchParams();
+    body.append("bookingId", id);
+    if (token) body.append("__RequestVerificationToken", token.value);
 
+    const response = await fetch(app.dataset.cancelUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8" },
+        body: body.toString()
+    });
+    const result = await response.json();
+
+    if (!result.success) {
+        alert(result.message || "The booking could not be cancelled.");
+        return;
+    }
+
+    const booking = bookings.find(item => item.id === id);
+    if (booking) booking.status = result.status;
+    renderBookings();
 }
 
 document.addEventListener("DOMContentLoaded", function () {

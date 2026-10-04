@@ -1,0 +1,18 @@
+@{ ViewBag.Title = "Staff Login"; }
+<link rel="stylesheet" href="~/Content/StaffPortal.css" />
+<div class="staff-login-page">
+    <main class="staff-login-card">
+        <div class="staff-eyebrow">AA Creations & Events · Staff Portal</div>
+        <h1>Staff Sign In</h1>
+        <p>Access your assigned events, tasks and staff support tools.</p>
+        @using (Html.BeginForm("StaffLogin", "Cust", FormMethod.Post))
+        {
+            @Html.AntiForgeryToken()
+            @Html.ValidationSummary(true, "", new { @class = "staff-error" })
+            <div class="staff-field"><label for="email">Email Address</label><input id="email" name="email" type="email" autocomplete="email" required /></div>
+            <div class="staff-field"><label for="password">Password</label><input id="password" name="password" type="password" autocomplete="current-password" required /></div>
+            <button type="submit" class="staff-submit">Sign In to Staff Portal</button>
+        }
+        <p style="margin-top:20px"><a class="staff-link" href="@Url.Action("Login","Cust")">← Back to main sign in</a></p>
+    </main>
+</div>
