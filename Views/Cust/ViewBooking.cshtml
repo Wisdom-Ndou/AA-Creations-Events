@@ -90,6 +90,20 @@
             </div>
 
             <p class="booking-count" id="bookingCount"></p>
+            @if (TempData["PaymentSuccess"] != null)
+            {
+                <div style="margin:0 0 18px;padding:13px 16px;border:1px solid #b8dfc9;border-radius:12px;background:#f2fbf6;color:#21643e;font-size:14px;">
+                    @TempData["PaymentSuccess"]
+                </div>
+            }
+
+            @if (TempData["PaymentError"] != null)
+            {
+                <div style="margin:0 0 18px;padding:13px 16px;border:1px solid #efbfd2;border-radius:12px;background:#fff4f8;color:#9e1657;font-size:14px;">
+                    @TempData["PaymentError"]
+                </div>
+            }
+
 
             <div id="emptyState" class="empty-state" hidden>
 
