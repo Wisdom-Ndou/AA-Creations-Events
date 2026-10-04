@@ -1,13 +1,41 @@
 @model WebApplication1.Models.Staff
-@{ ViewBag.Title="Edit Staff"; }
+@using System
+@using System.Linq
+@{
+    ViewBag.Title="Edit Staff";
+
+    var editPhoneDigits = new String(
+        (Model.staff_Phone ?? "").Where(Char.IsDigit).ToArray());
+
+    if (editPhoneDigits.Length == 11 && editPhoneDigits.StartsWith("27"))
+    {
+        editPhoneDigits = editPhoneDigits.Substring(2);
+    }
+    else if (editPhoneDigits.Length == 10 && editPhoneDigits.StartsWith("0"))
+    {
+        editPhoneDigits = editPhoneDigits.Substring(1);
+    }
+}
 <link rel="stylesheet" href="~/Content/AdminDashboard.css" />
+<style>
+    .edit-phone-row{display:flex;align-items:stretch;width:100%}
+    .edit-phone-prefix{display:flex;align-items:center;padding:0 12px;background:#f4edf1;border:1px solid #d9c6d0;border-right:0;border-radius:8px 0 0 8px;font-weight:700;color:#6f5361}
+    .edit-phone-row .form-control{border-radius:0 8px 8px 0;flex:1;min-width:0}
+</style>
 <main class="main"><section class="page-head"><span class="badge">Admin</span><h1>Edit <em>Staff</em></h1><p>Update staff account and team information.</p></section>
 <section class="panel">@using(Html.BeginForm("EditStaff","Cust",FormMethod.Post)){@Html.AntiForgeryToken() @Html.HiddenFor(m=>m.staff_ID) @Html.ValidationSummary(false,"",new{@class="text-danger"})
 <div class="form-grid">
 <div class="form-group">@Html.LabelFor(m=>m.staff_FName,"First Name") @Html.TextBoxFor(m=>m.staff_FName,new{@class="form-control"})</div>
 <div class="form-group">@Html.LabelFor(m=>m.staff_LName,"Last Name") @Html.TextBoxFor(m=>m.staff_LName,new{@class="form-control"})</div>
 <div class="form-group">@Html.LabelFor(m=>m.staff_Email,"Email") @Html.TextBoxFor(m=>m.staff_Email,new{@class="form-control",type="email"})</div>
-<div class="form-group">@Html.LabelFor(m=>m.staff_Phone,"Phone") @Html.TextBoxFor(m=>m.staff_Phone,new{@class="form-control",maxlength="9"})</div>
+<div class="form-group">
+<label for="staff_Phone">Phone</label>
+<div class="edit-phone-row">
+<span class="edit-phone-prefix">+27</span>
+<input class="form-control" id="staff_Phone" name="staff_Phone" type="tel" value="@editPhoneDigits" maxlength="9" inputmode="numeric" pattern="^[1-9][0-9]{8}$" />
+</div>
+@Html.ValidationMessageFor(m=>m.staff_Phone)
+</div>
 <div class="form-group">
 <label>Team</label>
 @Html.DropDownListFor(m => m.staff_Type,
