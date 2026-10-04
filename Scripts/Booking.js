@@ -423,8 +423,8 @@ function handleAddressTyping() {
     }
 
     addressSearchTimer = setTimeout(() => {
-        searchEventAddresses(true);
-    }, 1100);
+        searchEventAddresses(false);
+    }, 650);
 }
 
 function getCityMapSettings(city) {
@@ -540,7 +540,7 @@ function openLocationMap() {
             bookingMap.setView([startLat, startLng], startZoom);
 
             L.tileLayer(
-                "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+                "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
                 {
                     minZoom: 3,
                     maxZoom: 19,
