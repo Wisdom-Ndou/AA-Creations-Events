@@ -7,11 +7,40 @@
    Enforces FirstName/LastName: letters only (A–Z / a–z).
 */
 
-const packages = [
-    { id: "basic", name: "Basic Package", price: 650, badge: "Starter" },
-    { id: "standard", name: "Standard Package", price: 850, badge: "Popular" },
-    { id: "premium", name: "Premium Package", price: 1000, badge: "Premium" }
-];
+const occasionPackages = {
+    "Birthday": [
+        { id:"basic", name:"Basic Package", price:650, badge:"Starter", description:"A simple birthday setup with the essential decorative touches for a warm, polished celebration.", inclusions:["1 birthday banner","40 ceiling balloons","10 floor balloons","Artificial rose petals"] },
+        { id:"standard", name:"Standard Package", price:850, badge:"Popular", description:"A fuller birthday setup with more volume, colour and personalised celebration details.", inclusions:["1 birthday banner","50 ceiling balloons","20 floor balloons","8 feature balloons","Age-number balloons","Artificial rose petals"] },
+        { id:"premium", name:"Premium Package", price:1000, badge:"Premium", description:"An elevated birthday setup with richer styling and extra statement details throughout the space.", inclusions:["1 birthday banner","Bed-area ceiling balloon styling","30 floor balloons","10 feature balloons","6 accent balloons","Age-number balloons","Rose-petal styling","Decorative candles"] }
+    ],
+    "Anniversary": [
+        { id:"basic", name:"Basic Package", price:700, badge:"Starter", description:"A romantic anniversary setup with soft decorative details for an intimate celebration.", inclusions:["1 anniversary banner","30 ceiling balloons","10 floor balloons","Heart accents","Artificial rose petals"] },
+        { id:"standard", name:"Standard Package", price:950, badge:"Popular", description:"A richer anniversary setup with layered romantic styling and additional feature decorations.", inclusions:["1 anniversary banner","45 ceiling balloons","18 floor balloons","6 heart balloons","Bed styling","Artificial rose petals","Decorative candles"] },
+        { id:"premium", name:"Premium Package", price:1500, badge:"Premium", description:"A complete romantic experience with statement styling and premium decorative details.", inclusions:["Premium anniversary banner styling","Full ceiling balloon arrangement","30 floor balloons","10 heart balloons","Feature bed styling","Rose petals on bed and floor","Decorative candle arrangement","Romantic accent décor"] }
+    ],
+    "Graduation": [
+        { id:"basic", name:"Basic Package", price:650, badge:"Starter", description:"A clean graduation setup celebrating the milestone with essential congratulatory décor.", inclusions:["1 congratulations banner","30 ceiling balloons","10 floor balloons","Graduation-themed accents"] },
+        { id:"standard", name:"Standard Package", price:900, badge:"Popular", description:"A fuller graduation display with stronger visual impact and more personalised milestone details.", inclusions:["1 congratulations banner","45 ceiling balloons","18 floor balloons","Graduation number/letter balloons","Feature backdrop accents","Celebration confetti details"] },
+        { id:"premium", name:"Premium Package", price:1200, badge:"Premium", description:"An elevated graduation setup with statement décor designed for photos and a memorable reveal.", inclusions:["Premium graduation banner styling","Full balloon arrangement","25 floor balloons","Graduation number/letter balloons","Statement backdrop accents","Photo-area styling","Premium celebration details"] }
+    ],
+    "Valentine's Day": [
+        { id:"basic", name:"Basic Package", price:750, badge:"Starter", description:"A sweet Valentine's setup with romantic essentials and a soft, intimate atmosphere.", inclusions:["1 love-themed banner","30 ceiling balloons","10 floor balloons","4 heart balloons","Artificial rose petals"] },
+        { id:"standard", name:"Standard Package", price:1050, badge:"Popular", description:"A fuller Valentine's experience with more romantic detail, heart accents and mood-setting décor.", inclusions:["1 love-themed banner","45 ceiling balloons","18 floor balloons","8 heart balloons","Bed styling","Rose petals on bed and floor","Decorative candles"] }
+    ],
+    "Baby Shower": [
+        { id:"basic", name:"Basic Package", price:800, badge:"Starter", description:"A gentle baby-shower setup with coordinated decorations and essential celebration details.", inclusions:["1 baby-shower banner","30 ceiling balloons","12 floor balloons","Baby-themed decorative accents"] },
+        { id:"standard", name:"Standard Package", price:1100, badge:"Popular", description:"A fuller baby-shower setup with layered balloon styling and more themed decorative elements.", inclusions:["1 baby-shower banner","45 ceiling balloons","20 floor balloons","Themed feature balloons","Table/feature-area accents","Photo-area details"] },
+        { id:"premium", name:"Premium Package", price:1600, badge:"Premium", description:"A complete baby-shower experience with statement styling and premium themed finishing touches.", inclusions:["Premium baby-shower banner styling","Full balloon arrangement","30 floor balloons","Feature balloon cluster","Statement backdrop accents","Photo-area styling","Premium themed décor"] }
+    ]
+};
+
+function isCustomOccasion() {
+    return state.form.occasion === "Other";
+}
+
+function getPackagesForOccasion() {
+    return occasionPackages[state.form.occasion] || [];
+}
 
 const addOns = [
     { id: "balloons", name: "Extra Balloon Bouquet", price: 50, icon: "🎈" },
