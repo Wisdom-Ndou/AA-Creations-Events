@@ -12,6 +12,40 @@
     var currentTerms =
         ViewBag.CurrentTerms as WebApplication1.Models.TermsAndConditions;
     var registrationSuccess = TempData["RegistrationSuccess"] as string;
+
+    Func<string, bool> customerFieldHasError = fieldName =>
+        ViewData.ModelState[fieldName] != null &&
+        ViewData.ModelState[fieldName].Errors.Count > 0;
+
+    var customerFirstNameValue =
+        !customerFieldHasError("Cust_FName") && Model != null
+            ? (Model.Cust_FName ?? "")
+            : "";
+
+    var customerLastNameValue =
+        !customerFieldHasError("Cust_LName") && Model != null
+            ? (Model.Cust_LName ?? "")
+            : "";
+
+    var customerEmailValue =
+        !customerFieldHasError("Cust_Email") && Model != null
+            ? (Model.Cust_Email ?? "")
+            : "";
+
+    var customerPhoneValue =
+        !customerFieldHasError("Cust_Phone") && Model != null
+            ? (Model.Cust_Phone ?? "")
+            : "";
+
+    var customerPasswordValue =
+        !customerFieldHasError("Cust_Passw") && Model != null
+            ? (Model.Cust_Passw ?? "")
+            : "";
+
+    var customerConfirmValue =
+        !customerFieldHasError("confirm")
+            ? (Request.Form["confirm"] ?? "")
+            : "";
 }
 
 <!DOCTYPE html>
@@ -350,6 +384,7 @@
                                 <input type="text"
                                        id="firstName"
                                        name="Cust_FName"
+                                       value="@customerFirstNameValue"
                                        placeholder="Nobuhle"
                                        required
                                        pattern="^[A-Za-z]+$"
@@ -378,6 +413,7 @@
                                 <input type="text"
                                        id="lastName"
                                        name="Cust_LName"
+                                       value="@customerLastNameValue"
                                        placeholder="Zulu"
                                        required
                                        pattern="^[A-Za-z]+$"
@@ -419,6 +455,7 @@
                             <input type="email"
                                    id="email"
                                    name="Cust_Email"
+                                   value="@customerEmailValue"
                                    placeholder="nobuzulu@gmail.com"
                                    aria-describedby="emailError"
                                    required />
@@ -458,6 +495,7 @@
                                 <input type="tel"
                                        id="phone"
                                        name="Cust_Phone"
+                                       value="@customerPhoneValue"
                                        placeholder="728467952"
                                        required
                                        pattern="^[1-9]\d{8}$"
@@ -505,6 +543,7 @@
                                 <input type="password"
                                        id="password"
                                        name="Cust_Passw"
+                                       value="@customerPasswordValue"
                                        placeholder="******"
                                        required
                                        pattern="(?=.*[A-Za-z])(?=.*\d).{6,}"
@@ -570,6 +609,7 @@
                             <input type="password"
                                    id="confirm"
                                    name="confirm"
+                                   value="@customerConfirmValue"
                                    placeholder="******"
                                    required />
 
