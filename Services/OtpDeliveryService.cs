@@ -1,8 +1,8 @@
 using System;
 using System.Configuration;
+using System.Diagnostics;
 using System.Net;
 using System.Net.Mail;
-using System.Diagnostics;
 
 namespace WebApplication1.Services
 {
@@ -11,39 +11,73 @@ namespace WebApplication1.Services
         private readonly string senderEmail;
         private readonly string smtpHost;
         private readonly int smtpPort;
+        private readonly string appPassword;
+
+        public string LastError { get; private set; }
 
         public OtpDeliveryService()
         {
-            senderEmail = ConfigurationManager.AppSettings["EmailSender"];
-            smtpHost = ConfigurationManager.AppSettings["EmailSmtpHost"];
+            senderEmail = GetSetting("AA_EMAIL_SENDER", "EmailSender");
+            smtpHost = GetSetting("AA_EMAIL_SMTP_HOST", "EmailSmtpHost");
 
             int port;
-            if (!int.TryParse(ConfigurationManager.AppSettings["EmailSmtpPort"], out port))
+            if (!int.TryParse(GetSetting("AA_EMAIL_SMTP_PORT", "EmailSmtpPort"), out port))
             {
                 port = 587;
             }
 
             smtpPort = port;
+            appPassword = GetSetting("AA_EMAIL_APP_PASSWORD", "EmailAppPassword");
+        }
+
+        private static string GetSetting(string environmentVariable, string appSettingKey)
+        {
+            string environmentValue = Environment.GetEnvironmentVariable(environmentVariable);
+            if (!string.IsNullOrWhiteSpace(environmentValue))
+            {
+                return environmentValue.Trim();
+            }
+
+            string configValue = ConfigurationManager.AppSettings[appSettingKey];
+            return string.IsNullOrWhiteSpace(configValue)
+                ? null
+                : configValue.Trim();
         }
 
         private bool SendEmail(string recipientEmail, string subject, string body)
         {
+            LastError = null;
+
+            if (string.IsNullOrWhiteSpace(recipientEmail))
+            {
+                LastError = "The recipient email address is missing.";
+                return false;
+            }
+
+            if (string.IsNullOrWhiteSpace(senderEmail) ||
+                string.IsNullOrWhiteSpace(appPassword))
+            {
+                LastError =
+                    "Email delivery is not configured. Set AA_EMAIL_SENDER and AA_EMAIL_APP_PASSWORD " +
+                    "as local environment variables, or set EmailSender and EmailAppPassword in the local Web.config.";
+                return false;
+            }
+
+            if (string.IsNullOrWhiteSpace(smtpHost))
+            {
+                LastError = "The SMTP host is not configured.";
+                return false;
+            }
+
             try
             {
-                string appPassword = ConfigurationManager.AppSettings["EmailAppPassword"];
-
-                if (string.IsNullOrWhiteSpace(recipientEmail) ||
-                    string.IsNullOrWhiteSpace(senderEmail) ||
-                    string.IsNullOrWhiteSpace(smtpHost) ||
-                    string.IsNullOrWhiteSpace(appPassword))
-                {
-                    return false;
-                }
+                // Explicit TLS 1.2 support helps older .NET Framework/IIS Express environments.
+                ServicePointManager.SecurityProtocol |= SecurityProtocolType.Tls12;
 
                 using (var message = new MailMessage())
                 {
                     message.From = new MailAddress(senderEmail, "AA Creations & Events");
-                    message.To.Add(recipientEmail);
+                    message.To.Add(new MailAddress(recipientEmail));
                     message.Subject = subject;
                     message.Body = body;
                     message.IsBodyHtml = true;
@@ -53,21 +87,48 @@ namespace WebApplication1.Services
                         smtp.EnableSsl = true;
                         smtp.UseDefaultCredentials = false;
                         smtp.Credentials = new NetworkCredential(senderEmail, appPassword);
+                        smtp.DeliveryMethod = SmtpDeliveryMethod.Network;
+                        smtp.Timeout = 20000;
                         smtp.Send(message);
                     }
                 }
 
                 return true;
             }
+            catch (SmtpException ex)
+            {
+                Trace.TraceError(
+                    "AA Creations SMTP delivery failed. Recipient={0}; Subject={1}; StatusCode={2}; Error={3}",
+                    recipientEmail,
+                    subject,
+                    ex.StatusCode,
+                    ex);
+
+                LastError = ex.StatusCode == SmtpStatusCode.GeneralFailure
+                    ? "The email server could not be reached or rejected the connection. Check the SMTP host, port and internet connection."
+                    : "The email server rejected the message. Check the sender email and app password.";
+                return false;
+            }
+            catch (FormatException ex)
+            {
+                Trace.TraceError(
+                    "AA Creations email address format error. Recipient={0}; Subject={1}; Error={2}",
+                    recipientEmail,
+                    subject,
+                    ex);
+
+                LastError = "The sender or recipient email address is not valid.";
+                return false;
+            }
             catch (Exception ex)
             {
-                // Email delivery must not undo a successful registration/booking,
-                // but failures must be diagnosable rather than silently swallowed.
                 Trace.TraceError(
                     "AA Creations email delivery failed. Recipient={0}; Subject={1}; Error={2}",
                     recipientEmail,
                     subject,
                     ex);
+
+                LastError = "The verification email could not be sent because the mail service returned an unexpected error.";
                 return false;
             }
         }
@@ -120,6 +181,5 @@ namespace WebApplication1.Services
 <p><strong>Total:</strong> R {totalPrice:N2}</p>
 <p>We will keep you updated as your booking progresses.</p>");
         }
-
     }
 }
