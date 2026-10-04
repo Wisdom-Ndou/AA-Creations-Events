@@ -2,6 +2,15 @@
 
 @{
     ViewBag.Title = "Register Staff";
+
+    var staffPasswordHasError =
+        ViewData.ModelState["staff_Passw"] != null &&
+        ViewData.ModelState["staff_Passw"].Errors.Count > 0;
+
+    var retainedStaffPassword =
+        !staffPasswordHasError && Model != null
+            ? (Model.staff_Passw ?? "")
+            : "";
 }
 
 <link rel="stylesheet"
@@ -78,6 +87,32 @@
             border-color: #ff2a6d;
             box-shadow: 0 0 10px rgba(255, 42, 109, 0.2);
         }
+
+    .phone-input-row {
+        display: flex;
+        align-items: stretch;
+        width: 100%;
+    }
+
+    .phone-prefix {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0 13px;
+        background: #2a2a3b;
+        border: 1px solid #333;
+        border-right: 0;
+        border-radius: 7px 0 0 7px;
+        color: #ffffff;
+        font-weight: 700;
+        white-space: nowrap;
+    }
+
+    .phone-input-row .form-control {
+        border-radius: 0 7px 7px 0;
+        flex: 1;
+        min-width: 0;
+    }
 
     .field-validation-error {
         color: #f87171;
@@ -188,7 +223,9 @@
                         new
                         {
                             @class = "form-control",
-                            placeholder = "Enter first name"
+                            placeholder = "Enter first name",
+                            pattern = "^[A-Za-z]+$",
+                            title = "Only letters allowed"
                         }
                     )
 
@@ -213,7 +250,9 @@
                         new
                         {
                             @class = "form-control",
-                            placeholder = "Enter last name"
+                            placeholder = "Enter last name",
+                            pattern = "^[A-Za-z]+$",
+                            title = "Only letters allowed"
                         }
                     )
 
@@ -259,15 +298,21 @@
                         "Phone Number"
                     )
 
-                    @Html.TextBoxFor(
-                        model => model.staff_Phone,
-                        new
-                        {
-                            @class = "form-control",
-                            placeholder = "e.g. 731234567",
-                            maxlength = "9"
-                        }
-                    )
+                    <div class="phone-input-row">
+                        <span class="phone-prefix">+27</span>
+                        @Html.TextBoxFor(
+                            model => model.staff_Phone,
+                            new
+                            {
+                                @class = "form-control",
+                                placeholder = "731234567",
+                                maxlength = "9",
+                                inputmode = "numeric",
+                                pattern = "^[1-9][0-9]{8}$",
+                                autocomplete = "tel-national"
+                            }
+                        )
+                    </div>
 
                     @Html.ValidationMessageFor(
                         model => model.staff_Phone
@@ -285,14 +330,13 @@
                         "Password"
                     )
 
-                    @Html.PasswordFor(
-                        model => model.staff_Passw,
-                        new
-                        {
-                            @class = "form-control",
-                            placeholder = "Enter password"
-                        }
-                    )
+                    <input type="password"
+                           id="staff_Passw"
+                           name="staff_Passw"
+                           class="form-control"
+                           value="@retainedStaffPassword"
+                           placeholder="Enter password"
+                           required />
 
                     @Html.ValidationMessageFor(
                         model => model.staff_Passw
