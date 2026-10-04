@@ -25,6 +25,11 @@ namespace WebApplication1.Models
 
         public string City { get; set; }
 
+        // Event location coordinates
+        public decimal? Latitude { get; set; }
+
+        public decimal? Longitude { get; set; }
+
         public string Notes { get; set; }
 
         public string PackageId { get; set; }

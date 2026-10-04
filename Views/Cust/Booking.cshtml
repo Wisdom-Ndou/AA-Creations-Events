@@ -1,4 +1,4 @@
-﻿@{
+@{
     ViewBag.Title = "Book a Celebration";
 }
 
@@ -6,6 +6,8 @@
 
 <main id="bookingApp"
       data-booking-url="@Url.Action("CreateBooking", "Cust")"
+      data-address-search-url="@Url.Action("SearchEventAddresses", "Cust")"
+      data-address-reverse-url="@Url.Action("ReverseEventLocation", "Cust")"
       data-logged-in="@(Session["CustomerId"] != null ? "true" : "false")"
       data-customer-first-name="@ViewBag.CustomerFirstName"
       data-customer-last-name="@ViewBag.CustomerLastName"
@@ -17,7 +19,7 @@
         <!-- Login Required Overlay -->
         <div class="booking-login-overlay" id="bookingLoginOverlay">
             <div class="booking-login-card">
-                <div class="booking-login-icon">🔒</div>
+                <div class="booking-login-icon">&#128274;</div>
 
                 <p class="eyebrow">Sign In Required</p>
 
@@ -87,6 +89,8 @@
     </section>
 </main>
 @section scripts {
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="~/Scripts/Common.js"></script>
     <script src="~/Scripts/Booking.js"></script>
 }

@@ -1,0 +1,521 @@
+﻿@model IEnumerable<WebApplication1.Models.StaffTask>
+
+@{
+    ViewBag.Title = "Staff Jobs";
+
+    var jobs = Model != null
+        ? Model.ToList()
+        : new List<WebApplication1.Models.StaffTask>();
+
+    int totalJobs = jobs.Count;
+
+    int pendingJobs = jobs.Count(j =>
+        j.Status == "Pending");
+
+    int inProgressJobs = jobs.Count(j =>
+        j.Status == "In Progress");
+
+    int completedJobs = jobs.Count(j =>
+        j.Status == "Completed");
+}
+
+<link rel="stylesheet"
+      href="~/Content/AdminDashboard.css" />
+<div class="staff-jobs-page">
+
+    <!-- ==========================================
+         PAGE HEADER
+    =========================================== -->
+
+    <div class="staff-jobs-header">
+
+        <div>
+
+            <span class="admin-badge">
+                ADMIN ACCESS
+            </span>
+
+            <h1>
+                Staff <span>Jobs</span>
+            </h1>
+
+            <p>
+                View job assignments across all staff teams.
+            </p>
+
+        </div>
+
+        <a href="@Url.Action("AdminDashboard", "Cust")"
+           class="panel-link">
+
+            Back to AdminDashboard 
+
+        </a>
+
+    </div>
+
+
+    <!-- ==========================================
+         JOB STATISTICS
+    =========================================== -->
+
+    <div class="job-stats">
+
+        <div class="job-stat-card">
+            <span>Total Jobs</span>
+            <strong>@totalJobs</strong>
+        </div>
+
+        <div class="job-stat-card">
+            <span>Pending</span>
+            <strong>@pendingJobs</strong>
+        </div>
+
+        <div class="job-stat-card">
+            <span>In Progress</span>
+            <strong>@inProgressJobs</strong>
+        </div>
+
+        <div class="job-stat-card">
+            <span>Completed</span>
+            <strong>@completedJobs</strong>
+        </div>
+
+    </div>
+
+
+    <!-- ==========================================
+         JOB TABLE
+    =========================================== -->
+
+    <section class="jobs-section">
+
+        <div class="jobs-section-header">
+
+            <div>
+                <h2>Team Job Assignments</h2>
+
+                <p>
+                    Tasks assigned to registered staff members.
+                </p>
+            </div>
+
+            <span class="job-count">
+                @totalJobs Jobs
+            </span>
+
+        </div>
+
+
+        @if (jobs.Any())
+        {
+            <div class="jobs-table-wrapper">
+
+                <table class="jobs-table">
+
+                    <thead>
+
+                        <tr>
+                            <th>Staff Member</th>
+                            <th>Team</th>
+                            <th>Job</th>
+                            <th>Event</th>
+                            <th>Due Date</th>
+                            <th>Priority</th>
+                            <th>Status</th>
+                        </tr>
+
+                    </thead>
+
+                    <tbody>
+
+                        @foreach (var job in jobs)
+                        {
+                            string priorityClass =
+                                job.Priority == "High"
+                                    ? "priority-high"
+                                    : job.Priority == "Medium"
+                                        ? "priority-medium"
+                                        : "priority-low";
+
+                            string statusClass =
+                                job.Status == "Completed"
+                                    ? "status-completed"
+                                    : job.Status == "In Progress"
+                                        ? "status-progress"
+                                        : "status-pending";
+
+                            <tr>
+
+                                <!-- STAFF -->
+
+                                <td>
+
+                                    @if (job.Staff != null)
+                                    {
+                                        <strong>
+                                            @job.Staff.staff_FName
+                                            @job.Staff.staff_LName
+                                        </strong>
+
+                                        <br />
+
+                                        <small>
+                                            @job.Staff.staff_Email
+                                        </small>
+                                    }
+                                    else
+                                    {
+                                        <span>Unknown Staff</span>
+                                    }
+
+                                </td>
+
+
+                                <!-- TEAM -->
+
+                                <td>
+
+                                    @if (job.Staff != null)
+                                    {
+                                        @job.Staff.staff_Type
+                                    }
+                                    else
+                                    {
+                                        <span>-</span>
+                                    }
+
+                                </td>
+
+
+                                <!-- JOB -->
+
+                                <td>
+
+                                    <strong>
+                                        @job.TaskName
+                                    </strong>
+
+                                    @if (!string.IsNullOrWhiteSpace(
+                                        job.Description))
+                                    {
+                                        <br />
+
+                                        <small>
+                                            @job.Description
+                                        </small>
+                                    }
+
+                                </td>
+
+
+                                <!-- EVENT -->
+
+                                <td>
+
+                                    @if (job.Booking != null)
+                                    {
+                                        <strong>
+                                            @job.Booking.Occasion
+                                        </strong>
+
+                                        <br />
+
+                                        <small>
+                                            Booking #@job.BookingId
+                                        </small>
+
+                                        <br />
+
+                                        <small>
+                                            @job.Booking.City
+                                        </small>
+                                    }
+                                    else
+                                    {
+                                        <span>
+                                            General Task
+                                        </span>
+                                    }
+
+                                </td>
+
+
+                                <!-- DUE DATE -->
+
+                                <td>
+                                    @job.DueDate.ToString("dd MMM yyyy")
+                                </td>
+
+
+                                <!-- PRIORITY -->
+
+                                <td>
+
+                                    <span class="job-badge @priorityClass">
+                                        @job.Priority
+                                    </span>
+
+                                </td>
+
+
+                                <!-- STATUS -->
+
+                                <td>
+
+                                    <span class="job-badge @statusClass">
+                                        @job.Status
+                                    </span>
+
+                                </td>
+
+                            </tr>
+                        }
+
+                    </tbody>
+
+                </table>
+
+            </div>
+        }
+        else
+        {
+            <div class="no-jobs">
+
+                <h3>No staff jobs yet</h3>
+
+                <p>
+                    Jobs will appear here after tasks are assigned
+                    to staff members from approved bookings.
+                </p>
+
+            </div>
+        }
+
+    </section>
+
+</div>
+<style>
+
+    .staff-jobs-page {
+        max-width: 1320px;
+        margin: 0 auto;
+        padding: 55px 30px 80px;
+        color: #fff;
+    }
+
+    .staff-jobs-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-end;
+        gap: 25px;
+        margin-bottom: 35px;
+    }
+
+    .admin-badge {
+        display: inline-block;
+        border: 1px solid #ff0066;
+        color: #ff0066;
+        padding: 7px 15px;
+        border-radius: 30px;
+        font-size: 11px;
+        letter-spacing: 2px;
+        margin-bottom: 15px;
+    }
+
+    .staff-jobs-header h1 {
+        margin: 0 0 8px;
+        font-size: 38px;
+    }
+
+        .staff-jobs-header h1 span {
+            color: #ff0066;
+        }
+
+    .staff-jobs-header p {
+        margin: 0;
+        color: #999;
+    }
+
+    .back-dashboard-btn {
+        color: #ff0066;
+        text-decoration: none;
+        font-weight: 700;
+    }
+
+
+    /* STATISTICS */
+
+    .job-stats {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 18px;
+        margin-bottom: 30px;
+    }
+
+    .job-stat-card {
+        background: #111;
+        border: 1px solid #333;
+        border-radius: 14px;
+        padding: 22px;
+    }
+
+        .job-stat-card span {
+            display: block;
+            color: #999;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 10px;
+        }
+
+        .job-stat-card strong {
+            font-size: 30px;
+            color: #fff;
+        }
+
+
+    /* JOBS */
+
+    .jobs-section {
+        background: #111;
+        border: 1px solid #333;
+        border-radius: 14px;
+        overflow: hidden;
+    }
+
+    .jobs-section-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 20px;
+        padding: 24px;
+        border-bottom: 1px solid #333;
+    }
+
+        .jobs-section-header h2 {
+            margin: 0 0 5px;
+        }
+
+        .jobs-section-header p {
+            margin: 0;
+            color: #999;
+            font-size: 13px;
+        }
+
+    .job-count {
+        background: #ff0066;
+        color: #fff;
+        border-radius: 30px;
+        padding: 7px 14px;
+        font-size: 11px;
+        font-weight: 700;
+    }
+
+    .jobs-table-wrapper {
+        overflow-x: auto;
+    }
+
+    .jobs-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+        .jobs-table th {
+            padding: 14px 16px;
+            text-align: left;
+            color: #999;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: .5px;
+            border-bottom: 1px solid #333;
+        }
+
+        .jobs-table td {
+            padding: 18px 16px;
+            vertical-align: top;
+            border-bottom: 1px solid #222;
+            font-size: 13px;
+            color: #eee;
+        }
+
+        .jobs-table small {
+            color: #888;
+        }
+
+    .job-badge {
+        display: inline-block;
+        padding: 5px 10px;
+        border-radius: 20px;
+        font-size: 11px;
+        font-weight: 700;
+        white-space: nowrap;
+    }
+
+    .priority-high {
+        background: #40151a;
+        color: #ff6875;
+    }
+
+    .priority-medium {
+        background: #3d3012;
+        color: #ffd15c;
+    }
+
+    .priority-low {
+        background: #12351f;
+        color: #59e78a;
+    }
+
+    .status-pending {
+        background: #3d3012;
+        color: #ffd15c;
+    }
+
+    .status-progress {
+        background: #172d42;
+        color: #6ebcff;
+    }
+
+    .status-completed {
+        background: #12351f;
+        color: #59e78a;
+    }
+
+    .no-jobs {
+        text-align: center;
+        padding: 60px 20px;
+        color: #999;
+    }
+
+        .no-jobs h3 {
+            color: #fff;
+            margin-bottom: 8px;
+        }
+
+
+    @@media (max-width: 900px) {
+
+        .job-stats {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+
+
+    @@media (max-width: 650px) {
+
+        .staff-jobs-header {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .job-stats {
+            grid-template-columns: 1fr;
+        }
+
+        .jobs-section-header {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+    }
+</style>

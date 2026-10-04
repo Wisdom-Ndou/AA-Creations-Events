@@ -186,6 +186,10 @@
                                 Status
                             </th>
 
+                            <th>
+                                Actions
+                            </th>
+
                         </tr>
 
                     </thead>
@@ -193,230 +197,221 @@
 
                     <tbody>
 
-
                         @if (Model.AllBookings != null &&
                              Model.AllBookings.Any())
-
-
                         {
-
                             foreach (var booking in Model.AllBookings)
-
                             {
-
                                 string clientName =
-                                    ((booking.FirstName ?? "") +
-                                     " " +
+                                    ((booking.FirstName ?? "") + " " +
                                      (booking.LastName ?? "")).Trim();
-
 
                                 if (string.IsNullOrWhiteSpace(clientName))
                                 {
                                     clientName = "Customer";
                                 }
 
-
-
-
-
                                 string status =
                                     string.IsNullOrWhiteSpace(booking.Status)
-                                         ? "Pending"
+                                        ? "Pending"
                                         : booking.Status;
 
-
                                 string statusClass =
-                                    status.ToLower() == "approved"
+                                    status.Equals(
+                                        "Approved",
+                                        StringComparison.OrdinalIgnoreCase)
                                         ? "approved"
-                                        : status.ToLower() == "declined"
+                                        : status.Equals(
+                                            "Declined",
+                                            StringComparison.OrdinalIgnoreCase)
                                             ? "declined"
                                             : "pending";
-                            <td>
-                                <span class="status @statusClass">
-                                    <span class="dot"></span>
-                                    @status
-                                </span>
-                            </td>
 
+
+                                <tr>
+
+                                    <!-- BOOKING ID -->
+
+                                    <td class="cell-id">
+                                        #BK-@booking.BookingId
+                                    </td>
+
+
+                                    <!-- CLIENT -->
+
+                                    <td>
+                                        @clientName
+                                    </td>
+
+
+                                    <!-- EVENT -->
+
+                                    <td>
+                                        @booking.Occasion
+                                    </td>
+
+
+                                    <!-- CITY -->
+
+                                    <td>
+                                        @booking.City
+                                    </td>
+
+
+                                    <!-- DATE / ADDRESS -->
+
+                                    <td>
+
+                                        <strong>
+                                            @booking.EventDate.ToString("dd MMM yyyy")
+                                        </strong>
+
+                                        <br />
+
+                                        <span class="venue-address">
+                                            @booking.Address
+                                        </span>
+
+                                    </td>
+
+
+                                    <!-- TIME -->
+
+                                    <td>
+                                        @booking.EventTime
+                                    </td>
+
+
+                                    <!-- PACKAGE -->
+
+                                    <td>
+                                        @booking.PackageId
+                                    </td>
+
+
+                                    <!-- TOTAL -->
+
+                                    <td>
+                                        R @booking.TotalPrice.ToString("N2")
+                                    </td>
+
+
+                                    <!-- STATUS -->
+
+                                    <td>
+
+                                        <span class="status @statusClass">
+
+                                            <span class="dot"></span>
+
+                                            @status
+
+                                        </span>
+
+                                    </td>
+
+
+                                    <!-- ACTIONS -->
+
+                                    <td class="booking-actions">
+
+                                        @if (status.Equals(
+                                            "Pending",
+                                            StringComparison.OrdinalIgnoreCase))
+                                        {
+                                            <!-- APPROVE -->
+
+                                            <form action="@Url.Action("UpdateBookingStatus", "Cust")"
+                                                  method="post"
+                                                  style="display:inline;">
+
+                                                @Html.AntiForgeryToken()
+
+                                                <input type="hidden"
+                                                       name="bookingId"
+                                                       value="@booking.BookingId" />
+
+                                                <input type="hidden"
+                                                       name="status"
+                                                       value="Approved" />
+
+                                                <button type="submit"
+                                                        class="approve-btn">
+                                                    Approve
+                                                </button>
+
+                                            </form>
+
+
+                                            <!-- DECLINE -->
+
+                                            <form action="@Url.Action("UpdateBookingStatus", "Cust")"
+                                                  method="post"
+                                                  style="display:inline;">
+
+                                                @Html.AntiForgeryToken()
+
+                                                <input type="hidden"
+                                                       name="bookingId"
+                                                       value="@booking.BookingId" />
+
+                                                <input type="hidden"
+                                                       name="status"
+                                                       value="Declined" />
+
+                                                <button type="submit"
+                                                        class="decline-btn">
+                                                    Decline
+                                                </button>
+
+                                            </form>
+                                        }
+                                        else if (status.Equals(
+                                            "Approved",
+                                            StringComparison.OrdinalIgnoreCase))
+                                        {
+                                            <!-- ASSIGN STAFF TASK -->
+
+                                            <a href="@Url.Action(
+                                    "AssignStaffTask",
+                                    "Cust",
+                                    new
+                                    {
+                                        bookingId = booking.BookingId
+                                    })"
+                                               class="assign-staff-btn">
+
+                                                Assign Staff Task
+
+                                            </a>
+                                        }
+                                        else
+                                        {
+                                            <span class="no-action">
+                                                Reviewed
+                                            </span>
+                                        }
+
+                                    </td>
+
+                                </tr>
+                            }
+                        }
+                        else
+                        {
                             <tr>
 
-                                <td class="booking-actions">
+                                <td colspan="10"
+                                    style="text-align:center;">
 
-                                    @if (status.Equals("Pending",
-                                        StringComparison.OrdinalIgnoreCase))
-                                    {
-                                        <form action="@Url.Action("UpdateBookingStatus", "Cust")"
-                                              method="post"
-                                              style="display:inline;">
-
-                                            @Html.AntiForgeryToken()
-
-                                            <input type="hidden"
-                                                   name="bookingId"
-                                                   value="@booking.BookingId" />
-
-                                            <input type="hidden"
-                                                   name="status"
-                                                   value="Approved" />
-
-                                            <button type="submit"
-                                                    class="approve-btn">
-                                                Approve
-                                            </button>
-
-                                        </form>
-
-                                        <form action="@Url.Action("UpdateBookingStatus", "Cust")"
-                                              method="post"
-                                              style="display:inline;">
-
-                                            @Html.AntiForgeryToken()
-
-                                            <input type="hidden"
-                                                   name="bookingId"
-                                                   value="@booking.BookingId" />
-
-                                            <input type="hidden"
-                                                   name="status"
-                                                   value="Declined" />
-
-                                            <button type="submit"
-                                                    class="decline-btn">
-                                                Decline
-                                            </button>
-
-                                        </form>
-                                    }
-                                    else
-                                    {
-                                        <span class="no-action">
-                                            Reviewed
-                                        </span>
-                                    }
-
-                                </td>
-
-
-
-                                <!-- BOOKING ID -->
-
-                                <td class="cell-id">
-                                    #BK-@booking.BookingId
-                                </td>
-
-
-                                <!-- CLIENT -->
-
-                                <td>
-                                    @clientName
-                                </td>
-
-
-                                <!-- EVENT -->
-
-                                <td>
-                                    @booking.Occasion
-                                </td>
-
-
-                                <!-- CITY -->
-
-                                <td>
-                                    @booking.City
-                                </td>
-
-
-                                <!-- DATE -->
-
-                                <td>
-                                    <strong>
-                                        @booking.EventDate.ToString("dd MMM yyyy")
-                                    </strong>
-
-                                    <br />
-
-                                    <span class="venue-address">
-                                        @booking.Address
-                                    </span>
-                                </td>>
-
-
-                                <!-- TIME -->
-
-                                <td>
-                                    @booking.EventTime
-                                </td>
-
-
-                                <!-- PACKAGE -->
-
-                                <td>
-                                    @booking.PackageId
-                                </td>
-
-
-                                <!-- TOTAL -->
-
-                                <td>
-                                    R @booking.TotalPrice.ToString("N2")
-                                </td>
-
-
-                                <!-- STATUS -->
-
-                                <td>
-
-                                    <span class="status @statusClass">
-
-                                        <span class="dot"></span>
-
-                                        @status
-
-                                    </span>
-
-                                    @if (status.ToLower() == "pending")
-                                    {
-                                        <div class="booking-actions">
-
-                                            <button type="button"
-                                                    class="approve-btn"
-                                                    onclick="updateBookingStatus(@booking.BookingId, 'approved')">
-                                                Approve
-                                            </button>
-
-                                            <button type="button"
-                                                    class="decline-btn"
-                                                    onclick="updateBookingStatus(@booking.BookingId, 'declined')">
-                                                Decline
-                                            </button>
-
-                                        </div>
-                                    }
+                                    No bookings have been made yet.
 
                                 </td>
 
                             </tr>
-
                         }
 
-                    }
-                    else
-                    {
-
-                        <tr>
-
-                            <td colspan="9"
-                                style="text-align:center;">
-
-                                No bookings have been made yet.
-
-                            </td>
-
-                        </tr>
-
-                    }
-
-                        </tbody>
+                    </tbody>
 
 
                     </table>
@@ -456,21 +451,6 @@
 
     </main>
 
-
-    <!-- ==========================================
-         SIGN OUT
-    =========================================== -->
-
-    <p class="footer-text">
-
-        <a class="footer-link"
-           href="@Url.Action("AdminLogout", "Cust")">
-
-            Sign Out
-
-        </a>
-
-    </p>
 
 
 </body>

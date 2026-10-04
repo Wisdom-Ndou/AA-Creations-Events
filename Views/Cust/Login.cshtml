@@ -1,4 +1,4 @@
-﻿@{
+﻿﻿@{
     ViewBag.Title = "Sign In";
 }
 
@@ -45,8 +45,13 @@
                     </div>
                 }
 
-                @* Form: default posts to Login; JS will switch to AdminLogin when role=admin *@
-                @using (Html.BeginForm("Login", "Cust", FormMethod.Post, new { id = "loginForm", @data_customer_action = Url.Action("Login", "Cust"), @data_admin_action = Url.Action("AdminLogin", "Cust") }))
+                @* Both Customer and Admin now use the unified Login action *@
+                @using (Html.BeginForm(
+                    "Login",
+                    "Cust",
+                    FormMethod.Post,
+                    new { id = "loginForm" }
+                ))
                 {
                     @Html.AntiForgeryToken()
 
@@ -69,10 +74,14 @@
                         <a href="@Url.Action("ForgotPassword", "Cust")">Forgot Password?</a>
                     </div>
 
-                    @* Admin-only field (name matches CustController.AdminLogin parameter) *@
+                    @* Admin-only field *@
                     <div class="field" id="accessCodeField" hidden>
-                        <label for="adminAccessCode">Admin Access Code</label>
-                        <input type="password" id="adminAccessCode" name="adminAccessCode" placeholder="Enter admin access code" />
+                        <label for="accessCode">Admin Access Code</label>
+
+                        <input type="password"
+                               id="accessCode"
+                               name="accessCode"
+                               placeholder="Enter admin access code" />
                     </div>
 
                     <div class="options-row">
@@ -98,48 +107,118 @@
 
     <script>
         (function () {
-            const customerBtn = document.getElementById('roleCustomerBtn');
-            const adminBtn = document.getElementById('roleAdminBtn');
-            const roleInput = document.getElementById('role');
-            const form = document.getElementById('loginForm');
-            const accessField = document.getElementById('accessCodeField');
-            const adminRegister = document.getElementById('adminRegisterRow');
-            const customerRegister = document.getElementById('customerRegisterRow');
-            const indicatorText = document.getElementById('indicatorText');
 
-            // data attributes set by BeginForm
-            const customerAction = form.getAttribute('data-customer-action') || '@Url.Action("Login","Cust")';
-            const adminAction = form.getAttribute('data-admin-action') || '@Url.Action("AdminLogin","Cust")';
+            const customerBtn =
+                document.getElementById('roleCustomerBtn');
+
+            const adminBtn =
+                document.getElementById('roleAdminBtn');
+
+            const roleInput =
+                document.getElementById('role');
+
+            const accessField =
+                document.getElementById('accessCodeField');
+
+            const accessCodeInput =
+                document.getElementById('accessCode');
+
+            const adminRegister =
+                document.getElementById('adminRegisterRow');
+
+            const customerRegister =
+                document.getElementById('customerRegisterRow');
+
+            const indicatorText =
+                document.getElementById('indicatorText');
+
 
             function setRole(role) {
+
                 if (role === 'admin') {
-                    adminBtn.classList.add('active'); customerBtn.classList.remove('active');
+
+                    adminBtn.classList.add('active');
+                    customerBtn.classList.remove('active');
+
+                    adminBtn.setAttribute(
+                        'aria-selected',
+                        'true'
+                    );
+
+                    customerBtn.setAttribute(
+                        'aria-selected',
+                        'false'
+                    );
+
                     roleInput.value = 'admin';
+
                     accessField.hidden = false;
-                    accessField.querySelector('input').required = true;
+
+                    accessCodeInput.required = true;
+
                     adminRegister.style.display = 'block';
+
                     customerRegister.style.display = 'none';
-                    form.action = adminAction;
-                    indicatorText.textContent = 'Signing in as admin';
-                } else {
-                    customerBtn.classList.add('active'); adminBtn.classList.remove('active');
+
+                    indicatorText.textContent =
+                        'Signing in as admin';
+                }
+                else {
+
+                    customerBtn.classList.add('active');
+                    adminBtn.classList.remove('active');
+
+                    customerBtn.setAttribute(
+                        'aria-selected',
+                        'true'
+                    );
+
+                    adminBtn.setAttribute(
+                        'aria-selected',
+                        'false'
+                    );
+
                     roleInput.value = 'customer';
+
                     accessField.hidden = true;
-                    accessField.querySelector('input').required = false;
+
+                    accessCodeInput.required = false;
+
+                    // Clear the admin code when switching back
+                    // to customer login.
+                    accessCodeInput.value = '';
+
                     adminRegister.style.display = 'none';
+
                     customerRegister.style.display = 'block';
-                    form.action = customerAction;
-                    indicatorText.textContent = 'Signing in as customer';
+
+                    indicatorText.textContent =
+                        'Signing in as customer';
                 }
             }
 
-            customerBtn.addEventListener('click', function () { setRole('customer'); });
-            adminBtn.addEventListener('click', function () { setRole('admin'); });
 
-            // initialize
+            customerBtn.addEventListener(
+                'click',
+                function () {
+                    setRole('customer');
+                }
+            );
+
+
+            adminBtn.addEventListener(
+                'click',
+                function () {
+                    setRole('admin');
+                }
+            );
+
+
+            // Start on customer login
             setRole('customer');
+
         })();
     </script>
-        
+
 </body>
 </html>
