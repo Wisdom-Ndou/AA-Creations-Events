@@ -2509,3 +2509,17 @@ a {
     .location-actions { flex-direction: column; }
     .location-actions .btn { width: 100%; }
 }
+
+
+.payment-validation-message {
+    margin: 8px 0 0;
+    color: #b42318;
+    font-size: 12px;
+    line-height: 1.45;
+    font-weight: 600;
+}
+
+.field-input[aria-invalid="true"] {
+    border-color: #b42318;
+    box-shadow: 0 0 0 3px rgba(180, 35, 24, .08);
+}
