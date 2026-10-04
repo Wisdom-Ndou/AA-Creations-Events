@@ -1,4 +1,5 @@
 ﻿@inherits System.Web.Mvc.WebViewPage<dynamic>
+@using System
 @{
     ViewBag.Title = "Adminregister";
 
@@ -241,7 +242,7 @@
 
                     <div class="terms-box">
                         <label class="terms-label">
-                            <input type="checkbox" id="termsAccepted" name="termsAccepted" value="true" @(adminTermsAccepted ? "checked=\"checked\"" : "") required />
+                            <input type="checkbox" id="termsAccepted" name="termsAccepted" value="true" @(adminTermsAccepted ? Html.Raw("checked=\"checked\"") : Html.Raw("")) required />
                             <span>I confirm that all information provided is accurate and I agree to the Admin Terms of Use.</span>
                         </label>
                     </div>
