@@ -39,6 +39,47 @@ namespace WebApplication1.Controllers
         }
 
         [HttpGet]
+        public ActionResult CustomerDashboard()
+        {
+            if (Session["CustomerId"] == null ||
+                Session["CustomerAuthenticated"] == null ||
+                !(bool)Session["CustomerAuthenticated"])
+            {
+                return RedirectToAction("Login", "Cust");
+            }
+
+            int customerId = (int)Session["CustomerId"];
+            var customer = db.Customers.FirstOrDefault(c => c.Cust_ID == customerId);
+            if (customer == null)
+            {
+                ClearRoleSessions();
+                return RedirectToAction("Login", "Cust");
+            }
+
+            DateTime today = DateTime.Today;
+            var bookings = db.Bookings
+                .Where(b => b.CustomerId == customerId)
+                .Include("Package")
+                .OrderByDescending(b => b.CreatedAt)
+                .ToList();
+
+            ViewBag.Customer = customer;
+            ViewBag.TotalBookings = bookings.Count;
+            ViewBag.UpcomingBookings = bookings.Count(b =>
+                b.EventDate >= today &&
+                !string.Equals(b.Status, "Declined", StringComparison.OrdinalIgnoreCase) &&
+                !string.Equals(b.Status, "Cancelled", StringComparison.OrdinalIgnoreCase));
+            ViewBag.BalanceOutstanding = bookings.Sum(b => Math.Max(0m, b.TotalPrice - b.AmountPaid));
+            ViewBag.OpenComplaints = db.CustomerComplaints.Count(x =>
+                x.CustomerId == customerId &&
+                x.Status != "Resolved" &&
+                x.Status != "Closed");
+            ViewBag.RecentBookings = bookings.Take(4).ToList();
+
+            return View();
+        }
+
+        [HttpGet]
         public ActionResult Login()
         {
             return View();
@@ -129,7 +170,7 @@ namespace WebApplication1.Controllers
                     true;
 
                 return RedirectToAction(
-                    "Index",
+                    "CustomerDashboard",
                     "Cust"
                 );
             }
