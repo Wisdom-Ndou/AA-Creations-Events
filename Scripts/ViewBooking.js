@@ -388,57 +388,6 @@ function renderBookings() {
         });
     });
 
-    document.querySelectorAll("[data-pay-balance]").forEach(button => {
-        button.addEventListener("click", async event => {
-            event.stopPropagation();
-            const booking = bookings.find(item => item.id === Number(button.dataset.payBalance));
-            if (!booking) return;
-
-            const outstanding = Number(booking.balanceOutstanding || 0);
-            const raw = window.prompt(
-                "Outstanding balance: R" + formatMoney(outstanding) +
-                "\nEnter the amount you want to pay now:",
-                outstanding.toFixed(2)
-            );
-
-            if (raw === null) return;
-            const amount = Number(raw);
-            if (!Number.isFinite(amount) || amount <= 0 || amount > outstanding) {
-                alert("Enter an amount greater than zero and no more than the outstanding balance.");
-                return;
-            }
-
-            const app = document.getElementById("bookingsApp");
-            const token = document.querySelector('input[name="__RequestVerificationToken"]');
-            const body = new URLSearchParams();
-            body.append("bookingId", booking.id);
-            body.append("amount", amount.toFixed(2));
-            if (token) body.append("__RequestVerificationToken", token.value);
-
-            try {
-                const response = await fetch(app.dataset.payUrl, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8" },
-                    body: body.toString()
-                });
-                const result = await response.json();
-                if (!result.success) {
-                    alert(result.message || "The payment could not be recorded.");
-                    return;
-                }
-
-                booking.amountPaid = Number(result.amountPaid || 0);
-                booking.balanceOutstanding = Number(result.balanceOutstanding || 0);
-                booking.paymentStatus = result.paymentStatus;
-                booking.balanceDueDate = result.balanceDueDate || null;
-                alert(result.message || "Payment recorded.");
-                renderBookings();
-            } catch (error) {
-                alert("We could not record the payment right now. Please try again.");
-            }
-        });
-    });
-
     document
         .querySelectorAll("[data-cancel-booking]")
         .forEach(button => {
@@ -625,7 +574,7 @@ function renderDetails(booking, isPast) {
                             ${(booking.status || "").toLowerCase() === "setup completed" ? '<button type="button" class="btn btn-primary" data-complete-booking="' + booking.id + '">Confirm Arrival & Complete</button>' : ""}
 
                             ${Number(booking.balanceOutstanding || 0) > 0 && !["declined","cancelled","completed"].includes((booking.status || "").toLowerCase())
-                                ? '<button type="button" class="btn btn-primary" data-pay-balance="' + booking.id + '">Pay Remaining Balance</button>'
+                                ? '<a class="btn btn-primary" href="/Cust/BalancePayment?bookingId=' + booking.id + '">Pay Remaining Balance</a>'
                                 : ""}
 
                             ${["pending", "approved"].includes((booking.status || "Pending").toLowerCase()) ? `
