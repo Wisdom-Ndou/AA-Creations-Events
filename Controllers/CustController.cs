@@ -69,7 +69,11 @@ namespace WebApplication1.Controllers
                 b.EventDate >= today &&
                 !string.Equals(b.Status, "Declined", StringComparison.OrdinalIgnoreCase) &&
                 !string.Equals(b.Status, "Cancelled", StringComparison.OrdinalIgnoreCase));
-            ViewBag.BalanceOutstanding = bookings.Sum(b => Math.Max(0m, b.TotalPrice - b.AmountPaid));
+            ViewBag.BalanceOutstanding = bookings
+                .Where(b =>
+                    !string.Equals(b.Status, "Cancelled", StringComparison.OrdinalIgnoreCase) &&
+                    !string.Equals(b.Status, "Declined", StringComparison.OrdinalIgnoreCase))
+                .Sum(b => Math.Max(0m, b.TotalPrice - b.AmountPaid));
             ViewBag.OpenComplaints = db.CustomerComplaints.Count(x =>
                 x.CustomerId == customerId &&
                 x.Status != "Resolved" &&
@@ -998,7 +1002,7 @@ namespace WebApplication1.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public JsonResult CancelCustomerBooking(int bookingId)
+        public JsonResult CancelCustomerBooking(int bookingId, string cancellationReason)
         {
             if (Session["CustomerId"] == null)
                 return Json(new { success = false, requiresLogin = true, message = "Please sign in first." });
@@ -1016,11 +1020,27 @@ namespace WebApplication1.Controllers
                 current.Equals("Cancelled", StringComparison.OrdinalIgnoreCase))
                 return Json(new { success = false, message = "This booking can no longer be cancelled online." });
 
+            if (string.IsNullOrWhiteSpace(cancellationReason))
+            {
+                return Json(new
+                {
+                    success = false,
+                    message = "Please provide a reason for cancelling this booking."
+                });
+            }
+
+            cancellationReason = cancellationReason.Trim();
+            if (cancellationReason.Length > 500)
+            {
+                cancellationReason = cancellationReason.Substring(0, 500);
+            }
+
             int daysBeforeEvent = (booking.EventDate.Date - DateTime.Today).Days;
             decimal cancellationRate = daysBeforeEvent > 7 ? 0.10m : 0.20m;
             booking.CancellationCharge = Math.Round(booking.AmountPaid * cancellationRate, 2);
             booking.RefundAmount = Math.Max(0m, booking.AmountPaid - booking.CancellationCharge);
             booking.PaymentStatus = booking.RefundAmount > 0m ? "Refund Due" : booking.PaymentStatus;
+            booking.BalanceDueDate = null;
             booking.Status = "Cancelled";
 
             var pendingTasks = db.StaffTasks
@@ -1035,6 +1055,20 @@ namespace WebApplication1.Controllers
             }
 
             db.SaveChanges();
+
+            var cancellationEmailService = new OtpDeliveryService();
+            bool cancellationEmailSent = cancellationEmailService.SendBookingCancellationEmail(
+                booking.Email,
+                booking.FirstName,
+                booking.BookingId,
+                booking.Occasion,
+                booking.EventDate,
+                cancellationReason,
+                booking.AmountPaid,
+                booking.CancellationCharge,
+                booking.RefundAmount
+            );
+
             return Json(new
             {
                 success = true,
@@ -1042,9 +1076,14 @@ namespace WebApplication1.Controllers
                 cancellationCharge = booking.CancellationCharge,
                 refundAmount = booking.RefundAmount,
                 paymentStatus = booking.PaymentStatus,
+                balanceOutstanding = 0m,
+                cancellationReason = cancellationReason,
+                cancellationEmailSent = cancellationEmailSent,
                 message = booking.RefundAmount > 0m
-                    ? "Booking cancelled. Your refund amount has been calculated from the amount paid."
-                    : "Booking cancelled."
+                    ? "Booking cancelled. Your refund amount has been calculated from the amount paid." +
+                      (cancellationEmailSent ? " A cancellation email has been sent to you." : "")
+                    : "Booking cancelled." +
+                      (cancellationEmailSent ? " A cancellation email has been sent to you." : "")
             });
         }
 
