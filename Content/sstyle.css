@@ -1,4 +1,4 @@
-﻿@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;0,800;1,400;1,600&family=Poppins:wght@300;400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;0,800;1,400;1,600&family=Poppins:wght@300;400;500;600&display=swap');
 
 :root {
     --background: #fdf8fa;
@@ -2016,3 +2016,154 @@ a {
         min-width: 96px;
         text-decoration: none;
     }
+
+/* ==========================================================
+   EVENT ADDRESS AUTOCOMPLETE / MAP LOCATION
+   ========================================================== */
+
+.location-section {
+    position: relative;
+    z-index: 20;
+}
+
+.address-autocomplete {
+    position: relative;
+}
+
+.address-suggestions {
+    display: none;
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0;
+    right: 0;
+    z-index: 3000;
+    max-height: 280px;
+    overflow-y: auto;
+    background: #ffffff;
+    border: 1px solid #ead7e2;
+    border-radius: 12px;
+    box-shadow: 0 12px 30px rgba(60, 25, 45, 0.14);
+    padding: 6px;
+}
+
+.address-suggestions.visible {
+    display: block;
+}
+
+.address-suggestion {
+    width: 100%;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 11px 12px;
+    border: 0;
+    border-radius: 9px;
+    background: transparent;
+    text-align: left;
+    cursor: pointer;
+    color: inherit;
+}
+
+.address-suggestion:hover,
+.address-suggestion:focus {
+    background: #fff3f8;
+    outline: none;
+}
+
+.address-suggestion.outside {
+    background: #fff9f9;
+}
+
+.address-suggestion-icon {
+    flex: 0 0 auto;
+    font-size: 16px;
+    line-height: 1.3;
+}
+
+.address-suggestion-text {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.address-suggestion-text strong {
+    font-size: 14px;
+    line-height: 1.35;
+    font-weight: 600;
+    overflow-wrap: anywhere;
+}
+
+.address-suggestion-text small {
+    color: #7c6c75;
+    font-size: 12px;
+    line-height: 1.3;
+}
+
+.address-suggestion-empty {
+    padding: 14px;
+    color: #7c6c75;
+    font-size: 13px;
+    text-align: center;
+}
+
+.selected-city-summary {
+    margin-top: -4px;
+}
+
+.selected-city-display {
+    display: flex;
+    align-items: center;
+    min-height: 44px;
+    padding: 10px 13px;
+    border: 1px solid #ead7e2;
+    border-radius: 9px;
+    background: #fff8fb;
+    font-weight: 600;
+}
+
+.location-message {
+    min-height: 22px;
+    margin-top: 10px;
+    font-size: 13px;
+    line-height: 1.45;
+}
+
+.location-message.info {
+    color: #5c6570;
+}
+
+.location-message.success {
+    color: #18794e;
+}
+
+.location-message.warning {
+    color: #8a5a00;
+}
+
+.location-message.error {
+    color: #b42318;
+}
+
+.booking-map-container {
+    position: relative;
+    z-index: 1;
+    margin-top: 12px;
+    overflow: hidden;
+    border-radius: 12px;
+}
+
+@media (max-width: 600px) {
+    .address-suggestions {
+        max-height: 240px;
+    }
+
+    .location-actions {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .location-actions .btn {
+        width: 100%;
+    }
+}

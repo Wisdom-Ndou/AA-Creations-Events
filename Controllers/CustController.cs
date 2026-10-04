@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Configuration;
 using System.Data.Entity;
@@ -9,6 +9,9 @@ using System.Web.Helpers;
 using System.Web.Mvc;
 using System.Web.Optimization;
 using System.Xml.Linq;
+using System.Net;
+using System.Text;
+using Newtonsoft.Json.Linq;
 using WebApplication1.Helpers;
 using WebApplication1.Models;
 using WebApplication1.Services;
@@ -525,6 +528,333 @@ namespace WebApplication1.Controllers
             return View();
         }
 
+
+        // ==========================================================
+        // EVENT LOCATION / ADDRESS LOOKUP
+        // ==========================================================
+
+        private static readonly HashSet<string> AllowedEventCities =
+       new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+       {
+        "Durban",
+        "Pietermaritzburg",
+        "Mandeni",
+        "eMandeni"
+       };
+
+        
+
+        
+
+        private static string NormalizeEventCity(string city)
+        {
+            return (city ?? string.Empty).Trim();
+        }
+
+        private static bool IsAllowedEventCity(string city)
+        {
+            return AllowedEventCities.Contains(
+                NormalizeEventCity(city));
+        }
+        
+
+       
+        private static string GetGeocodedCity(JObject feature)
+        {
+            var geocoding = feature["properties"]?["geocoding"] as JObject;
+
+            if (geocoding == null)
+                return string.Empty;
+
+            // geocodejson normally gives us "city". The fallbacks help with
+            // places that are classified as a town/village by OpenStreetMap.
+            string[] fields = { "city", "town", "village", "locality" };
+
+            foreach (var field in fields)
+            {
+                var value = geocoding[field]?.ToString();
+
+                if (!string.IsNullOrWhiteSpace(value))
+                    return value.Trim();
+            }
+
+            return string.Empty;
+        }
+
+        private static string GetGeocodedLabel(JObject feature)
+        {
+            var geocoding = feature["properties"]?["geocoding"] as JObject;
+
+            var label = geocoding?["label"]?.ToString();
+
+            if (!string.IsNullOrWhiteSpace(label))
+                return label.Trim();
+
+            return feature["properties"]?["label"]?.ToString()?.Trim()
+                   ?? string.Empty;
+        }
+
+        
+
+        private static JObject GetFirstNominatimFeature(string url)
+        {
+            using (var client = new WebClient())
+            {
+                client.Encoding = Encoding.UTF8;
+
+                // Nominatim requires an identifying User-Agent.
+                client.Headers["User-Agent"] =
+                    "AA-Creations-Events/1.0 (booking address lookup)";
+
+                client.Headers["Accept"] = "application/json";
+                client.Headers["Accept-Language"] = "en";
+
+                var json = client.DownloadString(url);
+                var root = JObject.Parse(json);
+                var features = root["features"] as JArray;
+
+                if (features == null || features.Count == 0)
+                    return null;
+
+                return features[0] as JObject;
+            }
+        }
+
+        [HttpGet]
+        public JsonResult SearchEventAddresses(string address, string city)
+        {
+            city = NormalizeEventCity(city);
+
+            if (!IsAllowedEventCity(city))
+            {
+                return Json(new
+                {
+                    success = false,
+                    message = "Please select Durban, Pietermaritzburg or Mandeni first."
+                }, JsonRequestBehavior.AllowGet);
+            }
+
+            if (string.IsNullOrWhiteSpace(address) || address.Trim().Length < 3)
+            {
+                return Json(new
+                {
+                    success = true,
+                    results = new object[0]
+                }, JsonRequestBehavior.AllowGet);
+            }
+
+            try
+            {
+                // We deliberately do not hard-filter the results by a city
+                // bounding box. Results may be outside the selected city so
+                // the customer can be told clearly when that happens.
+                var query =
+                    address.Trim() +
+                    ", " +
+                    city +
+                    ", KwaZulu-Natal, South Africa";
+
+                var url =
+                    "https://nominatim.openstreetmap.org/search" +
+                    "?format=geocodejson" +
+                    "&addressdetails=1" +
+                    "&countrycodes=za" +
+                    "&layer=address,poi" +
+                    "&limit=8" +
+                    "&q=" +
+                    Uri.EscapeDataString(query);
+
+                JObject root;
+
+                using (var client = new WebClient())
+                {
+                    client.Encoding = Encoding.UTF8;
+                    client.Headers["User-Agent"] =
+                        "AA-Creations-Events/1.0 (booking address lookup)";
+                    client.Headers["Accept"] = "application/json";
+                    client.Headers["Accept-Language"] = "en";
+
+                    root = JObject.Parse(client.DownloadString(url));
+                }
+
+                var features = root["features"] as JArray;
+
+                if (features == null)
+                {
+                    return Json(new
+                    {
+                        success = true,
+                        results = new object[0]
+                    }, JsonRequestBehavior.AllowGet);
+                }
+
+                var results = new List<object>();
+
+                foreach (var token in features)
+                {
+                    var feature = token as JObject;
+                    var coordinates =
+                        feature?["geometry"]?["coordinates"] as JArray;
+
+                    if (feature == null ||
+                        coordinates == null ||
+                        coordinates.Count < 2)
+                    {
+                        continue;
+                    }
+
+                    double longitude;
+                    double latitude;
+
+                    if (!double.TryParse(
+                            coordinates[0]?.ToString(),
+                            System.Globalization.NumberStyles.Any,
+                            System.Globalization.CultureInfo.InvariantCulture,
+                            out longitude) ||
+                        !double.TryParse(
+                            coordinates[1]?.ToString(),
+                            System.Globalization.NumberStyles.Any,
+                            System.Globalization.CultureInfo.InvariantCulture,
+                            out latitude))
+                    {
+                        continue;
+                    }
+
+                    var resolvedCity = GetGeocodedCity(feature);
+                    var label = GetGeocodedLabel(feature);
+
+                    results.Add(new
+                    {
+                        address = label,
+                        latitude = latitude,
+                        longitude = longitude,
+                        resolvedCity = resolvedCity,
+                        inSelectedCity = true
+                    });
+                }
+
+                return Json(new
+                {
+                    success = true,
+                    results = results
+                }, JsonRequestBehavior.AllowGet);
+            }
+            catch (WebException)
+            {
+                return Json(new
+                {
+                    success = false,
+                    message = "The address service is temporarily unavailable. Please try again or pin the location on the map."
+                }, JsonRequestBehavior.AllowGet);
+            }
+            catch (Exception)
+            {
+                return Json(new
+                {
+                    success = false,
+                    message = "We could not search for that address right now. Please try again."
+                }, JsonRequestBehavior.AllowGet);
+            }
+        }
+
+        [HttpGet]
+        public JsonResult ReverseEventLocation(
+            double latitude,
+            double longitude,
+            string city)
+        {
+            city = NormalizeEventCity(city);
+
+            
+            
+
+            try
+            {
+                var url =
+                    "https://nominatim.openstreetmap.org/reverse" +
+                    "?format=geocodejson" +
+                    "&addressdetails=1" +
+                    "&zoom=18" +
+                    "&lat=" +
+                    latitude.ToString(
+                        System.Globalization.CultureInfo.InvariantCulture) +
+                    "&lon=" +
+                    longitude.ToString(
+                        System.Globalization.CultureInfo.InvariantCulture);
+
+                var feature = GetFirstNominatimFeature(url);
+
+                if (feature == null)
+                {
+                    return Json(new
+                    {
+                        success = false,
+                        message = "We could not find an address at that map location."
+                    }, JsonRequestBehavior.AllowGet);
+                }
+
+                
+
+                return Json(new
+                {
+                    success = true,
+                    address = GetGeocodedLabel(feature),
+                    resolvedCity = GetGeocodedCity(feature),
+                    latitude = latitude,
+                    longitude = longitude
+                }, JsonRequestBehavior.AllowGet);
+            }
+            catch (WebException)
+            {
+                return Json(new
+                {
+                    success = false,
+                    message = "We could not verify that map location right now. Please try again."
+                }, JsonRequestBehavior.AllowGet);
+            }
+            catch (Exception)
+            {
+                return Json(new
+                {
+                    success = false,
+                    message = "The map address lookup failed. Please try again."
+                }, JsonRequestBehavior.AllowGet);
+            }
+        }
+
+        private bool ValidateSubmittedEventLocation(
+      string city,
+      decimal? latitude,
+      decimal? longitude)
+        {
+            city = NormalizeEventCity(city);
+
+            // A supported service city must still be selected.
+            if (!IsAllowedEventCity(city))
+            {
+                return false;
+            }
+
+            // The customer must still confirm a map location.
+            if (!latitude.HasValue || !longitude.HasValue)
+            {
+                return false;
+            }
+
+            double lat = (double)latitude.Value;
+            double lon = (double)longitude.Value;
+
+            // Only check that the coordinates themselves are valid.
+            if (lat < -90 || lat > 90 ||
+                lon < -180 || lon > 180)
+            {
+                return false;
+            }
+
+            // No city-radius/location restriction.
+            return true;
+        }
+
         [HttpPost]
         public JsonResult CreateBooking(CreateBookingRequest request)
         {
@@ -553,6 +883,47 @@ namespace WebApplication1.Controllers
                 {
                     success = false,
                     message = "No booking information was received."
+                });
+            }
+
+            // Server-side location validation prevents the browser from
+            // bypassing the selected-city rule.
+            if (!IsAllowedEventCity(request.City))
+            {
+                return Json(new
+                {
+                    success = false,
+                    message = "Please select Durban, Pietermaritzburg or Mandeni as the event city."
+                });
+            }
+
+            if (string.IsNullOrWhiteSpace(request.Address))
+            {
+                return Json(new
+                {
+                    success = false,
+                    message = "Please provide a valid event address."
+                });
+            }
+
+            if (!request.Latitude.HasValue || !request.Longitude.HasValue)
+            {
+                return Json(new
+                {
+                    success = false,
+                    message = "Please select and confirm the event location on the map."
+                });
+            }
+
+            if (!ValidateSubmittedEventLocation(
+         request.City,
+         request.Latitude,
+         request.Longitude))
+            {
+                return Json(new
+                {
+                    success = false,
+                    message = "Please select and confirm a valid event location."
                 });
             }
 
@@ -610,6 +981,9 @@ namespace WebApplication1.Controllers
                     EventTime = request.EventTime,
                     Address = request.Address,
                     City = request.City,
+                    Latitude = request.Latitude,
+                    Longitude = request.Longitude,
+
                     Notes = request.Notes,
 
                     // Use the validated package ID
