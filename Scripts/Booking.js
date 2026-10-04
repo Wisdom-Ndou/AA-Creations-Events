@@ -290,7 +290,8 @@ function renderBookingStep() {
         </div>
         <div class="form-group full">
           <label class="form-label" for="city">City / Town</label>
-          <select class="form-control" id="city" name="city" required disabled>\n            <option value="Pietermaritzburg" ${state.form.city === "Pietermaritzburg" ? "selected" : ""}>Pietermaritzburg</option>\n            <option value="Durban" ${state.form.city === "Durban" ? "selected" : ""}>Durban</option>\n            <option value="Mandeni" ${state.form.city === "Mandeni" ? "selected" : ""}>Mandeni</option>\n          </select>
+          <select class="form-control" id="city" name="city" required>\n            <option value="Pietermaritzburg" ${state.form.city === "Pietermaritzburg" ? "selected" : ""}>Pietermaritzburg</option>\n            <option value="Durban" ${state.form.city === "Durban" ? "selected" : ""}>Durban</option>\n            <option value="Mandeni" ${state.form.city === "Mandeni" ? "selected" : ""}>Mandeni</option>\n          </select>
+          <small class="muted">This city/town is used for staff assignment and booking operations.</small>
         </div>
       </div>
 
@@ -656,7 +657,7 @@ function handleFormInput(event) {
     }
 }
 
-async async function submitBooking() {
+async function submitBooking() {
     const bookingUrl = document.getElementById("bookingApp").dataset.bookingUrl;
 
     const confirmBtn = document.getElementById("confirmBookingFinal");
