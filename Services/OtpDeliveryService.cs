@@ -274,6 +274,35 @@ namespace WebApplication1.Services
 <p>Thank you for choosing AA Creations & Events.</p>");
         }
 
+        public bool SendBookingCancellationEmail(
+            string email,
+            string firstName,
+            int bookingId,
+            string occasion,
+            DateTime eventDate,
+            string cancellationReason,
+            decimal amountPaid,
+            decimal cancellationCharge,
+            decimal refundAmount)
+        {
+            return SendEmail(
+                email,
+                "AA Creations & Events - Booking Cancelled",
+                $@"<h2>Booking Cancelled</h2>
+<p>Hi {firstName},</p>
+<p>Your booking has been cancelled successfully.</p>
+<p><strong>Booking Reference:</strong> #{bookingId}</p>
+<p><strong>Occasion:</strong> {occasion}</p>
+<p><strong>Event Date:</strong> {eventDate:dd MMMM yyyy}</p>
+<p><strong>Cancellation Reason:</strong> {System.Net.WebUtility.HtmlEncode(cancellationReason)}</p>
+<hr />
+<p><strong>Amount Paid:</strong> R {amountPaid:N2}</p>
+<p><strong>Cancellation Charge:</strong> R {cancellationCharge:N2}</p>
+<p><strong>Refund Amount:</strong> R {refundAmount:N2}</p>
+<p>The refund amount shown above is the amount due back to you based on the cancellation policy.</p>
+<p>If you have any questions about your cancellation or refund, please contact AA Creations & Events.</p>");
+        }
+
         public bool SendBookingConfirmationEmail(
             string email,
             string firstName,
