@@ -470,7 +470,8 @@ namespace WebApplication1.Controllers
             Customer obj,
             bool termsAccepted,
             string termsVersion,
-            string cookiePreference)
+            string cookiePreference,
+            string confirm)
         {
             var currentTerms = GetCurrentTerms();
             ViewBag.CurrentTerms = currentTerms;
@@ -492,6 +493,14 @@ namespace WebApplication1.Controllers
             {
                 ModelState.AddModelError("", "The Terms & Conditions have been updated. Please review and accept the latest version.");
                 return View(obj);
+            }
+
+            if (!string.Equals(
+                    obj == null ? null : obj.Cust_Passw,
+                    confirm,
+                    StringComparison.Ordinal))
+            {
+                ModelState.AddModelError("confirm", "Passwords do not match.");
             }
 
             if (!ModelState.IsValid)
@@ -597,13 +606,13 @@ namespace WebApplication1.Controllers
             if (string.IsNullOrWhiteSpace(firstName) ||
                 !firstName.All(char.IsLetter))
             {
-                ModelState.AddModelError("", "Please enter a valid first name using letters only.");
+                ModelState.AddModelError("firstName", "Please enter a valid first name using letters only.");
             }
 
             if (string.IsNullOrWhiteSpace(lastName) ||
                 !lastName.All(char.IsLetter))
             {
-                ModelState.AddModelError("", "Please enter a valid last name using letters only.");
+                ModelState.AddModelError("lastName", "Please enter a valid last name using letters only.");
             }
 
             var emailValidator =
@@ -612,7 +621,7 @@ namespace WebApplication1.Controllers
             if (string.IsNullOrWhiteSpace(email) ||
                 !emailValidator.IsValid(email))
             {
-                ModelState.AddModelError("", "Please enter a valid email address.");
+                ModelState.AddModelError("email", "Please enter a valid email address.");
             }
 
             if (phone.Length != 9 ||
@@ -620,7 +629,7 @@ namespace WebApplication1.Controllers
                 phone.StartsWith("0"))
             {
                 ModelState.AddModelError(
-                    "",
+                    "phone",
                     "Enter a 9-digit South African mobile number without the leading 0.");
             }
 
@@ -630,27 +639,27 @@ namespace WebApplication1.Controllers
                 !password.Any(ch => !char.IsLetterOrDigit(ch)))
             {
                 ModelState.AddModelError(
-                    "",
+                    "password",
                     "Password must be at least 8 characters and include at least 2 uppercase letters and 1 special character.");
             }
 
             if (!string.Equals(password, confirm, StringComparison.Ordinal))
             {
-                ModelState.AddModelError("", "Passwords do not match.");
+                ModelState.AddModelError("confirm", "Passwords do not match.");
             }
 
             if (termsAccepted != true)
             {
-                ModelState.AddModelError("", "Please accept the Admin Terms of Use.");
+                ModelState.AddModelError("termsAccepted", "Please accept the Admin Terms of Use.");
             }
 
             if (string.IsNullOrWhiteSpace(adminAccessCode))
             {
-                ModelState.AddModelError("", "Please enter the admin authorization code.");
+                ModelState.AddModelError("adminAccessCode", "Please enter the admin authorization code.");
             }
             else if (!IsValidAdminAccessCode(adminAccessCode))
             {
-                ModelState.AddModelError("", "Invalid admin authorization code.");
+                ModelState.AddModelError("adminAccessCode", "Invalid admin authorization code.");
             }
 
             if (!ModelState.IsValid)
@@ -661,7 +670,7 @@ namespace WebApplication1.Controllers
             if (db.Admins.Any(a => a.admin_Email == email))
             {
                 ModelState.AddModelError(
-                    "",
+                    "email",
                     "An administrator with this email address already exists.");
                 return View();
             }
@@ -693,8 +702,15 @@ namespace WebApplication1.Controllers
                 return View();
             }
 
-            TempData["LoginSuccess"] =
-                "Admin registration was successful. You can now sign in.";
+            var adminRegistrationEmailService = new OtpDeliveryService();
+            bool adminRegistrationEmailSent =
+                adminRegistrationEmailService.SendAdminRegistrationEmail(
+                    admin.admin_Email,
+                    admin.admin_FName);
+
+            TempData["LoginSuccess"] = adminRegistrationEmailSent
+                ? "Admin registration was successful. A confirmation email has been sent to " + admin.admin_Email + "."
+                : "Admin registration was successful, but the confirmation email could not be sent right now. You can still sign in.";
 
             return RedirectToAction("Login", "Cust");
         }
@@ -4213,6 +4229,14 @@ namespace WebApplication1.Controllers
 
             if (!ModelState.IsValid)
             {
+                ClearInvalidRegistrationValues(
+                    "staff_FName",
+                    "staff_LName",
+                    "staff_Email",
+                    "staff_Passw",
+                    "staff_Phone",
+                    "staff_Type");
+
                 return View(staff);
             }
 
@@ -4232,6 +4256,7 @@ namespace WebApplication1.Controllers
             else
             {
                 ModelState.AddModelError("staff_Type", "Select a valid staff team.");
+                ClearInvalidRegistrationValues("staff_Type");
                 return View(staff);
             }
 
@@ -4246,6 +4271,7 @@ namespace WebApplication1.Controllers
                     "A staff account with this email already exists."
                 );
 
+                ClearInvalidRegistrationValues("staff_Email");
                 return View(staff);
             }
 
@@ -4254,8 +4280,38 @@ namespace WebApplication1.Controllers
             db.Staffs.Add(staff);
             db.SaveChanges();
 
-            return RedirectToAction("AdminDashboard", "Cust");
+            var staffRegistrationEmailService = new OtpDeliveryService();
+            bool staffRegistrationEmailSent =
+                staffRegistrationEmailService.SendStaffRegistrationEmail(
+                    staff.staff_Email,
+                    staff.staff_FName,
+                    staff.staff_Type,
+                    staff.staff_City);
+
+            TempData["StaffManagementSuccess"] = staffRegistrationEmailSent
+                ? "Staff member registered successfully. A confirmation email has been sent to " + staff.staff_Email + "."
+                : "Staff member registered successfully, but the confirmation email could not be sent right now.";
+
+            return RedirectToAction("StaffManagement", "Cust");
         }
+        private void ClearInvalidRegistrationValues(params string[] fieldNames)
+        {
+            foreach (var fieldName in fieldNames)
+            {
+                var entry = ModelState[fieldName];
+
+                if (entry == null || entry.Errors.Count == 0)
+                    continue;
+
+                ModelState.SetModelValue(
+                    fieldName,
+                    new ValueProviderResult(
+                        string.Empty,
+                        string.Empty,
+                        System.Globalization.CultureInfo.CurrentCulture));
+            }
+        }
+
         private string NormalizeCity(string city)
         {
             if (string.IsNullOrWhiteSpace(city))
