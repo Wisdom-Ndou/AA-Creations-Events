@@ -435,3 +435,47 @@ footer {
 
 @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Jost:wght@300;400;500;600&display=swap');
 
+
+
+/* Admin navigation theme */
+.desktop-nav.admin-nav {
+    background: #120c10;
+    color: #f4eaf0;
+    border-bottom: 1px solid rgba(196, 30, 111, 0.45);
+    box-shadow: 0 6px 18px rgba(0,0,0,0.28);
+}
+
+.desktop-nav.admin-nav .logo {
+    color: var(--pink);
+    font-weight: 800;
+    letter-spacing: 2.4px;
+    text-shadow: 0 0 14px rgba(196,30,111,.18);
+}
+
+.desktop-nav.admin-nav .logo:hover {
+    color: #e7378d;
+}
+
+.desktop-nav.admin-nav .nav-links {
+    color: #d8c6d0;
+}
+
+.desktop-nav.admin-nav .nav-links a {
+    color: #d8c6d0;
+}
+
+.desktop-nav.admin-nav .nav-links a:hover {
+    color: var(--pink);
+}
+
+.desktop-nav.admin-nav .login-btn {
+    color: #fff;
+    background: #8f174f;
+    border-radius: 999px;
+    padding: 9px 16px;
+}
+
+.desktop-nav.admin-nav .login-btn:hover {
+    color: #fff;
+    background: var(--pink);
+}
