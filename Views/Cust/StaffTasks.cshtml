@@ -9,12 +9,23 @@
     .staff-task-top{display:flex;justify-content:space-between;gap:18px;align-items:flex-start}
     .staff-task-title{font-size:1.08rem;font-weight:800;color:var(--staff-text);margin-bottom:5px}
     .staff-task-meta{color:var(--staff-muted);line-height:1.55;margin:.25rem 0}
-    .staff-task-form{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:16px;padding-top:16px;border-top:1px solid #efe3e9}
-    .staff-task-form input{flex:1;min-width:250px}
-    .staff-task-form .complete{background:var(--staff-success)}
-    .staff-task-form .unable{background:var(--staff-danger)}
+    .staff-task-form{margin-top:18px;padding-top:18px;border-top:1px solid #efe3e9}
+    .staff-task-actions{display:grid;grid-template-columns:minmax(180px,.65fr) minmax(0,1.6fr);gap:14px;align-items:stretch}
+    .task-complete-btn,.task-unable-btn{border:0;border-radius:12px;padding:13px 17px;font-weight:800;cursor:pointer;transition:transform .18s ease,box-shadow .18s ease,filter .18s ease}
+    .task-complete-btn{background:#edf9f3;color:#17643f;border:1px solid #a7d9c1}
+    .task-complete-btn:hover{transform:translateY(-1px);box-shadow:0 8px 18px rgba(23,100,63,.12);filter:brightness(.98)}
+    .task-unable-panel{display:flex;gap:10px;align-items:flex-end;padding:12px;border:1px solid #ecd9e2;border-radius:14px;background:#fff8fb}
+    .task-reason-group{flex:1;min-width:0}
+    .task-reason-label{display:block;margin:0 0 6px;font-size:.78rem;font-weight:800;color:var(--staff-text)}
+    .task-reason-label span{font-weight:500;color:var(--staff-muted)}
+    .task-reason-input{width:100%;box-sizing:border-box;min-height:44px;padding:11px 12px;border:1px solid #d9c6d0;border-radius:10px;background:#fff;color:var(--staff-text);outline:none;resize:vertical;font:inherit}
+    .task-reason-input:focus{border-color:var(--staff-pink);box-shadow:0 0 0 3px rgba(194,24,91,.10)}
+    .task-reason-input.invalid{border-color:var(--staff-danger);box-shadow:0 0 0 3px rgba(141,36,74,.09)}
+    .task-unable-btn{background:#fff0f5;color:#8d244a;border:1px solid #efb7c9;white-space:nowrap}
+    .task-unable-btn:hover{transform:translateY(-1px);box-shadow:0 8px 18px rgba(141,36,74,.12);filter:brightness(.98)}
     .staff-toolbar{display:flex;justify-content:space-between;gap:15px;align-items:center;margin-bottom:20px}
-    @@media(max-width:640px){.staff-task-top,.staff-toolbar{flex-direction:column}.staff-task-form{align-items:stretch}.staff-task-form input{min-width:0}}
+    @@media(max-width:760px){.staff-task-actions{grid-template-columns:1fr}.task-unable-panel{align-items:stretch;flex-direction:column}.task-unable-btn{width:100%}}
+    @@media(max-width:640px){.staff-task-top,.staff-toolbar{flex-direction:column}}
 </style>
 <main class="staff-page">
     <header class="staff-hero">
@@ -58,13 +69,35 @@
 
                 @if (String.Equals(task.Status,"Pending",StringComparison.OrdinalIgnoreCase))
                 {
-                    using (Html.BeginForm("UpdateStaffTask","Cust",FormMethod.Post,new { @class="staff-task-form" }))
+                    using (Html.BeginForm("UpdateStaffTask","Cust",FormMethod.Post,new { @class="staff-task-form", data_task_form="true" }))
                     {
                         @Html.AntiForgeryToken()
                         <input type="hidden" name="taskId" value="@task.TaskId" />
-                        <button class="complete" type="submit" name="status" value="Completed">Mark Complete</button>
-                        <input type="text" name="completionReason" placeholder="Reason if you cannot complete the task" maxlength="1000" />
-                        <button class="unable" type="submit" name="status" value="Unable">Unable to Complete</button>
+
+                        <div class="staff-task-actions">
+                            <button class="task-complete-btn" type="submit" name="status" value="Completed">
+                                ✓ Mark Complete
+                            </button>
+
+                            <div class="task-unable-panel">
+                                <div class="task-reason-group">
+                                    <label class="task-reason-label" for="reason-@task.TaskId">
+                                        Reason if you cannot complete the task
+                                        <span>· required only for Unable</span>
+                                    </label>
+                                    <textarea class="task-reason-input"
+                                              id="reason-@task.TaskId"
+                                              name="completionReason"
+                                              rows="2"
+                                              maxlength="1000"
+                                              placeholder="Briefly explain what is preventing completion…"></textarea>
+                                </div>
+
+                                <button class="task-unable-btn" type="submit" name="status" value="Unable">
+                                    ! Unable to Complete
+                                </button>
+                            </div>
+                        </div>
                     }
                 }
                 else if (!String.IsNullOrWhiteSpace(task.CompletionReason))
@@ -76,3 +109,29 @@
     }
     </section>
 </main>
+
+<script>
+    document.querySelectorAll('[data-task-form="true"]').forEach(function (form) {
+        var reason = form.querySelector('.task-reason-input');
+        var unable = form.querySelector('.task-unable-btn');
+
+        if (!reason || !unable) return;
+
+        unable.addEventListener('click', function (event) {
+            if (reason.value.trim()) {
+                reason.classList.remove('invalid');
+                return;
+            }
+
+            event.preventDefault();
+            reason.classList.add('invalid');
+            reason.focus();
+        });
+
+        reason.addEventListener('input', function () {
+            if (reason.value.trim()) {
+                reason.classList.remove('invalid');
+            }
+        });
+    });
+</script>
