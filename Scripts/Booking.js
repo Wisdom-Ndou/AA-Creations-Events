@@ -85,7 +85,7 @@ const state = {
 };
 
 function getSelectedPackage() {
-    return packages.find(pkg => pkg.id === state.form.packageId);
+    return getPackagesForOccasion().find(pkg => pkg.id === state.form.packageId);
 }
 
 function getSelectedAddOns() {
@@ -93,6 +93,7 @@ function getSelectedAddOns() {
 }
 
 function getTotal() {
+    if (isCustomOccasion()) return 0;
     const packagePrice = getSelectedPackage()?.price || 0;
     return packagePrice + getSelectedAddOns().reduce((sum, addon) => sum + addon.price, 0);
 }
@@ -130,10 +131,7 @@ function formatMoney(value) {
 }
 
 function loadQueryPackage() {
-    const pkg = new URLSearchParams(window.location.search).get("package");
-    if (packages.some(item => item.id === pkg)) {
-        state.form.packageId = pkg;
-    }
+    // Occasion selection must happen before a package can be selected.
 }
 
 function isPhoneValid(value) {
@@ -148,11 +146,7 @@ function isNameValid(value) {
 function isStep1Valid() {
     return Boolean(
         state.form.occasion &&
-        state.form.packageId &&
-        isNameValid(state.form.firstName) &&
-        isNameValid(state.form.lastName) &&
-        state.form.email.includes("@") &&
-        isPhoneValid(state.form.phone)
+        (isCustomOccasion() || getSelectedPackage())
     );
 }
 
@@ -191,6 +185,10 @@ function isExpiryValid(value) {
 }
 
 function isStep4Valid() {
+    if (isCustomOccasion()) {
+        return Boolean(state.termsAccepted);
+    }
+
     const b = state.banking;
     const total = getTotal();
     const minimum = getMinimumPayment();
@@ -710,7 +708,7 @@ async function submitBooking() {
         city: state.form.city,
         notes: state.form.notes,
 
-        packageId: state.form.packageId,
+        packageId: isCustomOccasion() ? "" : state.form.packageId,
         addOns: state.form.addOns,
         paymentAmount: getSelectedPaymentAmount(),
         termsAccepted: state.termsAccepted
