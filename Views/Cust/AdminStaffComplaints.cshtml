@@ -1,44 +1,167 @@
 @model IEnumerable<WebApplication1.Models.StaffComplaint>
+@using System
 @using System.Linq
 @{
     ViewBag.Title = "Staff Complaints";
-}
-<main style="max-width:1100px;margin:40px auto;padding:0 20px;">
-@if (TempData["ComplaintAdminError"] != null)
-{
-    <div class="alert">@TempData["ComplaintAdminError"]</div>
+    var complaints = Model == null
+        ? new List<WebApplication1.Models.StaffComplaint>()
+        : Model.ToList();
+
+    int openCount = complaints.Count(c => string.Equals(c.Status, "Open", StringComparison.OrdinalIgnoreCase));
+    int resolvedCount = complaints.Count(c => string.Equals(c.Status, "Resolved", StringComparison.OrdinalIgnoreCase));
+    int highPriorityCount = complaints.Count(c => string.Equals(c.Priority, "High", StringComparison.OrdinalIgnoreCase));
 }
 
-    <h1>Staff Complaints</h1>
-    @if (TempData["ComplaintAdminSuccess"] != null) { <p>@TempData["ComplaintAdminSuccess"]</p> }
+<link rel="stylesheet" href="~/Content/AdminDashboard.css" />
 
-    @if (!Model.Any())
+<style>
+.admin-complaints-wrap{max-width:1300px;margin:0 auto;padding:2rem;width:100%}
+.admin-complaint-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1rem;margin-bottom:1.5rem}
+.admin-complaint-stat{background:#111;border:1px solid #333;border-left:4px solid #ff2a6d;border-radius:12px;padding:1.2rem 1.3rem}
+.admin-complaint-stat span{display:block;color:#a0a0b0;font-size:.78rem;text-transform:uppercase;letter-spacing:.08em;margin-bottom:.35rem}
+.admin-complaint-stat strong{display:block;color:#fff;font-size:1.8rem}
+.admin-complaint-list{display:grid;gap:1rem}
+.admin-complaint-card{background:#111;border:1px solid #333;border-radius:14px;padding:1.25rem;box-shadow:0 8px 24px rgba(0,0,0,.3)}
+.admin-complaint-card:hover{border-color:#4a2a39}
+.admin-complaint-top{display:flex;justify-content:space-between;align-items:flex-start;gap:1rem;padding-bottom:1rem;border-bottom:1px solid rgba(255,42,109,.16)}
+.admin-complaint-title{margin:0 0 .35rem;color:#fff;font-size:1.25rem}
+.admin-complaint-meta{color:#a0a0b0;font-size:.84rem;line-height:1.6}
+.admin-pill{display:inline-flex;align-items:center;padding:.35rem .7rem;border-radius:999px;font-size:.72rem;font-weight:800;text-transform:uppercase;letter-spacing:.05em;white-space:nowrap}
+.admin-pill.open{color:#facc15;border:1px solid #facc15;background:rgba(250,204,21,.08)}
+.admin-pill.resolved{color:#4ade80;border:1px solid #4ade80;background:rgba(74,222,128,.08)}
+.admin-priority{display:inline-flex;margin-left:.5rem;padding:.2rem .55rem;border-radius:999px;font-size:.72rem;font-weight:700}
+.admin-priority.high{color:#f87171;background:rgba(248,113,113,.1)}
+.admin-priority.medium{color:#facc15;background:rgba(250,204,21,.1)}
+.admin-priority.low{color:#4ade80;background:rgba(74,222,128,.1)}
+.admin-complaint-body{margin:1rem 0;color:#e5e5e5;line-height:1.7}
+.admin-booking-link{margin:0 0 1rem;color:#d7c5cf;font-size:.9rem}
+.admin-booking-link strong{color:#ff5e91}
+.admin-response-form{display:grid;gap:.85rem;margin-top:1rem}
+.admin-response-form textarea{width:100%;min-height:120px;resize:vertical;box-sizing:border-box;padding:.85rem 1rem;border:1px solid #444;border-radius:10px;outline:none;background:#1c1c1c;color:#fff;font:inherit;line-height:1.55}
+.admin-response-form textarea:focus{border-color:#ff2a6d;box-shadow:0 0 0 3px rgba(255,42,109,.12)}
+.admin-response-actions{display:flex;justify-content:flex-end;gap:.7rem;flex-wrap:wrap}
+.admin-save-btn,.admin-resolve-btn{padding:.65rem 1rem;border-radius:8px;font-size:.86rem;font-weight:700;cursor:pointer}
+.admin-save-btn{border:1px solid #ff2a6d;background:rgba(255,42,109,.1);color:#ff5e91}
+.admin-save-btn:hover{background:#ff2a6d;color:#fff}
+.admin-resolve-btn{border:1px solid #4ade80;background:rgba(74,222,128,.1);color:#4ade80}
+.admin-resolve-btn:hover{background:#4ade80;color:#000}
+.admin-empty{padding:2.5rem 1.5rem;text-align:center;border:1px dashed #444;border-radius:14px;color:#a0a0b0;background:#111}
+.admin-alert{margin-bottom:1rem;padding:.85rem 1rem;border-radius:10px;border:1px solid #444;background:#171717}
+.admin-alert.error{color:#fca5a5;border-color:#7f1d1d}
+.admin-alert.success{color:#86efac;border-color:#166534}
+@@media(max-width:800px){.admin-complaint-stats{grid-template-columns:1fr}.admin-complaint-top{flex-direction:column}.admin-response-actions{justify-content:stretch}.admin-response-actions button{flex:1}}
+</style>
+
+<section class="page-head">
+    <div class="badge">Admin Support</div>
+    <h1>Staff <em>Complaints</em></h1>
+    <p>Review issues raised by staff members, respond clearly, and resolve them from one place.</p>
+</section>
+
+<main class="admin-complaints-wrap">
+    @if (TempData["ComplaintAdminError"] != null)
     {
-        <p>No staff complaints have been submitted.</p>
+        <div class="admin-alert error">@TempData["ComplaintAdminError"]</div>
     }
-    else
+
+    @if (TempData["ComplaintAdminSuccess"] != null)
     {
-        foreach (var complaint in Model)
+        <div class="admin-alert success">@TempData["ComplaintAdminSuccess"]</div>
+    }
+
+    <section class="admin-complaint-stats">
+        <article class="admin-complaint-stat">
+            <span>Total Complaints</span>
+            <strong>@complaints.Count</strong>
+        </article>
+        <article class="admin-complaint-stat">
+            <span>Open</span>
+            <strong>@openCount</strong>
+        </article>
+        <article class="admin-complaint-stat">
+            <span>High Priority</span>
+            <strong>@highPriorityCount</strong>
+        </article>
+    </section>
+
+    <section class="panel">
+        <div class="panel-head">
+            <div>
+                <h2>Staff Complaint Queue</h2>
+                <p>@openCount open · @resolvedCount resolved</p>
+            </div>
+        </div>
+
+        @if (!complaints.Any())
         {
-            <section style="margin-bottom:24px;padding:20px;border:1px solid #444;">
-                <h2>@complaint.Title</h2>
-                <p><strong>Staff:</strong> @complaint.Staff.staff_FName @complaint.Staff.staff_LName</p>
-                <p><strong>Priority:</strong> @complaint.Priority | <strong>Status:</strong> @complaint.Status</p>
-                <p>@complaint.Description</p>
-                @if (complaint.Booking != null)
-                {
-                    <p><strong>Booking:</strong> #@complaint.BookingId - @complaint.Booking.Occasion, @complaint.Booking.City</p>
-                }
-
-                @using (Html.BeginForm("RespondToStaffComplaint", "Cust", FormMethod.Post))
-                {
-                    @Html.AntiForgeryToken()
-                    <input type="hidden" name="complaintId" value="@complaint.ComplaintId" />
-                    <textarea name="adminResponse" maxlength="2000" required style="width:100%;min-height:90px;">@complaint.AdminResponse</textarea>
-                    <button type="submit" name="status" value="Open">Save Response</button>
-                    <button type="submit" name="status" value="Resolved">Resolve</button>
-                }
-            </section>
+            <div class="admin-empty">No staff complaints have been submitted.</div>
         }
-    }
+        else
+        {
+            <div class="admin-complaint-list">
+                @foreach (var complaint in complaints)
+                {
+                    var statusClass = string.Equals(complaint.Status, "Resolved", StringComparison.OrdinalIgnoreCase) ? "resolved" : "open";
+                    var priorityClass = (complaint.Priority ?? "Medium").ToLower();
+
+                    <article class="admin-complaint-card">
+                        <div class="admin-complaint-top">
+                            <div>
+                                <h3 class="admin-complaint-title">@complaint.Title</h3>
+                                <div class="admin-complaint-meta">
+                                    Staff:
+                                    <strong>
+                                        @(complaint.Staff == null
+                                            ? "Unknown Staff"
+                                            : complaint.Staff.staff_FName + " " + complaint.Staff.staff_LName)
+                                    </strong>
+                                    · Submitted @complaint.CreatedAt.ToString("dd MMM yyyy HH:mm")
+                                </div>
+                            </div>
+
+                            <div>
+                                <span class="admin-pill @statusClass">@complaint.Status</span>
+                                <span class="admin-priority @priorityClass">@complaint.Priority priority</span>
+                            </div>
+                        </div>
+
+                        <div class="admin-complaint-body">@complaint.Description</div>
+
+                        @if (complaint.Booking != null)
+                        {
+                            <div class="admin-booking-link">
+                                <strong>Booking:</strong>
+                                #BK-@complaint.BookingId · @complaint.Booking.Occasion · @complaint.Booking.City
+                            </div>
+                        }
+
+                        @using (Html.BeginForm("RespondToStaffComplaint", "Cust", FormMethod.Post, new { @class = "admin-response-form" }))
+                        {
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="complaintId" value="@complaint.ComplaintId" />
+
+                            <textarea name="adminResponse"
+                                      maxlength="2000"
+                                      required
+                                      placeholder="Write a clear response to the staff member...">@complaint.AdminResponse</textarea>
+
+                            <div class="admin-response-actions">
+                                <button type="submit" name="status" value="Open" class="admin-save-btn">
+                                    Save Response
+                                </button>
+
+                                <button type="submit" name="status" value="Resolved" class="admin-resolve-btn">
+                                    Mark Resolved
+                                </button>
+                            </div>
+                        }
+                    </article>
+                }
+            </div>
+        }
+    </section>
+
+    <a href="@Url.Action("AdminDashboard","Cust")" class="quick-action" style="max-width:260px">
+        ← Back to Admin Dashboard
+    </a>
 </main>
