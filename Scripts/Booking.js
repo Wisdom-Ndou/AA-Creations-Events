@@ -53,6 +53,7 @@ const addOns = [
 
 let bookingMap = null;
 let bookingMarker = null;
+let bookingMapResizeObserver = null;
 let addressSearchTimer = null;
 let addressSearchController = null;
 
@@ -475,12 +476,10 @@ function openLocationMap() {
 
     if (typeof L === "undefined") {
         console.error("Leaflet is not loaded.");
-
         showLocationMessage(
             "The map service could not load. Please refresh the page.",
             "error"
         );
-
         return;
     }
 
@@ -496,16 +495,14 @@ function openLocationMap() {
 
     const settings = getCityMapSettings(city);
 
-    // Show map before Leaflet calculates its size
+    // Make the map visible first. Leaflet must measure a real rendered size.
     mapContainer.style.display = "block";
-    mapContainer.style.width = "100%";
 
-    mapElement.style.display = "block";
-    mapElement.style.width = "100%";
-    mapElement.style.height = "350px";
-    mapElement.style.minHeight = "350px";
+    if (bookingMapResizeObserver) {
+        bookingMapResizeObserver.disconnect();
+        bookingMapResizeObserver = null;
+    }
 
-    // Remove previous map
     if (bookingMap) {
         bookingMap.off();
         bookingMap.remove();
@@ -513,7 +510,6 @@ function openLocationMap() {
         bookingMarker = null;
     }
 
-    // Clean Leaflet ID if necessary
     if (mapElement._leaflet_id) {
         mapElement._leaflet_id = null;
     }
@@ -533,108 +529,81 @@ function openLocationMap() {
         startZoom = 16;
     }
 
-    bookingMap = L.map("bookingMap", {
-        zoomControl: true,
-        attributionControl: true
-    });
+    // Wait until the browser has laid out the newly-visible container.
+    requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+            bookingMap = L.map("bookingMap", {
+                zoomControl: true,
+                attributionControl: true
+            });
 
-    bookingMap.setView(
-        [startLat, startLng],
-        startZoom
-    );
+            bookingMap.setView([startLat, startLng], startZoom);
 
-    const osmLayer = L.tileLayer(
-        "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
-        {
-            minZoom: 3,
-            maxZoom: 19,
-            attribution: "&copy; OpenStreetMap contributors"
-        }
-    );
+            L.tileLayer(
+                "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+                {
+                    minZoom: 3,
+                    maxZoom: 19,
+                    updateWhenIdle: false,
+                    keepBuffer: 3,
+                    attribution: "&copy; OpenStreetMap contributors"
+                }
+            ).addTo(bookingMap);
 
-    osmLayer.on("loading", function () {
-        console.log("MAP: loading tiles...");
-    });
-
-    osmLayer.on("load", function () {
-        console.log("MAP: tiles loaded successfully.");
-    });
-
-    osmLayer.on("tileerror", function (event) {
-        console.error("MAP TILE ERROR:", event);
-
-        showLocationMessage(
-            "The map background could not be loaded. Check the browser console.",
-            "error"
-        );
-    });
-
-    osmLayer.addTo(bookingMap);
-
-    bookingMarker = L.marker(
-        [startLat, startLng],
-        {
-            draggable: true
-        }
-    ).addTo(bookingMap);
-
-    async function setSelectedMapLocation(latlng) {
-        const lat = Number(latlng.lat);
-        const lng = Number(latlng.lng);
-
-        state.form.latitude = lat;
-        state.form.longitude = lng;
-        state.form.locationValidated = false;
-        state.form.locationConfirmed = false;
-
-        const latitudeInput = document.getElementById("latitude");
-        const longitudeInput = document.getElementById("longitude");
-
-        if (latitudeInput) {
-            latitudeInput.value = lat;
-        }
-
-        if (longitudeInput) {
-            longitudeInput.value = lng;
-        }
-
-        showLocationMessage(
-            "Location selected. Finding the address...",
-            "info"
-        );
-
-        await reverseGeocodeMapLocation(lat, lng);
-    }
-
-    bookingMap.on("click", function (event) {
-        console.log("MAP CLICK:", event.latlng);
-
-        bookingMarker.setLatLng(event.latlng);
-
-        setSelectedMapLocation(event.latlng);
-    });
-
-    bookingMarker.on("dragend", function () {
-        const position = bookingMarker.getLatLng();
-
-        setSelectedMapLocation(position);
-    });
-
-    setTimeout(function () {
-        if (bookingMap) {
-            bookingMap.invalidateSize(true);
-            bookingMap.setView(
+            bookingMarker = L.marker(
                 [startLat, startLng],
-                startZoom
-            );
-        }
-    }, 200);
+                { draggable: true }
+            ).addTo(bookingMap);
 
-    setTimeout(function () {
-        if (bookingMap) {
-            bookingMap.invalidateSize(true);
-        }
-    }, 700);
+            async function setSelectedMapLocation(latlng) {
+                const lat = Number(latlng.lat);
+                const lng = Number(latlng.lng);
+
+                state.form.latitude = lat;
+                state.form.longitude = lng;
+                state.form.locationValidated = false;
+                state.form.locationConfirmed = false;
+
+                const latitudeInput = document.getElementById("latitude");
+                const longitudeInput = document.getElementById("longitude");
+
+                if (latitudeInput) latitudeInput.value = lat;
+                if (longitudeInput) longitudeInput.value = lng;
+
+                showLocationMessage(
+                    "Location selected. Finding the address...",
+                    "info"
+                );
+
+                await reverseGeocodeMapLocation(lat, lng);
+            }
+
+            bookingMap.on("click", function (event) {
+                bookingMarker.setLatLng(event.latlng);
+                setSelectedMapLocation(event.latlng);
+            });
+
+            bookingMarker.on("dragend", function () {
+                setSelectedMapLocation(bookingMarker.getLatLng());
+            });
+
+            // Recalculate whenever the responsive booking card changes width.
+            if (typeof ResizeObserver !== "undefined") {
+                bookingMapResizeObserver = new ResizeObserver(() => {
+                    if (bookingMap) {
+                        bookingMap.invalidateSize({ pan: false, debounceMoveend: true });
+                    }
+                });
+                bookingMapResizeObserver.observe(mapContainer);
+            }
+
+            // One immediate resize plus a delayed one handles fonts/nav/layout shifts.
+            bookingMap.invalidateSize({ pan: false });
+            setTimeout(() => {
+                if (bookingMap) bookingMap.invalidateSize({ pan: false });
+            }, 250);
+        });
+    });
 }
 async function reverseGeocodeMapLocation(lat, lng) {
     const city = getSelectedCity();
@@ -1424,6 +1393,10 @@ function handleFormInput(event) {
         state.form.longitude = null;
         state.form.locationValidated = false;
         state.form.locationConfirmed = false;
+        if (bookingMapResizeObserver) {
+            bookingMapResizeObserver.disconnect();
+            bookingMapResizeObserver = null;
+        }
         if (bookingMap) {
             bookingMap.remove();
             bookingMap = null;
