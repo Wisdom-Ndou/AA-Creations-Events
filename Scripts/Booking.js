@@ -51,6 +51,11 @@ const addOns = [
     { id: "candles", name: "Scented Candle Set", price: 90, icon: "🕯️" }
 ];
 
+let bookingMap = null;
+let bookingMarker = null;
+let addressSearchTimer = null;
+let addressSearchController = null;
+
 const state = {
     step: 1,
     submitted: false,
@@ -69,7 +74,11 @@ const state = {
         city: "",
         notes: "",
         packageId: "",
-        addOns: []
+        addOns: [],
+        latitude: null,
+        longitude: null,
+        locationValidated: false,
+        locationConfirmed: false
     },
     // Step 4 card fields remain UI-only. Card data is never sent or stored.
     // Only the selected business payment amount and T&C acknowledgement are sent.
@@ -154,9 +163,634 @@ function isStep2Valid() {
     return Boolean(
         state.form.date &&
         state.form.time &&
+        state.form.city &&
+        state.form.city.trim() &&
+        state.form.address &&
         state.form.address.trim() &&
-        state.form.city && state.form.city.trim()
+        state.form.locationValidated &&
+        state.form.locationConfirmed &&
+        state.form.latitude !== null &&
+        state.form.longitude !== null
     );
+}
+
+function showLocationMessage(message, type = "") {
+    const element = document.getElementById("locationMessage");
+    if (!element) return;
+    element.textContent = message;
+    element.className = `location-message ${type}`;
+}
+
+function getSelectedCity() {
+    return String(state.form.city || "").trim();
+}
+
+function getBookingEndpoint(name) {
+    const app = document.getElementById("bookingApp");
+    if (!app) return "";
+    return app.dataset[name] || "";
+}
+
+function clearLocationSelection(clearAddress = false) {
+    state.form.latitude = null;
+    state.form.longitude = null;
+    state.form.locationValidated = false;
+    state.form.locationConfirmed = false;
+
+    const latitude = document.getElementById("latitude");
+    const longitude = document.getElementById("longitude");
+
+    if (latitude) latitude.value = "";
+    if (longitude) longitude.value = "";
+
+    if (clearAddress) {
+        state.form.address = "";
+        const addressInput = document.getElementById("address");
+        if (addressInput) addressInput.value = "";
+    }
+
+    const nextButton = document.getElementById("nextStep2");
+    if (nextButton) nextButton.disabled = !isStep2Valid();
+}
+
+function showAddressSuggestions(results) {
+    const list = document.getElementById("addressSuggestions");
+    if (!list) return;
+
+    if (!results || results.length === 0) {
+        list.innerHTML = `
+            <div class="address-suggestion-empty">
+                No matching addresses were found.
+            </div>`;
+        list.classList.add("visible");
+        return;
+    }
+
+    list.innerHTML = results.map((result, index) => {
+        return `
+            <button type="button"
+                    class="address-suggestion"
+                    data-result-index="${index}">
+                <span class="address-suggestion-icon">📍</span>
+                <span class="address-suggestion-text">
+                    <strong>${escapeHtml(result.address || "Unnamed location")}</strong>
+                    <small>
+                        ${result.resolvedCity
+                ? escapeHtml(result.resolvedCity)
+                : "Select this location"}
+                    </small>
+                </span>
+            </button>
+        `;
+    }).join("");
+
+    list.classList.add("visible");
+
+    list.querySelectorAll("[data-result-index]").forEach(button => {
+        button.addEventListener("click", () => {
+            const index = Number(button.dataset.resultIndex);
+            const result = results[index];
+            selectAddressResult(result);
+        });
+    });
+}
+
+function hideAddressSuggestions() {
+    const list = document.getElementById("addressSuggestions");
+    if (list) list.classList.remove("visible");
+}
+
+function selectAddressResult(result) {
+    if (!result) return;
+
+    const city = getSelectedCity();
+
+    if (result.inSelectedCity !== true) {
+        clearLocationSelection(false);
+        hideAddressSuggestions();
+
+        showLocationMessage(
+            `That address is outside the ${city} service area. Please choose an address within ${city} or pin another location on the map.`,
+            "error"
+        );
+
+        updateStep2Button();
+        return;
+    }
+
+    state.form.address = result.address || "";
+    state.form.latitude = Number(result.latitude);
+    state.form.longitude = Number(result.longitude);
+    state.form.locationValidated = true;
+    state.form.locationConfirmed = true;
+
+    const addressInput = document.getElementById("address");
+    const latitude = document.getElementById("latitude");
+    const longitude = document.getElementById("longitude");
+
+    if (addressInput) addressInput.value = state.form.address;
+    if (latitude) latitude.value = state.form.latitude;
+    if (longitude) longitude.value = state.form.longitude;
+
+    hideAddressSuggestions();
+
+    showLocationMessage(
+        "✓ Address found and location confirmed.",
+        "success"
+    );
+
+    updateStep2Button();
+}
+
+function updateStep2Button() {
+    const nextButton = document.getElementById("nextStep2");
+    if (nextButton) nextButton.disabled = !isStep2Valid();
+}
+
+async function searchEventAddresses(showMessage = true) {
+    const addressInput = document.getElementById("address");
+    const city = getSelectedCity();
+
+    if (!addressInput) return [];
+
+    const address = addressInput.value.trim();
+
+    if (!city) {
+        showLocationMessage(
+            "Please select a valid map location first.",
+            "error"
+        );
+        hideAddressSuggestions();
+        return [];
+    }
+
+    if (address.length < 3) {
+        hideAddressSuggestions();
+        return [];
+    }
+
+    if (showMessage) {
+        showLocationMessage("Searching for matching addresses...", "info");
+    }
+
+    if (addressSearchController) {
+        addressSearchController.abort();
+    }
+
+    addressSearchController = new AbortController();
+
+    const endpoint = getBookingEndpoint("addressSearchUrl");
+
+    if (!endpoint) {
+        showLocationMessage("The address search service is not configured.", "error");
+        return [];
+    }
+
+    const url =
+        `${endpoint}?address=${encodeURIComponent(address)}&city=${encodeURIComponent(city)}`;
+
+    try {
+        const response = await fetch(url, {
+            method: "GET",
+            headers: { "Accept": "application/json" },
+            signal: addressSearchController.signal
+        });
+
+        const result = await response.json();
+
+        if (!response.ok || !result.success) {
+            throw new Error(result.message || "Address search failed.");
+        }
+
+        const results = result.results || [];
+        showAddressSuggestions(results);
+
+        if (results.length === 0) {
+            showLocationMessage(
+                "No matching address was found. Try a fuller street address or use Pin Location on Map.",
+                "warning"
+            );
+        } else if (showMessage) {
+            showLocationMessage(
+                "Select an address from the list below.",
+                "info"
+            );
+        }
+
+        return results;
+    } catch (error) {
+        if (error.name === "AbortError") {
+            return [];
+        }
+
+        console.error("Address search failed:", error);
+
+        showLocationMessage(
+            "We couldn't search for that address right now. Please try again or pin the location on the map.",
+            "error"
+        );
+
+        hideAddressSuggestions();
+        return [];
+    }
+}
+
+function handleAddressTyping() {
+    const addressInput = document.getElementById("address");
+    if (!addressInput) return;
+
+    // Any manual edit invalidates the previous selected coordinates.
+    state.form.address = addressInput.value;
+    state.form.latitude = null;
+    state.form.longitude = null;
+    state.form.locationValidated = false;
+    state.form.locationConfirmed = false;
+
+    const latitude = document.getElementById("latitude");
+    const longitude = document.getElementById("longitude");
+
+    if (latitude) latitude.value = "";
+    if (longitude) longitude.value = "";
+
+    updateStep2Button();
+
+    clearTimeout(addressSearchTimer);
+
+    if (addressInput.value.trim().length < 3) {
+        hideAddressSuggestions();
+        return;
+    }
+
+    addressSearchTimer = setTimeout(() => {
+        searchEventAddresses(true);
+    }, 1100);
+}
+
+function getCityMapSettings(city) {
+    const normalized = String(city || "").trim().toLowerCase();
+
+    switch (normalized) {
+        case "pietermaritzburg":
+            return {
+                lat: -29.6006,
+                lng: 30.3794,
+                zoom: 13
+            };
+
+        case "mandeni":
+        case "emandeni":
+            return {
+                lat: -29.1460,
+                lng: 31.4070,
+                zoom: 13
+            };
+
+        case "durban":
+        default:
+            return {
+                lat: -29.8587,
+                lng: 31.0218,
+                zoom: 12
+            };
+    }
+}
+
+function getCityMapCenter(city) {
+    const settings = getCityMapSettings(city);
+
+    return {
+        lat: settings.lat,
+        lng: settings.lng
+    };
+}
+ 
+function openLocationMap() {
+    const mapContainer = document.getElementById("mapContainer");
+    const mapElement = document.getElementById("bookingMap");
+
+    if (!mapContainer || !mapElement) {
+        console.error("Map container or bookingMap element not found.");
+        return;
+    }
+
+    if (typeof L === "undefined") {
+        console.error("Leaflet is not loaded.");
+
+        showLocationMessage(
+            "The map service could not load. Please refresh the page.",
+            "error"
+        );
+
+        return;
+    }
+
+    const city = getSelectedCity();
+
+    if (!city) {
+        showLocationMessage(
+            "Please select a city/town before opening the map.",
+            "error"
+        );
+        return;
+    }
+
+    const settings = getCityMapSettings(city);
+
+    // Show map before Leaflet calculates its size
+    mapContainer.style.display = "block";
+    mapContainer.style.width = "100%";
+
+    mapElement.style.display = "block";
+    mapElement.style.width = "100%";
+    mapElement.style.height = "350px";
+    mapElement.style.minHeight = "350px";
+
+    // Remove previous map
+    if (bookingMap) {
+        bookingMap.off();
+        bookingMap.remove();
+        bookingMap = null;
+        bookingMarker = null;
+    }
+
+    // Clean Leaflet ID if necessary
+    if (mapElement._leaflet_id) {
+        mapElement._leaflet_id = null;
+    }
+
+    let startLat = settings.lat;
+    let startLng = settings.lng;
+    let startZoom = settings.zoom;
+
+    if (
+        state.form.latitude !== null &&
+        state.form.longitude !== null &&
+        Number.isFinite(Number(state.form.latitude)) &&
+        Number.isFinite(Number(state.form.longitude))
+    ) {
+        startLat = Number(state.form.latitude);
+        startLng = Number(state.form.longitude);
+        startZoom = 16;
+    }
+
+    bookingMap = L.map("bookingMap", {
+        zoomControl: true,
+        attributionControl: true
+    });
+
+    bookingMap.setView(
+        [startLat, startLng],
+        startZoom
+    );
+
+    const osmLayer = L.tileLayer(
+        "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+        {
+            minZoom: 3,
+            maxZoom: 19,
+            attribution: "&copy; OpenStreetMap contributors"
+        }
+    );
+
+    osmLayer.on("loading", function () {
+        console.log("MAP: loading tiles...");
+    });
+
+    osmLayer.on("load", function () {
+        console.log("MAP: tiles loaded successfully.");
+    });
+
+    osmLayer.on("tileerror", function (event) {
+        console.error("MAP TILE ERROR:", event);
+
+        showLocationMessage(
+            "The map background could not be loaded. Check the browser console.",
+            "error"
+        );
+    });
+
+    osmLayer.addTo(bookingMap);
+
+    bookingMarker = L.marker(
+        [startLat, startLng],
+        {
+            draggable: true
+        }
+    ).addTo(bookingMap);
+
+    async function setSelectedMapLocation(latlng) {
+        const lat = Number(latlng.lat);
+        const lng = Number(latlng.lng);
+
+        state.form.latitude = lat;
+        state.form.longitude = lng;
+        state.form.locationValidated = false;
+        state.form.locationConfirmed = false;
+
+        const latitudeInput = document.getElementById("latitude");
+        const longitudeInput = document.getElementById("longitude");
+
+        if (latitudeInput) {
+            latitudeInput.value = lat;
+        }
+
+        if (longitudeInput) {
+            longitudeInput.value = lng;
+        }
+
+        showLocationMessage(
+            "Location selected. Finding the address...",
+            "info"
+        );
+
+        await reverseGeocodeMapLocation(lat, lng);
+    }
+
+    bookingMap.on("click", function (event) {
+        console.log("MAP CLICK:", event.latlng);
+
+        bookingMarker.setLatLng(event.latlng);
+
+        setSelectedMapLocation(event.latlng);
+    });
+
+    bookingMarker.on("dragend", function () {
+        const position = bookingMarker.getLatLng();
+
+        setSelectedMapLocation(position);
+    });
+
+    setTimeout(function () {
+        if (bookingMap) {
+            bookingMap.invalidateSize(true);
+            bookingMap.setView(
+                [startLat, startLng],
+                startZoom
+            );
+        }
+    }, 200);
+
+    setTimeout(function () {
+        if (bookingMap) {
+            bookingMap.invalidateSize(true);
+        }
+    }, 700);
+}
+async function reverseGeocodeMapLocation(lat, lng) {
+    const city = getSelectedCity();
+    const endpoint = getBookingEndpoint("addressReverseUrl");
+
+    if (!city) {
+        clearLocationSelection(false);
+        showLocationMessage("Please select a city/town before choosing a map location.", "error");
+        return;
+    }
+
+    if (!endpoint) {
+        clearLocationSelection(false);
+        showLocationMessage("The map address service is not configured.", "error");
+        return;
+    }
+
+    const url =
+        `${endpoint}?latitude=${encodeURIComponent(lat)}&longitude=${encodeURIComponent(lng)}&city=${encodeURIComponent(city)}`;
+
+    try {
+        const response = await fetch(url, {
+            method: "GET",
+            headers: { "Accept": "application/json" }
+        });
+
+        const result = await response.json();
+
+        if (!response.ok || !result.success) {
+            throw new Error(result.message || "Unable to verify the selected map location.");
+        }
+
+        const addressInput = document.getElementById("address");
+        state.form.address = result.address || "";
+        if (addressInput) addressInput.value = state.form.address;
+
+        if (result.inSelectedCity !== true) {
+            state.form.locationValidated = false;
+            state.form.locationConfirmed = false;
+
+            showLocationMessage(
+                `That map location is outside the ${city} service area. Please move the pin to a location within ${city}.`,
+                "error"
+            );
+
+            updateStep2Button();
+            return;
+        }
+
+        state.form.latitude = Number(result.latitude);
+        state.form.longitude = Number(result.longitude);
+        state.form.locationValidated = true;
+        state.form.locationConfirmed = false;
+
+        showLocationMessage(
+            `✓ Location found inside the ${city} service area. Click Confirm Location to continue.`,
+            "success"
+        );
+
+        updateStep2Button();
+    } catch (error) {
+        console.error("Reverse geocoding failed:", error);
+        state.form.locationValidated = false;
+        state.form.locationConfirmed = false;
+
+        showLocationMessage(
+            error.message || "We could not verify that map location. Please try again.",
+            "error"
+        );
+
+        updateStep2Button();
+    }
+}
+
+function confirmEventLocation() {
+    if (!state.form.locationValidated ||
+        state.form.latitude === null ||
+        state.form.longitude === null) {
+        showLocationMessage(
+            `Please select a valid location inside ${getSelectedCity()} first.`,
+            "error"
+        );
+        return;
+    }
+
+    state.form.locationConfirmed = true;
+
+    const latitude = document.getElementById("latitude");
+    const longitude = document.getElementById("longitude");
+
+    if (latitude) latitude.value = state.form.latitude;
+    if (longitude) longitude.value = state.form.longitude;
+
+    showLocationMessage(
+        "✓ Event location confirmed successfully.",
+        "success"
+    );
+
+    updateStep2Button();
+}
+
+async function findEventAddress() {
+    const addressInput = document.getElementById("address");
+    const city = getSelectedCity();
+
+    if (!addressInput) return;
+
+    if (!city) {
+        showLocationMessage(
+            "Please select a city/town before searching for an address.",
+            "error"
+        );
+        return;
+    }
+
+    const address = addressInput.value.trim();
+
+    if (!address) {
+        showLocationMessage("Please enter an event address first.", "error");
+        return;
+    }
+
+    clearTimeout(addressSearchTimer);
+
+    const results = await searchEventAddresses(true);
+
+    if (!results || results.length === 0) {
+        state.form.locationValidated = false;
+        state.form.locationConfirmed = false;
+        updateStep2Button();
+
+        showLocationMessage(
+            "We couldn't find this address. Please check the spelling or pin the exact location on the map.",
+            "warning"
+        );
+
+        openLocationMap();
+        return;
+    }
+
+    // Only accept a result that falls within the selected city's service area.
+    const validResult = results.find(result => result.inSelectedCity === true);
+
+    if (validResult) {
+        selectAddressResult(validResult);
+        return;
+    }
+
+    clearLocationSelection(false);
+
+    showLocationMessage(
+        `We found matching addresses, but none are inside the ${city} service area. Please refine the address or pin a location within ${city}.`,
+        "error"
+    );
+
+    updateStep2Button();
 }
 
 // ---- Step 4 (banking) helpers ----
@@ -341,13 +975,44 @@ function renderBookingStep() {
           <input class="form-control" id="time" name="time" type="time" value="${escapeHtml(state.form.time)}" required>
         </div>
         <div class="form-group full">
-          <label class="form-label" for="address">Event Address</label>
-          <input class="form-control" id="address" name="address" value="${escapeHtml(state.form.address)}" placeholder="12 Celebration Street, Sandton" required>
-        </div>
-        <div class="form-group full">
           <label class="form-label" for="city">City / Town</label>
-          <select class="form-control" id="city" name="city" required>\n            <option value="Pietermaritzburg" ${state.form.city === "Pietermaritzburg" ? "selected" : ""}>Pietermaritzburg</option>\n            <option value="Durban" ${state.form.city === "Durban" ? "selected" : ""}>Durban</option>\n            <option value="Mandeni" ${state.form.city === "Mandeni" ? "selected" : ""}>Mandeni</option>\n          </select>
-          <small class="muted">This city/town is used for staff assignment and booking operations.</small>
+          <select class="form-control" id="city" name="city" required>
+            <option value="">Select a city/town…</option>
+            <option value="Durban" ${state.form.city === "Durban" ? "selected" : ""}>Durban</option>
+            <option value="Pietermaritzburg" ${state.form.city === "Pietermaritzburg" ? "selected" : ""}>Pietermaritzburg</option>
+            <option value="Mandeni" ${state.form.city === "Mandeni" ? "selected" : ""}>Mandeni</option>
+          </select>
+          <small class="muted">Choose the city first. Address search and map pins are then restricted to that service area.</small>
+        </div>
+
+        <div class="form-group full location-section">
+          <label class="form-label" for="address">Event Address</label>
+          <div class="address-autocomplete">
+            <input class="form-control" id="address" name="address"
+                   value="${escapeHtml(state.form.address)}"
+                   placeholder="Start typing an address…"
+                   autocomplete="off"
+                   ${state.form.city ? "" : "disabled"}
+                   required>
+            <div id="addressSuggestions" class="address-suggestions" role="listbox"></div>
+          </div>
+          <small class="muted">${state.form.city ? "Search for an address in " + escapeHtml(state.form.city) + ", or pin the location on the map." : "Select a city/town before entering an address."}</small>
+
+          <div class="location-actions">
+            <button type="button" class="btn btn-outline" id="findLocationButton" ${state.form.city ? "" : "disabled"}>🔎 Find Address</button>
+            <button type="button" class="btn btn-primary" id="pinLocationButton" ${state.form.city ? "" : "disabled"}>📍 Pin Location on Map</button>
+          </div>
+
+          <div id="locationMessage" class="location-message"></div>
+
+          <div id="mapContainer" class="booking-map-container" style="display:none;">
+            <div id="bookingMap"></div>
+            <p class="map-instruction">Click the map or drag the marker. The selected point must be inside the chosen city service area.</p>
+            <button type="button" class="btn btn-primary" id="confirmLocationButton">Confirm Location</button>
+          </div>
+
+          <input type="hidden" id="latitude" name="latitude" value="${state.form.latitude ?? ""}">
+          <input type="hidden" id="longitude" name="longitude" value="${state.form.longitude ?? ""}">
         </div>
       </div>
 
@@ -638,6 +1303,32 @@ function attachStepHandlers() {
             renderBookingStep();
         });
     });
+
+    document.getElementById("findLocationButton")?.addEventListener("click", findEventAddress);
+    document.getElementById("pinLocationButton")?.addEventListener("click", openLocationMap);
+    document.getElementById("confirmLocationButton")?.addEventListener("click", confirmEventLocation);
+
+    const addressInput = document.getElementById("address");
+    if (addressInput) {
+        addressInput.addEventListener("input", handleAddressTyping);
+        addressInput.addEventListener("focus", () => {
+            if (addressInput.value.trim().length >= 3 && !state.form.locationConfirmed) {
+                searchEventAddresses(false);
+            }
+        });
+    }
+
+    document.removeEventListener("click", handleAddressOutsideClick);
+    document.addEventListener("click", handleAddressOutsideClick);
+}
+
+function handleAddressOutsideClick(event) {
+    const input = document.getElementById("address");
+    const list = document.getElementById("addressSuggestions");
+    if (!input || !list) return;
+    if (event.target !== input && !list.contains(event.target)) {
+        hideAddressSuggestions();
+    }
 }
 
 function handleFormInput(event) {
@@ -727,6 +1418,21 @@ function handleFormInput(event) {
 
     state.form[control.name] = control.value;
 
+    if (control.name === "city" && state.step === 2) {
+        state.form.address = "";
+        state.form.latitude = null;
+        state.form.longitude = null;
+        state.form.locationValidated = false;
+        state.form.locationConfirmed = false;
+        if (bookingMap) {
+            bookingMap.remove();
+            bookingMap = null;
+            bookingMarker = null;
+        }
+        renderBookingStep();
+        return;
+    }
+
     if (control.name === "occasion" && state.step === 1) {
         state.form.packageId = "";
         renderBookingStep();
@@ -766,6 +1472,8 @@ async function submitBooking() {
 
         address: state.form.address,
         city: state.form.city,
+        latitude: state.form.latitude,
+        longitude: state.form.longitude,
         notes: state.form.notes,
 
         packageId: isCustomOccasion() ? "" : state.form.packageId,
