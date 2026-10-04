@@ -13,12 +13,11 @@
     bool isStaff = Session["StaffAuthenticated"] != null && (bool)Session["StaffAuthenticated"];
     bool isCustomer = Session["CustomerAuthenticated"] != null && (bool)Session["CustomerAuthenticated"];
 }
-<nav class="desktop-nav" aria-label="Main navigation">
+<nav class="desktop-nav @(isAdmin ? "admin-nav" : "")" aria-label="Main navigation">
     <a href="@(isCustomer ? Url.Action("CustomerDashboard","Cust") : isAdmin ? Url.Action("AdminDashboard","Cust") : isStaff ? Url.Action("StaffDashboard","Cust") : Url.Action("Index","Cust"))" class="logo">AA Creations & Events</a>
     <ul class="nav-links">
         @if (isAdmin)
         {
-            <li><a href="@Url.Action("AdminDashboard","Cust")">DASHBOARD</a></li>
             <li><a href="@Url.Action("AllBookings","Cust")">BOOKINGS</a></li>
             <li><a href="@Url.Action("UpcomingEvents","Cust")">UPCOMING EVENTS</a></li>
             <li><a href="@Url.Action("StaffManagement","Cust")">STAFF</a></li>
