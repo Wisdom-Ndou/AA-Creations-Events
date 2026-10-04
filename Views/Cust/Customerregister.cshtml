@@ -400,6 +400,13 @@
                                     Only letters allowed
                                 </p>
 
+                                @if (customerFieldHasError("Cust_FName"))
+                                {
+                                    <p class="error-text server-error" aria-live="polite">
+                                        @ViewData.ModelState["Cust_FName"].Errors[0].ErrorMessage
+                                    </p>
+                                }
+
                             </div>
 
 
@@ -428,6 +435,13 @@
                                    hidden>
                                     Only letters allowed
                                 </p>
+
+                                @if (customerFieldHasError("Cust_LName"))
+                                {
+                                    <p class="error-text server-error" aria-live="polite">
+                                        @ViewData.ModelState["Cust_LName"].Errors[0].ErrorMessage
+                                    </p>
+                                }
 
                             </div>
 
@@ -516,6 +530,13 @@
 
                             </p>
 
+                            @if (customerFieldHasError("Cust_Phone"))
+                            {
+                                <p class="error-text server-error" aria-live="polite">
+                                    @ViewData.ModelState["Cust_Phone"].Errors[0].ErrorMessage
+                                </p>
+                            }
+
                         </div>
 
 
@@ -595,6 +616,13 @@
 
                             </p>
 
+                            @if (customerFieldHasError("Cust_Passw"))
+                            {
+                                <p class="error-text server-error" aria-live="polite">
+                                    @ViewData.ModelState["Cust_Passw"].Errors[0].ErrorMessage
+                                </p>
+                            }
+
                         </div>
 
 
@@ -621,6 +649,13 @@
                                 Passwords do not match
 
                             </p>
+
+                            @if (customerFieldHasError("confirm"))
+                            {
+                                <p class="error-text server-error" aria-live="polite">
+                                    @ViewData.ModelState["confirm"].Errors[0].ErrorMessage
+                                </p>
+                            }
 
                         </div>
 
