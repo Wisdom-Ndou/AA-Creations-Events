@@ -239,9 +239,11 @@ function renderBookingStep() {
     renderProgress();
 
     if (state.step === 1) {
+        const availablePackages = getPackagesForOccasion();
+
         root.innerHTML = `
       <h2>Choose Your Occasion</h2>
-      <p class="muted" style="margin-bottom:18px;">Start with the celebration type, then choose the package that suits it.</p>
+      <p class="muted" style="margin-bottom:18px;">Tell us what you're celebrating. We'll then show only the packages available for that occasion.</p>
 
       <div class="form-group full">
         <label class="form-label" for="occasion">Occasion Type</label>
@@ -252,46 +254,53 @@ function renderBookingStep() {
         </select>
       </div>
 
-      ${state.form.occasion ? `
-        <p class="form-label" style="margin-top:20px;">Available Packages</p>
-        <div class="package-select-grid">
-          ${packages.map(pkg => `
-            <button type="button" class="package-choice ${state.form.packageId === pkg.id ? "selected" : ""}" data-package="${pkg.id}">
-              <span class="choice-badge">${pkg.badge}</span>
-              <p class="choice-title">${pkg.name}</p>
-              <div class="choice-price">R${formatMoney(pkg.price)}</div>
-            </button>
-          `).join("")}
-        </div>
-      ` : '<p class="muted">Select an occasion to view the available packages.</p>'}
-
-      <h3 style="margin-top:28px;">Your Details</h3>
-      <div class="form-grid two">
-        <div class="form-group">
-          <label class="form-label" for="firstName">First Name</label>
-          <input class="form-control" id="firstName" name="firstName" inputmode="text" pattern="^[A-Za-z]+$" maxlength="50" value="${escapeHtml(state.form.firstName)}" placeholder="Nomsa" required>
-          <small class="muted">Letters only (A–Z).</small>
-        </div>
-        <div class="form-group">
-          <label class="form-label" for="lastName">Last Name</label>
-          <input class="form-control" id="lastName" name="lastName" inputmode="text" pattern="^[A-Za-z]+$" maxlength="50" value="${escapeHtml(state.form.lastName)}" placeholder="Mabaso" required>
-          <small class="muted">Letters only (A–Z).</small>
-        </div>
-        <div class="form-group">
-          <label class="form-label" for="email">Email Address</label>
-          <input class="form-control" id="email" name="email" type="email" value="${escapeHtml(state.form.email)}" placeholder="nomsa@example.com" required>
-        </div>
-        <div class="form-group">
-          <label class="form-label" for="phone">Phone / WhatsApp</label>
-          <div class="phone-row">
-            <div class="phone-prefix">+27</div>
-            <input class="form-control" id="phone" name="phone" inputmode="numeric" pattern="^[1-9][0-9]{8}$" maxlength="9" value="${escapeHtml(state.form.phone)}" placeholder="723456789" required>
+      ${state.form.occasion && !isCustomOccasion() ? `
+        <section class="package-reveal" aria-live="polite">
+          <div class="booking-package-heading">
+            <p class="eyebrow">Choose Your Package</p>
+            <h3>Packages Available for Your ${escapeHtml(state.form.occasion)}</h3>
+            <p>Prices and inclusions below apply specifically to this occasion.</p>
           </div>
-          <small class="muted">Enter 9 digits (do not include leading 0).</small>
-        </div>
-      </div>
+
+          <div class="package-select-grid booking-package-grid">
+            ${availablePackages.map(pkg => {
+                const selected = state.form.packageId === pkg.id;
+                return `
+                <button type="button"
+                        class="package-choice booking-package-choice ${selected ? "selected" : ""}"
+                        data-package="${pkg.id}"
+                        aria-pressed="${selected ? "true" : "false"}">
+                  <div class="booking-package-topline">
+                    <span class="choice-badge">${pkg.badge}</span>
+                    ${selected ? '<span class="selected-mark" aria-label="Selected">✓ Selected</span>' : ""}
+                  </div>
+                  <p class="choice-title">${pkg.name}</p>
+                  <div class="choice-price">R${formatMoney(pkg.price)}</div>
+                  <p class="package-choice-description">${escapeHtml(pkg.description)}</p>
+                  <ul class="package-choice-inclusions">
+                    ${pkg.inclusions.map(item => `<li><span class="check">✓</span><span>${escapeHtml(item)}</span></li>`).join("")}
+                  </ul>
+                  <span class="package-select-cta">${selected ? "Package Selected" : "Select Package"}</span>
+                </button>
+              `;
+            }).join("")}
+          </div>
+        </section>
+      ` : ""}
+
+      ${isCustomOccasion() ? `
+        <section class="custom-occasion-card package-reveal" aria-live="polite">
+          <p class="eyebrow">Custom Celebration</p>
+          <h3>Planning something unique?</h3>
+          <p>We don't currently have a preset package for this type of event, but we'd be happy to create a setup suited to your occasion.</p>
+          <p>Continue to Event Info and use the Special Instructions section to tell us about your event, theme, decorations or anything else you'd like us to know.</p>
+        </section>
+      ` : ""}
+
       <div class="form-actions" style="justify-content:flex-end;">
-        <button type="button" class="btn btn-primary" id="nextStep1" ${isStep1Valid() ? "" : "disabled"}>Next: Event Details →</button>
+        <button type="button" class="btn btn-primary" id="nextStep1" ${isStep1Valid() ? "" : "disabled"}>
+          ${isCustomOccasion() ? "Continue to Event Info →" : "Next: Event Info →"}
+        </button>
       </div>
     `;
     }
