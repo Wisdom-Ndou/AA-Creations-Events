@@ -12,9 +12,11 @@ namespace WebApplication1.Models
         public int staff_ID { get; set; }
 
         [Required(ErrorMessage = "First Name is required")]
+        [RegularExpression(@"^[A-Za-z]+$", ErrorMessage = "First Name must only contain letters.")]
         public string staff_FName { get; set; }
 
         [Required(ErrorMessage = "Last Name is required")]
+        [RegularExpression(@"^[A-Za-z]+$", ErrorMessage = "Last Name must only contain letters.")]
         public string staff_LName { get; set; }
 
         [Required(ErrorMessage = "Email is required")]
