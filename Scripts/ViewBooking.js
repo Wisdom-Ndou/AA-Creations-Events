@@ -625,6 +625,7 @@ function openCancellationModal(id) {
 
     modal.classList.add("is-open");
     modal.setAttribute("aria-hidden", "false");
+    document.body.classList.add("cancel-modal-open");
     setTimeout(() => reason.focus(), 50);
 }
 
@@ -634,6 +635,7 @@ function closeCancellationModal() {
 
     modal.classList.remove("is-open");
     modal.setAttribute("aria-hidden", "true");
+    document.body.classList.remove("cancel-modal-open");
     cancellationBookingId = null;
 }
 
