@@ -479,3 +479,19 @@ footer {
     color: #fff;
     background: var(--pink);
 }
+
+
+/* Staff navigation emphasis */
+.desktop-nav.staff-nav .logo {
+    color: var(--pink);
+    font-weight: 800;
+    letter-spacing: 2.4px;
+}
+
+.desktop-nav.staff-nav .logo:hover {
+    color: var(--pink-dark);
+}
+
+.desktop-nav.staff-nav .nav-links a:hover {
+    color: var(--pink);
+}
