@@ -23,6 +23,29 @@ namespace WebApplication1.Controllers
     {
         private readonly DatabaseContext db = new DatabaseContext();
 
+        private static string GetAdminAccessCode()
+        {
+            var configured =
+                ConfigurationManager.AppSettings["AdminAccessCode"];
+
+            // Keep local development compatible with the existing project
+            // default while using Web.config whenever it is supplied.
+            return string.IsNullOrWhiteSpace(configured)
+                ? "AACode"
+                : configured.Trim();
+        }
+
+        private static bool IsValidAdminAccessCode(string suppliedCode)
+        {
+            if (string.IsNullOrWhiteSpace(suppliedCode))
+                return false;
+
+            return string.Equals(
+                suppliedCode.Trim(),
+                GetAdminAccessCode(),
+                StringComparison.Ordinal);
+        }
+
         [HttpPost]
         public ActionResult Bankingdetails()
         {
@@ -188,11 +211,6 @@ namespace WebApplication1.Controllers
 
             if (role == "admin")
             {
-                // Admin access code is NOT stored in the database.
-                // It is stored in Web.config.
-                string correctAccessCode =
-                    ConfigurationManager.AppSettings["AdminAccessCode"];
-
                 if (string.IsNullOrWhiteSpace(adminAccessCode))
                 {
                     ModelState.AddModelError(
@@ -203,11 +221,7 @@ namespace WebApplication1.Controllers
                     return View();
                 }
 
-                if (string.IsNullOrWhiteSpace(correctAccessCode) ||
-                    !string.Equals(
-                        adminAccessCode.Trim(),
-                        correctAccessCode.Trim(),
-                        StringComparison.Ordinal))
+                if (!IsValidAdminAccessCode(adminAccessCode))
                 {
                     ModelState.AddModelError(
                         "",
@@ -480,6 +494,11 @@ namespace WebApplication1.Controllers
                 return View(obj);
             }
 
+            if (!ModelState.IsValid)
+            {
+                return View(obj);
+            }
+
             if (cookiePreference != "necessary" && cookiePreference != "all")
             {
                 cookiePreference = "necessary";
@@ -570,47 +589,115 @@ namespace WebApplication1.Controllers
             bool? termsAccepted,
             string adminAccessCode)
         {
-            string configuredAccessCode = ConfigurationManager.AppSettings["AdminAccessCode"];
+            firstName = (firstName ?? string.Empty).Trim();
+            lastName = (lastName ?? string.Empty).Trim();
+            email = (email ?? string.Empty).Trim();
+            phone = (phone ?? string.Empty).Trim();
 
             if (string.IsNullOrWhiteSpace(firstName) ||
-                string.IsNullOrWhiteSpace(lastName) ||
-                string.IsNullOrWhiteSpace(email) ||
-                string.IsNullOrWhiteSpace(password) ||
-                password != confirm ||
-                termsAccepted != true ||
-                string.IsNullOrWhiteSpace(adminAccessCode) ||
-                string.IsNullOrWhiteSpace(configuredAccessCode) ||
-                !string.Equals(adminAccessCode.Trim(), configuredAccessCode.Trim(), StringComparison.Ordinal))
+                !firstName.All(char.IsLetter))
             {
-                ModelState.AddModelError("", "Please provide valid admin registration details and authorization code.");
+                ModelState.AddModelError("", "Please enter a valid first name using letters only.");
+            }
+
+            if (string.IsNullOrWhiteSpace(lastName) ||
+                !lastName.All(char.IsLetter))
+            {
+                ModelState.AddModelError("", "Please enter a valid last name using letters only.");
+            }
+
+            var emailValidator =
+                new System.ComponentModel.DataAnnotations.EmailAddressAttribute();
+
+            if (string.IsNullOrWhiteSpace(email) ||
+                !emailValidator.IsValid(email))
+            {
+                ModelState.AddModelError("", "Please enter a valid email address.");
+            }
+
+            if (phone.Length != 9 ||
+                !phone.All(char.IsDigit) ||
+                phone.StartsWith("0"))
+            {
+                ModelState.AddModelError(
+                    "",
+                    "Enter a 9-digit South African mobile number without the leading 0.");
+            }
+
+            if (string.IsNullOrWhiteSpace(password) ||
+                password.Length < 8 ||
+                password.Count(char.IsUpper) < 2 ||
+                !password.Any(ch => !char.IsLetterOrDigit(ch)))
+            {
+                ModelState.AddModelError(
+                    "",
+                    "Password must be at least 8 characters and include at least 2 uppercase letters and 1 special character.");
+            }
+
+            if (!string.Equals(password, confirm, StringComparison.Ordinal))
+            {
+                ModelState.AddModelError("", "Passwords do not match.");
+            }
+
+            if (termsAccepted != true)
+            {
+                ModelState.AddModelError("", "Please accept the Admin Terms of Use.");
+            }
+
+            if (string.IsNullOrWhiteSpace(adminAccessCode))
+            {
+                ModelState.AddModelError("", "Please enter the admin authorization code.");
+            }
+            else if (!IsValidAdminAccessCode(adminAccessCode))
+            {
+                ModelState.AddModelError("", "Invalid admin authorization code.");
+            }
+
+            if (!ModelState.IsValid)
+            {
                 return View();
             }
 
-            if (db.Admins.Any(a => a.admin_Email == email.Trim()))
+            if (db.Admins.Any(a => a.admin_Email == email))
             {
-                ModelState.AddModelError("", "An administrator with this email address already exists.");
+                ModelState.AddModelError(
+                    "",
+                    "An administrator with this email address already exists.");
                 return View();
             }
 
             var admin = new Admin
             {
-                admin_FName = firstName.Trim(),
-                admin_LName = lastName.Trim(),
-                admin_Email = email.Trim(),
+                admin_FName = firstName,
+                admin_LName = lastName,
+                admin_Email = email,
                 admin_Passw = Crypto.HashPassword(password),
-                admin_Phone = string.IsNullOrWhiteSpace(phone) ? null : phone.Trim()
+                admin_Phone = phone
             };
 
-            db.Admins.Add(admin);
-            db.SaveChanges();
+            try
+            {
+                db.Admins.Add(admin);
+                db.SaveChanges();
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Trace.TraceError(
+                    "Admin registration failed for {0}: {1}",
+                    email,
+                    ex);
 
-            TempData["AdminRegistrationSuccess"] =
+                ModelState.AddModelError(
+                    "",
+                    "We could not create the admin account. Please try again. If the problem continues, make sure the database migrations are up to date.");
+                return View();
+            }
+
+            TempData["LoginSuccess"] =
                 "Admin registration was successful. You can now sign in.";
 
-            // Redirect to the customer Login page so the success message shows on Login.cshtml
             return RedirectToAction("Login", "Cust");
         }
-
 
 
         public ActionResult Portfolio(Customer obj)
@@ -3291,24 +3378,7 @@ namespace WebApplication1.Controllers
             // CHECK ADMIN AUTHORIZATION CODE
             // ==========================================
 
-            string correctAccessCode = "AACode";
-
-            correctAccessCode = correctAccessCode?.Trim();
-
-            if (string.IsNullOrWhiteSpace(correctAccessCode))
-            {
-                ModelState.AddModelError(
-                    "",
-                    "Admin authorization code is not configured."
-                );
-
-                return View();
-            }
-
-            if (!string.Equals(
-                    adminAccessCode,
-                    correctAccessCode,
-                    StringComparison.Ordinal))
+            if (!IsValidAdminAccessCode(adminAccessCode))
             {
                 ModelState.AddModelError(
                     "",
