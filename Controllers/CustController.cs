@@ -687,6 +687,49 @@ namespace WebApplication1.Controllers
 
                 totalPrice += selectedAddOns.Sum(a => a.Price);
 
+                if (request.EventDate.Date < DateTime.Today)
+                {
+                    return Json(new
+                    {
+                        success = false,
+                        message = "The event date cannot be in the past."
+                    });
+                }
+
+                var currentTerms = GetCurrentTerms();
+                if (currentTerms == null || !request.TermsAccepted)
+                {
+                    return Json(new
+                    {
+                        success = false,
+                        message = "Please review and accept the Terms & Conditions and refund policy before confirming the booking."
+                    });
+                }
+
+                int daysUntilEvent = (request.EventDate.Date - DateTime.Today).Days;
+                decimal minimumPayment = daysUntilEvent <= 1
+                    ? totalPrice
+                    : Math.Round(totalPrice * 0.50m, 2);
+
+                if (request.PaymentAmount < minimumPayment || request.PaymentAmount > totalPrice)
+                {
+                    return Json(new
+                    {
+                        success = false,
+                        message = daysUntilEvent <= 1
+                            ? "Bookings made for today or tomorrow require full payment upfront."
+                            : "Please pay at least the 50% deposit, up to the full booking total.",
+                        minimumPayment = minimumPayment,
+                        totalPrice = totalPrice
+                    });
+                }
+
+                decimal amountPaid = Math.Round(request.PaymentAmount, 2);
+                decimal outstandingBalance = Math.Max(0m, totalPrice - amountPaid);
+                string paymentStatus = outstandingBalance == 0m
+                    ? "Fully Paid"
+                    : (amountPaid == minimumPayment ? "Deposit Paid" : "Partially Paid");
+
                 // Create the Booking entity
                 var customerId = (int)Session["CustomerId"];
 
@@ -712,7 +755,14 @@ namespace WebApplication1.Controllers
                     TotalPrice = totalPrice,
 
                     CreatedAt = DateTime.Now,
-                    Status = "Pending"
+                    Status = "Pending",
+                    AmountPaid = amountPaid,
+                    BalanceDueDate = outstandingBalance > 0m ? (DateTime?)request.EventDate.Date.AddDays(-1) : null,
+                    PaymentStatus = paymentStatus,
+                    CancellationCharge = 0m,
+                    RefundAmount = 0m,
+                    TermsVersion = currentTerms.Version,
+                    TermsAcceptedAt = DateTime.Now
                 };
 
                 // Add selected add-ons to the booking
@@ -748,6 +798,10 @@ namespace WebApplication1.Controllers
                     success = true,
                     bookingId = booking.BookingId,
                     totalPrice = totalPrice,
+                    amountPaid = booking.AmountPaid,
+                    balanceOutstanding = booking.BalanceOutstanding,
+                    paymentStatus = booking.PaymentStatus,
+                    balanceDueDate = booking.BalanceDueDate,
                     message = "Booking created successfully."
                 });
             }
@@ -811,6 +865,11 @@ namespace WebApplication1.Controllers
                 current.Equals("Cancelled", StringComparison.OrdinalIgnoreCase))
                 return Json(new { success = false, message = "This booking can no longer be cancelled online." });
 
+            int daysBeforeEvent = (booking.EventDate.Date - DateTime.Today).Days;
+            decimal cancellationRate = daysBeforeEvent > 7 ? 0.10m : 0.20m;
+            booking.CancellationCharge = Math.Round(booking.AmountPaid * cancellationRate, 2);
+            booking.RefundAmount = Math.Max(0m, booking.AmountPaid - booking.CancellationCharge);
+            booking.PaymentStatus = booking.RefundAmount > 0m ? "Refund Due" : booking.PaymentStatus;
             booking.Status = "Cancelled";
 
             var pendingTasks = db.StaffTasks
@@ -825,7 +884,86 @@ namespace WebApplication1.Controllers
             }
 
             db.SaveChanges();
-            return Json(new { success = true, status = booking.Status, message = "Booking cancelled." });
+            return Json(new
+            {
+                success = true,
+                status = booking.Status,
+                cancellationCharge = booking.CancellationCharge,
+                refundAmount = booking.RefundAmount,
+                paymentStatus = booking.PaymentStatus,
+                message = booking.RefundAmount > 0m
+                    ? "Booking cancelled. Your refund amount has been calculated from the amount paid."
+                    : "Booking cancelled."
+            });
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public JsonResult PayBookingBalance(int bookingId, decimal amount)
+        {
+            if (Session["CustomerId"] == null)
+            {
+                return Json(new { success = false, requiresLogin = true, message = "Please sign in first." });
+            }
+
+            int customerId = (int)Session["CustomerId"];
+            var booking = db.Bookings.FirstOrDefault(b =>
+                b.BookingId == bookingId &&
+                b.CustomerId == customerId);
+
+            if (booking == null)
+            {
+                return Json(new { success = false, message = "Booking could not be found." });
+            }
+
+            string status = (booking.Status ?? "Pending").Trim();
+            if (status.Equals("Declined", StringComparison.OrdinalIgnoreCase) ||
+                status.Equals("Cancelled", StringComparison.OrdinalIgnoreCase) ||
+                status.Equals("Completed", StringComparison.OrdinalIgnoreCase))
+            {
+                return Json(new { success = false, message = "Payments can no longer be added to this booking." });
+            }
+
+            decimal balance = Math.Max(0m, booking.TotalPrice - booking.AmountPaid);
+            if (balance <= 0m)
+            {
+                return Json(new
+                {
+                    success = true,
+                    amountPaid = booking.AmountPaid,
+                    balanceOutstanding = 0m,
+                    paymentStatus = "Fully Paid",
+                    message = "This booking is already fully paid."
+                });
+            }
+
+            if (amount <= 0m || amount > balance)
+            {
+                return Json(new
+                {
+                    success = false,
+                    message = "Enter an amount greater than zero and no more than the outstanding balance.",
+                    balanceOutstanding = balance
+                });
+            }
+
+            booking.AmountPaid = Math.Round(booking.AmountPaid + amount, 2);
+            balance = Math.Max(0m, booking.TotalPrice - booking.AmountPaid);
+            booking.PaymentStatus = balance == 0m ? "Fully Paid" : "Partially Paid";
+            booking.BalanceDueDate = balance == 0m ? null : booking.EventDate.Date.AddDays(-1);
+            db.SaveChanges();
+
+            return Json(new
+            {
+                success = true,
+                amountPaid = booking.AmountPaid,
+                balanceOutstanding = balance,
+                paymentStatus = booking.PaymentStatus,
+                balanceDueDate = booking.BalanceDueDate,
+                message = balance == 0m
+                    ? "Your booking balance has been paid in full."
+                    : "Payment recorded. A balance is still outstanding."
+            });
         }
 
         [HttpPost]
@@ -1863,6 +2001,15 @@ namespace WebApplication1.Controllers
                     }
                     else if (newStatus == "Declined")
                     {
+                        // A business-side cancellation/decline receives a full refund
+                        // of the amount actually paid.
+                        booking.CancellationCharge = 0m;
+                        booking.RefundAmount = booking.AmountPaid;
+                        if (booking.AmountPaid > 0m)
+                        {
+                            booking.PaymentStatus = "Refund Due";
+                        }
+
                         // Do not leave an active staff task behind if a booking
                         // is declined.
                         var existingTasks = db.StaffTasks
