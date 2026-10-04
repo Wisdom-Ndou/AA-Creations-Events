@@ -1739,13 +1739,15 @@ namespace WebApplication1.Controllers
                 catch (Exception ex)
                 {
                     transaction.Rollback();
+                    System.Diagnostics.Trace.TraceError(
+                        "UpdateBookingStatus failed for booking {0}: {1}",
+                        bookingId,
+                        ex);
 
-                    // Return the error as JSON so the caller can diagnose
-                    // why the staff task was not created.
                     return Json(new
                     {
                         success = false,
-                        message = "An error occurred while creating the staff task: " + ex.Message
+                        message = "We could not update this booking right now. Please try again."
                     });
                 }
             }
@@ -1756,7 +1758,7 @@ namespace WebApplication1.Controllers
                     ? "Booking approved and staff task assigned successfully."
                     : "Booking status updated successfully.";
 
-                return RedirectToAction("AdminDashboard", "Cust");
+                return RedirectToAction("AllBookings", "Cust");
             }
 
             return Json(new
