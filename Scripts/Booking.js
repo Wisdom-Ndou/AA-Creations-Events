@@ -459,7 +459,7 @@ function getCityMapSettings(city) {
                 lat: -29.6006,
                 lng: 30.3794,
                 zoom: 13,
-                radiusKm: 25
+                radiusKm: 20
             };
 
         case "mandeni":
@@ -468,7 +468,7 @@ function getCityMapSettings(city) {
                 lat: -29.1460,
                 lng: 31.4070,
                 zoom: 13,
-                radiusKm: 20
+                radiusKm: 15
             };
 
         case "durban":
@@ -477,7 +477,7 @@ function getCityMapSettings(city) {
                 lat: -29.8587,
                 lng: 31.0218,
                 zoom: 12,
-                radiusKm: 35
+                radiusKm: 30
             };
     }
 }
@@ -504,6 +504,36 @@ function getCityMapBounds(city) {
         [settings.lat - latitudeDelta, settings.lng - longitudeDelta],
         [settings.lat + latitudeDelta, settings.lng + longitudeDelta]
     ];
+}
+
+function calculateMapDistanceKm(lat1, lng1, lat2, lng2) {
+    const earthRadiusKm = 6371;
+    const toRadians = degrees => degrees * Math.PI / 180;
+
+    const deltaLat = toRadians(lat2 - lat1);
+    const deltaLng = toRadians(lng2 - lng1);
+    const startLat = toRadians(lat1);
+    const endLat = toRadians(lat2);
+
+    const a =
+        Math.sin(deltaLat / 2) * Math.sin(deltaLat / 2) +
+        Math.cos(startLat) * Math.cos(endLat) *
+        Math.sin(deltaLng / 2) * Math.sin(deltaLng / 2);
+
+    return earthRadiusKm *
+        2 *
+        Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+function isMapPointInsideSelectedCity(lat, lng) {
+    const settings = getCityMapSettings(getSelectedCity());
+
+    return calculateMapDistanceKm(
+        settings.lat,
+        settings.lng,
+        Number(lat),
+        Number(lng)
+    ) <= settings.radiusKm;
 }
 
 function openLocationMap() {
@@ -601,10 +631,10 @@ function openLocationMap() {
             async function setSelectedMapLocation(latlng) {
                 const lat = Number(latlng.lat);
                 const lng = Number(latlng.lng);
+                const cityName = getSelectedCity();
 
                 state.form.latitude = lat;
                 state.form.longitude = lng;
-                state.form.locationValidated = false;
                 state.form.locationConfirmed = false;
 
                 const latitudeInput = document.getElementById("latitude");
@@ -613,11 +643,32 @@ function openLocationMap() {
                 if (latitudeInput) latitudeInput.value = lat;
                 if (longitudeInput) longitudeInput.value = lng;
 
+                // Validate the pin immediately from its coordinates. Do not
+                // depend on reverse geocoding just to decide whether the pin
+                // is inside the selected service area.
+                if (!isMapPointInsideSelectedCity(lat, lng)) {
+                    state.form.locationValidated = false;
+
+                    showLocationMessage(
+                        `That pin is outside the ${cityName} service area. Please choose a location closer to ${cityName}.`,
+                        "error"
+                    );
+
+                    updateStep2Button();
+                    return;
+                }
+
+                state.form.locationValidated = true;
+
                 showLocationMessage(
-                    "Location selected. Finding the address...",
-                    "info"
+                    `✓ Pin selected inside the ${cityName} service area. Checking the address…`,
+                    "success"
                 );
 
+                updateStep2Button();
+
+                // Best-effort address enrichment. A failure here must not
+                // invalidate an otherwise valid pin.
                 await reverseGeocodeMapLocation(lat, lng);
             }
 
@@ -652,15 +703,17 @@ async function reverseGeocodeMapLocation(lat, lng) {
     const city = getSelectedCity();
     const endpoint = getBookingEndpoint("addressReverseUrl");
 
-    if (!city) {
-        clearLocationSelection(false);
-        showLocationMessage("Please select a city/town before choosing a map location.", "error");
+    if (!city || !state.form.locationValidated) {
+        updateStep2Button();
         return;
     }
 
     if (!endpoint) {
-        clearLocationSelection(false);
-        showLocationMessage("The map address service is not configured.", "error");
+        showLocationMessage(
+            `✓ Pin selected inside the ${city} service area. Keep your typed address and click Confirm Map Location.`,
+            "success"
+        );
+        updateStep2Button();
         return;
     }
 
@@ -676,19 +729,15 @@ async function reverseGeocodeMapLocation(lat, lng) {
         const result = await response.json();
 
         if (!response.ok || !result.success) {
-            throw new Error(result.message || "Unable to verify the selected map location.");
+            throw new Error(result.message || "Map address lookup unavailable.");
         }
-
-        const addressInput = document.getElementById("address");
-        state.form.address = result.address || "";
-        if (addressInput) addressInput.value = state.form.address;
 
         if (result.inSelectedCity !== true) {
             state.form.locationValidated = false;
             state.form.locationConfirmed = false;
 
             showLocationMessage(
-                `That map location is outside the ${city} service area. Please move the pin to a location within ${city}.`,
+                `That pin is outside the ${city} service area. Please move it closer to ${city}.`,
                 "error"
             );
 
@@ -701,20 +750,37 @@ async function reverseGeocodeMapLocation(lat, lng) {
         state.form.locationValidated = true;
         state.form.locationConfirmed = false;
 
-        showLocationMessage(
-            `✓ Location found inside the ${city} service area. Click Confirm Location to continue.`,
-            "success"
-        );
+        const resolvedAddress = String(result.address || "").trim();
+        const addressInput = document.getElementById("address");
+
+        // Only replace the manual address when reverse geocoding actually
+        // returned a useful address. Otherwise preserve what the customer typed.
+        if (resolvedAddress) {
+            state.form.address = resolvedAddress;
+            if (addressInput) addressInput.value = resolvedAddress;
+
+            showLocationMessage(
+                `✓ Pin selected inside the ${city} service area and the address was located. Click Confirm Map Location.`,
+                "success"
+            );
+        } else {
+            showLocationMessage(
+                `✓ Pin selected inside the ${city} service area. We couldn't fetch a street label, so your typed address has been kept. Click Confirm Map Location.`,
+                "success"
+            );
+        }
 
         updateStep2Button();
     } catch (error) {
-        console.error("Reverse geocoding failed:", error);
-        state.form.locationValidated = false;
+        console.warn("Reverse geocoding unavailable; keeping valid pin.", error);
+
+        // Keep the pin valid. Reverse geocoding is only optional enrichment.
+        state.form.locationValidated = true;
         state.form.locationConfirmed = false;
 
         showLocationMessage(
-            error.message || "We could not verify that map location. Please try again.",
-            "error"
+            `✓ Pin selected inside the ${city} service area. We couldn't fetch a street label, so your typed address has been kept. Click Confirm Map Location.`,
+            "success"
         );
 
         updateStep2Button();
