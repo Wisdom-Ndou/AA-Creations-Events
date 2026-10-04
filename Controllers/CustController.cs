@@ -1047,6 +1047,151 @@ namespace WebApplication1.Controllers
             });
         }
 
+        [HttpGet]
+        public ActionResult BalancePayment(int bookingId)
+        {
+            if (Session["CustomerId"] == null)
+            {
+                return RedirectToAction("Login", "Cust");
+            }
+
+            int customerId = (int)Session["CustomerId"];
+            var booking = db.Bookings
+                .Include("Package")
+                .FirstOrDefault(b =>
+                    b.BookingId == bookingId &&
+                    b.CustomerId == customerId);
+
+            if (booking == null)
+            {
+                TempData["PaymentError"] = "Booking could not be found.";
+                return RedirectToAction("ViewBooking", "Cust");
+            }
+
+            string status = (booking.Status ?? "Pending").Trim();
+            if (status.Equals("Declined", StringComparison.OrdinalIgnoreCase) ||
+                status.Equals("Cancelled", StringComparison.OrdinalIgnoreCase) ||
+                status.Equals("Completed", StringComparison.OrdinalIgnoreCase))
+            {
+                TempData["PaymentError"] = "Payments can no longer be added to this booking.";
+                return RedirectToAction("ViewBooking", "Cust");
+            }
+
+            decimal balance = Math.Max(0m, booking.TotalPrice - booking.AmountPaid);
+            if (balance <= 0m)
+            {
+                booking.PaymentStatus = "Fully Paid";
+                booking.BalanceDueDate = null;
+                db.SaveChanges();
+
+                TempData["PaymentSuccess"] = "This booking is already fully paid.";
+                return RedirectToAction("ViewBooking", "Cust");
+            }
+
+            if (string.Equals(booking.PaymentStatus, "Quote Required", StringComparison.OrdinalIgnoreCase))
+            {
+                TempData["PaymentError"] = "This booking is waiting for a custom quote before payment can be made.";
+                return RedirectToAction("ViewBooking", "Cust");
+            }
+
+            ViewBag.Booking = booking;
+            ViewBag.OutstandingBalance = balance;
+            return View();
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public ActionResult BalancePayment(
+            int bookingId,
+            string cardholderName,
+            string cardNumber,
+            string expiryDate,
+            string cvv,
+            string streetAddress,
+            string billingCity,
+            string postalCode)
+        {
+            if (Session["CustomerId"] == null)
+            {
+                return RedirectToAction("Login", "Cust");
+            }
+
+            int customerId = (int)Session["CustomerId"];
+            var booking = db.Bookings
+                .Include("Package")
+                .FirstOrDefault(b =>
+                    b.BookingId == bookingId &&
+                    b.CustomerId == customerId);
+
+            if (booking == null)
+            {
+                TempData["PaymentError"] = "Booking could not be found.";
+                return RedirectToAction("ViewBooking", "Cust");
+            }
+
+            string status = (booking.Status ?? "Pending").Trim();
+            if (status.Equals("Declined", StringComparison.OrdinalIgnoreCase) ||
+                status.Equals("Cancelled", StringComparison.OrdinalIgnoreCase) ||
+                status.Equals("Completed", StringComparison.OrdinalIgnoreCase))
+            {
+                TempData["PaymentError"] = "Payments can no longer be added to this booking.";
+                return RedirectToAction("ViewBooking", "Cust");
+            }
+
+            decimal balance = Math.Max(0m, booking.TotalPrice - booking.AmountPaid);
+            if (balance <= 0m)
+            {
+                booking.PaymentStatus = "Fully Paid";
+                booking.BalanceDueDate = null;
+                db.SaveChanges();
+
+                TempData["PaymentSuccess"] = "This booking is already fully paid.";
+                return RedirectToAction("ViewBooking", "Cust");
+            }
+
+            if (string.Equals(booking.PaymentStatus, "Quote Required", StringComparison.OrdinalIgnoreCase))
+            {
+                TempData["PaymentError"] = "This booking is waiting for a custom quote before payment can be made.";
+                return RedirectToAction("ViewBooking", "Cust");
+            }
+
+            string cardDigits = new string((cardNumber ?? "").Where(char.IsDigit).ToArray());
+            string cvvDigits = new string((cvv ?? "").Where(char.IsDigit).ToArray());
+            string postalDigits = new string((postalCode ?? "").Where(char.IsDigit).ToArray());
+
+            bool detailsValid =
+                !string.IsNullOrWhiteSpace(cardholderName) &&
+                cardDigits.Length >= 13 &&
+                cardDigits.Length <= 16 &&
+                !string.IsNullOrWhiteSpace(expiryDate) &&
+                (cvvDigits.Length == 3 || cvvDigits.Length == 4) &&
+                !string.IsNullOrWhiteSpace(streetAddress) &&
+                !string.IsNullOrWhiteSpace(billingCity) &&
+                postalDigits.Length == 4;
+
+            if (!detailsValid)
+            {
+                ViewBag.Booking = booking;
+                ViewBag.OutstandingBalance = balance;
+                ViewBag.PaymentError = "Please complete all banking details correctly before paying the remaining balance.";
+                return View();
+            }
+
+            // This project uses a simulated card-payment screen.
+            // Card/billing details are validated for the UI flow only and are never stored.
+            booking.AmountPaid = booking.TotalPrice;
+            booking.PaymentStatus = "Fully Paid";
+            booking.BalanceDueDate = null;
+
+            db.SaveChanges();
+
+            TempData["PaymentSuccess"] =
+                "Your remaining balance of R" + balance.ToString("N2") +
+                " has been paid. This booking is now fully paid.";
+
+            return RedirectToAction("ViewBooking", "Cust");
+        }
+
         [HttpPost]
         [ValidateAntiForgeryToken]
         public JsonResult PayBookingBalance(int bookingId, decimal amount)
