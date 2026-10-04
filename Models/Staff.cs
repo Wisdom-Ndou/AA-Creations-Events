@@ -18,7 +18,7 @@ namespace WebApplication1.Models
         public string staff_LName { get; set; }
 
         [Required(ErrorMessage = "Email is required")]
-        [EmailAddress(ErrorMessage = "Invalid email address format")]
+        [EmailAddress(ErrorMessage = "Please enter a valid email address.")]
         public string staff_Email { get; set; }
 
         [Required(ErrorMessage = "Password is required")]
