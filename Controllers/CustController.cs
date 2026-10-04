@@ -569,6 +569,7 @@ namespace WebApplication1.Controllers
                 string.IsNullOrWhiteSpace(email) ||
                 string.IsNullOrWhiteSpace(password) ||
                 password != confirm ||
+                termsAccepted != true ||
                 string.IsNullOrWhiteSpace(adminAccessCode) ||
                 string.IsNullOrWhiteSpace(configuredAccessCode) ||
                 !string.Equals(adminAccessCode.Trim(), configuredAccessCode.Trim(), StringComparison.Ordinal))
