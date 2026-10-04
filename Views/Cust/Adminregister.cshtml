@@ -1,6 +1,29 @@
 ﻿@inherits System.Web.Mvc.WebViewPage<dynamic>
 @{
     ViewBag.Title = "Adminregister";
+
+    Func<string, bool> adminFieldHasError = fieldName =>
+        ViewData.ModelState[fieldName] != null &&
+        ViewData.ModelState[fieldName].Errors.Count > 0;
+
+    Func<string, string> adminRetainedValue = fieldName =>
+        adminFieldHasError(fieldName)
+            ? ""
+            : (Request.Form[fieldName] ?? "");
+
+    var adminFirstNameValue = adminRetainedValue("firstName");
+    var adminLastNameValue = adminRetainedValue("lastName");
+    var adminEmailValue = adminRetainedValue("email");
+    var adminPhoneValue = adminRetainedValue("phone");
+    var adminAccessCodeValue = adminRetainedValue("adminAccessCode");
+    var adminPasswordValue = adminRetainedValue("password");
+    var adminConfirmValue = adminRetainedValue("confirm");
+    var adminTermsAccepted =
+        !adminFieldHasError("termsAccepted") &&
+        String.Equals(
+            Request.Form["termsAccepted"],
+            "true",
+            StringComparison.OrdinalIgnoreCase);
 }
 
 <!DOCTYPE html>
@@ -67,7 +90,7 @@
                 {
                     @Html.AntiForgeryToken()
 
-                    @Html.ValidationSummary(true, "", new { @class = "validation-summary" })
+                    @Html.ValidationSummary(false, "", new { @class = "validation-summary" })
 
                     <section class="form-section">
                         <p class="section-label">Identity</p>
@@ -77,6 +100,7 @@
                                 <input type="text"
                                        id="firstName"
                                        name="firstName"
+                                       value="@adminFirstNameValue"
                                        placeholder="Thabo"
                                        required
                                        pattern="^[A-Za-z]+$"
@@ -91,6 +115,7 @@
                                 <input type="text"
                                        id="lastName"
                                        name="lastName"
+                                       value="@adminLastNameValue"
                                        placeholder="Sithole"
                                        required
                                        pattern="^[A-Za-z]+$"
@@ -106,7 +131,7 @@
                         <p class="section-label">Contact</p>
                         <div class="field">
                             <label for="email">Work Email</label>
-                            <input type="email" id="email" name="email" placeholder="thabo@aacreations.co.za" required aria-describedby="emailError" aria-invalid="false" />
+                            <input type="email" id="email" name="email" value="@adminEmailValue" placeholder="thabo@aacreations.co.za" required aria-describedby="emailError" aria-invalid="false" />
                             <p class="error-text" id="emailError" aria-live="polite" hidden>Enter a valid work email</p>
                         </div>
 
@@ -117,6 +142,7 @@
                                 <input type="tel"
                                        id="phone"
                                        name="phone"
+                                       value="@adminPhoneValue"
                                        placeholder="723456789"
                                        required
                                        maxlength="9"
@@ -143,6 +169,7 @@
                             <input type="password"
                                    id="adminAccessCode"
                                    name="adminAccessCode"
+                                   value="@adminAccessCodeValue"
                                    placeholder="Enter your admin access code"
                                    autocomplete="off"
                                    required />
@@ -159,6 +186,7 @@
                                     <input type="password"
                                            id="password"
                                            name="password"
+                                           value="@adminPasswordValue"
                                            placeholder="••••••••"
                                            required
                                            aria-describedby="passwordError"
@@ -192,6 +220,7 @@
                                 <input type="password"
                                        id="confirm"
                                        name="confirm"
+                                       value="@adminConfirmValue"
                                        placeholder="••••••••"
                                        required
                                        aria-describedby="mismatchText"
@@ -212,7 +241,7 @@
 
                     <div class="terms-box">
                         <label class="terms-label">
-                            <input type="checkbox" id="termsAccepted" name="termsAccepted" value="true" required />
+                            <input type="checkbox" id="termsAccepted" name="termsAccepted" value="true" @(adminTermsAccepted ? "checked=\"checked\"" : "") required />
                             <span>I confirm that all information provided is accurate and I agree to the Admin Terms of Use.</span>
                         </label>
                     </div>
