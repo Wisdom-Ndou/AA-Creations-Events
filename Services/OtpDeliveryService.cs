@@ -3,6 +3,7 @@ using System.Configuration;
 using System.Diagnostics;
 using System.Net;
 using System.Net.Mail;
+using System.Net.Sockets;
 using System.Linq;
 
 namespace WebApplication1.Services
@@ -15,6 +16,7 @@ namespace WebApplication1.Services
         private readonly string appPassword;
 
         public string LastError { get; private set; }
+        public string LastDiagnostic { get; private set; }
 
         public OtpDeliveryService()
         {
@@ -102,6 +104,7 @@ namespace WebApplication1.Services
         private bool SendEmail(string recipientEmail, string subject, string body)
         {
             LastError = null;
+            LastDiagnostic = null;
 
             if (string.IsNullOrWhiteSpace(recipientEmail))
             {
@@ -170,9 +173,33 @@ namespace WebApplication1.Services
                     ex.StatusCode,
                     ex);
 
-                LastError = ex.StatusCode == SmtpStatusCode.GeneralFailure
-                    ? "The email server could not be reached or rejected the connection. Check the SMTP host, port and internet connection."
-                    : "The email server rejected the message. Check the sender email and app password.";
+                LastDiagnostic = BuildDiagnostic(ex);
+
+                if (ex.InnerException is SocketException)
+                {
+                    LastError =
+                        "The application could not open a network connection to Gmail SMTP. " +
+                        "Check whether smtp.gmail.com on port " + smtpPort +
+                        " is reachable from this computer/network.";
+                }
+                else if (ex.InnerException != null &&
+                         ex.InnerException.GetType().Name.IndexOf("Authentication", StringComparison.OrdinalIgnoreCase) >= 0)
+                {
+                    LastError =
+                        "The secure connection to Gmail failed during TLS/SSL negotiation. " +
+                        "Check Windows/.NET TLS support and any antivirus or firewall that inspects encrypted mail traffic.";
+                }
+                else if (ex.StatusCode == SmtpStatusCode.GeneralFailure)
+                {
+                    LastError =
+                        "Gmail SMTP could not complete the connection. Use the Email SMTP Test endpoint to see the underlying network/TLS error.";
+                }
+                else
+                {
+                    LastError =
+                        "Gmail rejected the SMTP request. Verify that the sender account uses a valid Google App Password and that 2-Step Verification is enabled.";
+                }
+
                 return false;
             }
             catch (FormatException ex)
@@ -197,6 +224,30 @@ namespace WebApplication1.Services
                 LastError = "The verification email could not be sent because the mail service returned an unexpected error.";
                 return false;
             }
+        }
+
+        private static string BuildDiagnostic(Exception ex)
+        {
+            var parts = new System.Collections.Generic.List<string>();
+            Exception current = ex;
+            int depth = 0;
+
+            while (current != null && depth < 4)
+            {
+                parts.Add(current.GetType().Name + ": " + current.Message);
+                current = current.InnerException;
+                depth++;
+            }
+
+            return string.Join(" -> ", parts);
+        }
+
+        public bool SendDiagnosticEmail(string email)
+        {
+            return SendEmail(
+                email,
+                "AA Creations & Events - Email Test",
+                "<h2>Email test successful</h2><p>Your AA Creations & Events SMTP configuration is working.</p>");
         }
 
         public bool SendOtpByEmail(string email, string otp)
