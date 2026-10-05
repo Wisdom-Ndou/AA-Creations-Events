@@ -418,6 +418,13 @@ namespace WebApplication1.Controllers
                 return RedirectToAction("ForgotPassword", "Cust");
             }
 
+            TimeSpan retryAfter;
+            if (!CanIssueOtp(customer.Cust_ID, "ForgotPassword", out retryAfter))
+            {
+                TempData["OtpError"] = GetOtpThrottleMessage(retryAfter);
+                return RedirectToAction("ForgotPasswordMethod", "Cust");
+            }
+
             string otp = OtpHelper.GenerateOtp();
 
             var otpVerification = new OtpVerification
@@ -2169,8 +2176,75 @@ namespace WebApplication1.Controllers
             return RedirectToAction("ManageAccount");
         }
 
+        private bool CanIssueOtp(int customerId, string purpose, out TimeSpan retryAfter)
+        {
+            var now = DateTime.Now;
+            var windowStart = now.AddMinutes(-10);
+
+            var recentRequests = db.OtpVerifications
+                .Where(o =>
+                    o.CustomerId == customerId &&
+                    o.Purpose == purpose &&
+                    o.CreatedAt >= windowStart)
+                .OrderByDescending(o => o.CreatedAt)
+                .Select(o => o.CreatedAt)
+                .ToList();
+
+            retryAfter = TimeSpan.Zero;
+
+            // Prevent rapid resend loops.
+            if (recentRequests.Any())
+            {
+                var nextAllowed = recentRequests[0].AddSeconds(60);
+
+                if (nextAllowed > now)
+                {
+                    retryAfter = nextAllowed - now;
+                    return false;
+                }
+            }
+
+            // Also cap each OTP purpose to five requests per ten minutes.
+            if (recentRequests.Count >= 5)
+            {
+                var oldestInWindow = recentRequests[recentRequests.Count - 1];
+                var nextAllowed = oldestInWindow.AddMinutes(10);
+
+                if (nextAllowed > now)
+                {
+                    retryAfter = nextAllowed - now;
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        private static string GetOtpThrottleMessage(TimeSpan retryAfter)
+        {
+            var seconds = Math.Max(1, (int)Math.Ceiling(retryAfter.TotalSeconds));
+
+            if (seconds >= 60)
+            {
+                var minutes = (int)Math.Ceiling(seconds / 60.0);
+                return "Too many verification-code requests. Please try again in about " +
+                       minutes + (minutes == 1 ? " minute." : " minutes.");
+            }
+
+            return "Please wait " + seconds +
+                   (seconds == 1 ? " second" : " seconds") +
+                   " before requesting another verification code.";
+        }
+
         private bool CreateAndSendOtp(Customer customer, string purpose, string recipientEmail)
         {
+            TimeSpan retryAfter;
+            if (!CanIssueOtp(customer.Cust_ID, purpose, out retryAfter))
+            {
+                TempData["OtpDeliveryError"] = GetOtpThrottleMessage(retryAfter);
+                return false;
+            }
+
             string otp = OtpHelper.GenerateOtp();
 
             var previousOtps = db.OtpVerifications
@@ -2273,6 +2347,13 @@ namespace WebApplication1.Controllers
             if (purpose != "ManageAccount" && purpose != "ChangePassword")
             {
                 TempData["OtpError"] = "Invalid OTP request.";
+                return RedirectToAction("ManageAccount", "Cust");
+            }
+
+            TimeSpan retryAfter;
+            if (!CanIssueOtp(customer.Cust_ID, purpose, out retryAfter))
+            {
+                TempData["OtpError"] = GetOtpThrottleMessage(retryAfter);
                 return RedirectToAction("ManageAccount", "Cust");
             }
 
