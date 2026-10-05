@@ -16,9 +16,6 @@
     var adminLastNameValue = adminRetainedValue("lastName");
     var adminEmailValue = adminRetainedValue("email");
     var adminPhoneValue = adminRetainedValue("phone");
-    var adminAccessCodeValue = adminRetainedValue("adminAccessCode");
-    var adminPasswordValue = adminRetainedValue("password");
-    var adminConfirmValue = adminRetainedValue("confirm");
     var adminTermsAccepted =
         !adminFieldHasError("termsAccepted") &&
         String.Equals(
@@ -170,7 +167,6 @@
                             <input type="password"
                                    id="adminAccessCode"
                                    name="adminAccessCode"
-                                   value="@adminAccessCodeValue"
                                    placeholder="Enter your admin access code"
                                    autocomplete="off"
                                    required />
@@ -187,7 +183,6 @@
                                     <input type="password"
                                            id="password"
                                            name="password"
-                                           value="@adminPasswordValue"
                                            placeholder="••••••••"
                                            required
                                            aria-describedby="passwordError"
@@ -221,7 +216,6 @@
                                 <input type="password"
                                        id="confirm"
                                        name="confirm"
-                                       value="@adminConfirmValue"
                                        placeholder="••••••••"
                                        required
                                        aria-describedby="mismatchText"
