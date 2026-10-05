@@ -1610,36 +1610,60 @@ async function submitBooking() {
         confirmBtn.textContent = "Confirming…";
     }
 
-    // Only real booking data is sent — never card/banking fields.
-    const booking = {
-        firstName: state.form.firstName,
-        lastName: state.form.lastName,
-        email: state.form.email,
-        phone: state.form.phone,
-        occasion: state.form.occasion,
+    // Send a normal form payload so ASP.NET MVC can validate the
+    // anti-forgery token before creating any database records. Card/banking
+    // fields are intentionally never included.
+    const form = document.getElementById("bookingForm");
+    const antiForgeryToken =
+        form?.querySelector('input[name="__RequestVerificationToken"]')?.value || "";
 
-        eventDate: state.form.date,
-        eventTime: state.form.time,
+    if (!antiForgeryToken) {
+        if (confirmBtn) {
+            confirmBtn.disabled = false;
+            confirmBtn.textContent = isCustomOccasion()
+                ? "Submit Custom Request ✓"
+                : "Confirm Booking ✓";
+        }
 
-        address: state.form.address,
-        city: state.form.city,
-        latitude: state.form.latitude,
-        longitude: state.form.longitude,
-        notes: state.form.notes,
+        alert("The booking security token is missing. Please refresh the page and try again.");
+        return;
+    }
 
-        packageId: isCustomOccasion() ? "" : state.form.packageId,
-        addOns: state.form.addOns,
-        paymentAmount: getSelectedPaymentAmount(),
-        termsAccepted: state.termsAccepted
-    };
+    const booking = new FormData();
+    booking.append("__RequestVerificationToken", antiForgeryToken);
+    booking.append("FirstName", state.form.firstName);
+    booking.append("LastName", state.form.lastName);
+    booking.append("Email", state.form.email);
+    booking.append("Phone", state.form.phone);
+    booking.append("Occasion", state.form.occasion);
+    booking.append("EventDate", state.form.date);
+    booking.append("EventTime", state.form.time);
+    booking.append("Address", state.form.address);
+    booking.append("City", state.form.city);
+    booking.append("Notes", state.form.notes || "");
+    booking.append("PackageId", isCustomOccasion() ? "" : state.form.packageId);
+    booking.append("PaymentAmount", String(getSelectedPaymentAmount()));
+    booking.append("TermsAccepted", state.termsAccepted ? "true" : "false");
+
+    if (state.form.latitude !== null && state.form.latitude !== undefined) {
+        booking.append("Latitude", String(state.form.latitude));
+    }
+
+    if (state.form.longitude !== null && state.form.longitude !== undefined) {
+        booking.append("Longitude", String(state.form.longitude));
+    }
+
+    state.form.addOns.forEach(addOnId => {
+        booking.append("AddOns", addOnId);
+    });
 
     try {
         const response = await fetch(bookingUrl, {
             method: "POST",
             headers: {
-                "Content-Type": "application/json"
+                "X-Requested-With": "XMLHttpRequest"
             },
-            body: JSON.stringify(booking)
+            body: booking
         });
 
         const result = await response.json();
