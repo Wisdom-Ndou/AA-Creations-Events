@@ -51,46 +51,39 @@ Base branch: `fix/booking-city-location-on-chatgpt`
 - Existing production/development rows are not overwritten when version 1.0 already exists.
 - Future Terms changes must be inserted as new immutable versions rather than editing v1.0 in place.
 
-## Production blockers still open
+## Remaining work for the assessed deployment
 
-### 1. Real payment processing
+This application is being deployed as a school-project demonstration, not as a live commercial service.
 
-The existing payment experience is simulated.
+### Simulated payments
 
-Current code can record amounts as paid without confirmation from a payment provider. One balance-payment screen also accepts raw card number/CVV values even though no real charge is performed.
+The simulated payment workflow is intentional and may remain enabled for the assessment.
 
-Before accepting real customer payments, choose and integrate a real payment provider using hosted/tokenized payment fields and provider-verified callbacks/webhooks. The application must update `AmountPaid` only after verified payment confirmation.
+- The booking wizard simulates deposit/full-payment choices and writes the resulting payment state to the database.
+- Card/CVV/billing values entered in the booking wizard are not sent or stored.
+- The remaining-balance page now keeps its demo card fields browser-only and posts only the booking ID plus a simulation-confirmation flag.
+- The old standalone banking route redirects to the active booking flow.
+- No real payment gateway, merchant account or PCI certification is required for this assessed deployment.
 
-Until then, production must not present simulated payments as real payments or collect raw card/CVV data.
+### Mapping/geocoding
 
-### 2. Mapping/geocoding provider
+The current OpenStreetMap/Nominatim implementation may be used for the low-volume assessment/demo deployment. A commercial provider would only be necessary if the project later became a real public service with meaningful traffic.
 
-The booking system currently relies on public OpenStreetMap tile infrastructure and public Nominatim geocoding.
+### Login abuse protection
 
-Before meaningful public traffic, either:
+OTP requests are already throttled. Additional enterprise-grade login rate limiting/lockout is recommended for a real public service but is not a blocker for the assessed deployment.
 
-- move to a production mapping/geocoding provider, or
-- implement provider-compliant shared throttling/caching and a documented fallback strategy.
+### Time handling
 
-### 3. Login abuse protection
+The application uses `DateTime.Now` / `DateTime.Today` extensively. The Azure Windows App Service must therefore be configured with:
 
-OTP resend abuse is now throttled, but customer/admin/staff password login attempts still need production-grade rate limiting/lockout protection.
+`WEBSITE_TIME_ZONE=South Africa Standard Time`
 
-### 4. Production time handling
+A future commercial system should preferably store persisted timestamps in UTC.
 
-The application uses `DateTime.Now` / `DateTime.Today` extensively.
+### Privacy/legal operational work
 
-Initial Azure deployment must set the Windows App Service time zone to South Africa. Long term, persisted timestamps should be migrated toward UTC storage plus local-time display conversion.
-
-### 5. Privacy/legal operational work
-
-Before a real public launch:
-
-- publish an accurate Privacy Policy;
-- ensure cookie wording matches actual cookies/analytics;
-- define personal-information retention/deletion handling;
-- define breach-response procedures;
-- confirm POPIA/Information Officer obligations with appropriate legal/compliance guidance.
+The existing Terms & Conditions and agreement tracking remain part of the demo. Formal privacy/compliance operations would be required before any real commercial use, but they are not a blocker for this school-project deployment.
 
 ## Azure configuration still to create
 
