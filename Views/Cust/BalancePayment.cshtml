@@ -11,7 +11,7 @@
     <header class="payment-header">
         <p class="eyebrow">Complete Your Payment</p>
         <h1 class="page-title">Pay Remaining Balance</h1>
-        <p class="page-subtitle">Finish paying for your AA Creations & Events booking.</p>
+        <p class="page-subtitle">School-project payment simulation for your AA Creations & Events booking.</p>
     </header>
 
     <main class="card-panel">
@@ -24,7 +24,7 @@
 
         <div class="card-panel-header">
             <h2>Booking #@booking.BookingId</h2>
-            <p class="secure-note">This is a simulated payment screen. Card details are not stored.</p>
+            <p class="secure-note"><strong>Demo only:</strong> do not enter real card details. Values typed here stay in your browser and are not sent to the server.</p>
         </div>
 
         <div class="booking-total" style="display:grid;gap:8px;">
@@ -46,26 +46,27 @@
         {
             @Html.AntiForgeryToken()
             <input type="hidden" name="bookingId" value="@booking.BookingId" />
+            <input type="hidden" id="simulationConfirmed" name="simulationConfirmed" value="false" />
 
             <div class="field-group">
                 <label for="cardholderName">Cardholder Name</label>
-                <input type="text" id="cardholderName" name="cardholderName" placeholder="Name as it appears on card" required />
+                <input type="text" id="cardholderName" placeholder="Demo cardholder name" autocomplete="off" required />
             </div>
 
             <div class="field-group">
                 <label for="cardNumber">Card Number</label>
-                <input type="text" id="cardNumber" name="cardNumber" inputmode="numeric" maxlength="19" placeholder="0000 0000 0000 0000" required />
+                <input type="text" id="cardNumber" inputmode="numeric" maxlength="19" placeholder="4111 1111 1111 1111" autocomplete="off" required />
             </div>
 
             <div class="field-row">
                 <div class="field-group">
                     <label for="expiryDate">Expiry Date</label>
-                    <input type="text" id="expiryDate" name="expiryDate" inputmode="numeric" maxlength="5" placeholder="MM/YY" required />
+                    <input type="text" id="expiryDate" inputmode="numeric" maxlength="5" placeholder="12/30" autocomplete="off" required />
                 </div>
 
                 <div class="field-group">
                     <label for="cvv">CVV</label>
-                    <input type="text" id="cvv" name="cvv" inputmode="numeric" maxlength="4" placeholder="123" required />
+                    <input type="text" id="cvv" inputmode="numeric" maxlength="4" placeholder="123" autocomplete="off" required />
                 </div>
             </div>
 
@@ -74,25 +75,25 @@
 
             <div class="field-group">
                 <label for="streetAddress">Street Address</label>
-                <input type="text" id="streetAddress" name="streetAddress" placeholder="123 Main Street" required />
+                <input type="text" id="streetAddress" placeholder="123 Demo Street" autocomplete="off" required />
             </div>
 
             <div class="field-row">
                 <div class="field-group">
                     <label for="billingCity">City</label>
-                    <input type="text" id="billingCity" name="billingCity" placeholder="Durban" required />
+                    <input type="text" id="billingCity" placeholder="Durban" autocomplete="off" required />
                 </div>
 
                 <div class="field-group">
                     <label for="postalCode">Postal Code</label>
-                    <input type="text" id="postalCode" name="postalCode" inputmode="numeric" maxlength="4" placeholder="4001" required />
+                    <input type="text" id="postalCode" inputmode="numeric" maxlength="4" placeholder="4001" autocomplete="off" required />
                 </div>
             </div>
 
             <div class="trust-badges">
-                <span>Simulated secure payment</span>
+                <span>School-project simulation</span>
                 <span class="dot">.</span>
-                <span>No card details are stored</span>
+                <span>No card/CVV/billing data leaves this page</span>
             </div>
 
             <div class="form-actions">
@@ -166,6 +167,15 @@
     form.querySelectorAll("input").forEach(function (input) {
         input.addEventListener("input", validate);
         input.addEventListener("change", validate);
+    });
+
+    form.addEventListener("submit", function (event) {
+        if (!validate()) {
+            event.preventDefault();
+            return;
+        }
+
+        document.getElementById("simulationConfirmed").value = "true";
     });
 })();
 </script>
