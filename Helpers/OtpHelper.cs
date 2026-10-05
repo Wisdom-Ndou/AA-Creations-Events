@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Web;
+using System.Security.Cryptography;
 using System.Web.Helpers;
 
 namespace WebApplication1.Helpers
@@ -10,9 +8,23 @@ namespace WebApplication1.Helpers
     {
         public static string GenerateOtp()
         {
-            Random random = new Random();
+            const uint otpRange = 900000;
+            const uint upperBound = uint.MaxValue - (uint.MaxValue % otpRange);
 
-            return random.Next(100000, 1000000).ToString();
+            uint value;
+            var bytes = new byte[4];
+
+            using (var rng = RandomNumberGenerator.Create())
+            {
+                do
+                {
+                    rng.GetBytes(bytes);
+                    value = BitConverter.ToUInt32(bytes, 0);
+                }
+                while (value >= upperBound);
+            }
+
+            return (100000 + (value % otpRange)).ToString("D6");
         }
 
         public static string HashOtp(string otp)
