@@ -50,12 +50,21 @@ jobs:
             throw "Release publish failed with exit code $LASTEXITCODE."
           }
 
-          $publishedConfigPath = Join-Path $publishDir "Web.config"
+          $configCandidates = @(
+            (Join-Path $publishDir "Web.config"),
+            (Join-Path $PWD "obj\Release\Package\PackageTmp\Web.config"),
+            (Join-Path $PWD "obj\Release\TransformWebConfig\transformed\Web.config")
+          )
 
-          if (-not (Test-Path $publishedConfigPath)) {
-            throw "Published Web.config was not found."
+          $publishedConfigPath = $configCandidates |
+            Where-Object { Test-Path $_ } |
+            Select-Object -First 1
+
+          if (-not $publishedConfigPath) {
+            throw "Transformed Release Web.config was not found in any expected publish output location."
           }
 
+          Write-Host "Validating transformed config: $publishedConfigPath"
           [xml]$publishedConfig = Get-Content $publishedConfigPath
 
           if ($publishedConfig.configuration.'system.web'.compilation.debug -eq "true") {
