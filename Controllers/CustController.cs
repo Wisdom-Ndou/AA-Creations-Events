@@ -2225,89 +2225,21 @@ namespace WebApplication1.Controllers
         }
 
         [HttpGet]
-        public JsonResult EmailDiagnostics()
+        public ActionResult Health()
         {
-            if (Session["CustomerId"] == null)
+            try
             {
-                return Json(new
-                {
-                    success = false,
-                    message = "Please sign in first."
-                }, JsonRequestBehavior.AllowGet);
+                // Verify that the application can reach the configured database
+                // without exposing server names, connection details, or row counts.
+                db.Database.SqlQuery<int>("SELECT 1").FirstOrDefault();
+                return Content("Healthy", "text/plain");
             }
-
-            var service = new OtpDeliveryService();
-
-            return Json(new
+            catch
             {
-                success = true,
-                configured = service.IsConfigured,
-                sender = service.SenderDisplay,
-                smtpHost = service.SmtpHost,
-                smtpPort = service.SmtpPort,
-                passwordConfigured = service.HasPassword
-            }, JsonRequestBehavior.AllowGet);
-        }
-
-        [HttpGet]
-        public JsonResult EmailSmtpTest()
-        {
-            if (Session["CustomerId"] == null)
-            {
-                return Json(new
-                {
-                    success = false,
-                    message = "Please sign in first."
-                }, JsonRequestBehavior.AllowGet);
+                return new HttpStatusCodeResult(
+                    (int)HttpStatusCode.ServiceUnavailable,
+                    "Unhealthy");
             }
-
-            int customerId = (int)Session["CustomerId"];
-            var customer = db.Customers.FirstOrDefault(c => c.Cust_ID == customerId);
-
-            if (customer == null)
-            {
-                return Json(new
-                {
-                    success = false,
-                    message = "Customer account could not be found."
-                }, JsonRequestBehavior.AllowGet);
-            }
-
-            var service = new OtpDeliveryService();
-            bool sent = service.SendDiagnosticEmail(customer.Cust_Email);
-
-            return Json(new
-            {
-                success = sent,
-                message = sent
-                    ? "SMTP test email sent successfully."
-                    : service.LastError,
-                diagnostic = sent ? null : service.LastDiagnostic,
-                smtpHost = service.SmtpHost,
-                smtpPort = service.SmtpPort,
-                sender = service.SenderDisplay
-            }, JsonRequestBehavior.AllowGet);
-        }
-
-        public JsonResult TestCustomerDatabase()
-        {
-            var customerCount = db.Customers.Count();
-
-            var databaseName = db.Database.SqlQuery<string>(
-                "SELECT DB_NAME()"
-            ).FirstOrDefault();
-
-            var serverName = db.Database.SqlQuery<string>(
-                "SELECT @@SERVERNAME"
-            ).FirstOrDefault();
-
-            return Json(new
-            {
-                success = true,
-                customerCount = customerCount,
-                database = databaseName,
-                server = serverName
-            }, JsonRequestBehavior.AllowGet);
         }
 
         [HttpPost]
@@ -3551,11 +3483,10 @@ namespace WebApplication1.Controllers
             );
         }
 
-        [HttpGet]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
         public ActionResult AdminLogout()
         {
-            // Clear admin session information
-
             Session.Remove("AdminId");
             Session.Remove("AdminEmail");
             Session.Remove("AdminFirstName");
@@ -3570,19 +3501,19 @@ namespace WebApplication1.Controllers
         [HttpGet]
         public JsonResult AdminExists(string email)
         {
+            if (!CanRegisterAdmin())
+            {
+                Response.StatusCode = (int)HttpStatusCode.Forbidden;
+                return Json(
+                    new { success = false, message = "Not authorized." },
+                    JsonRequestBehavior.AllowGet);
+            }
+
             if (string.IsNullOrWhiteSpace(email))
                 return Json(new { success = false, message = "Email required" }, JsonRequestBehavior.AllowGet);
 
             bool exists = db.Admins.Any(a => a.admin_Email == email.Trim());
             return Json(new { success = true, exists }, JsonRequestBehavior.AllowGet);
-        }
-
-
-        [HttpGet]
-        public ActionResult Ping()
-        {
-            // Quick routing/controller reachability test
-            return Content("CustController: Pong");
         }
 
         [HttpGet]
@@ -4127,7 +4058,8 @@ namespace WebApplication1.Controllers
             return RedirectToAction("StaffDashboard", "Cust");
         }
 
-        [HttpGet]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
         public ActionResult StaffLogout()
         {
             Session.Remove("StaffId");
