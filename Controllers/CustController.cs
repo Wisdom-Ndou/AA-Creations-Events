@@ -143,6 +143,7 @@ namespace WebApplication1.Controllers
         [HttpGet]
         public ActionResult Login()
         {
+            ViewBag.CanRegisterAdmin = CanRegisterAdmin();
             return View();
         }
 
@@ -638,9 +639,10 @@ namespace WebApplication1.Controllers
         {
             if (!CanRegisterAdmin())
             {
-                return new HttpStatusCodeResult(
-                    (int)HttpStatusCode.Forbidden,
-                    "Administrator registration is restricted.");
+                TempData["AdminRegistrationMessage"] =
+                    "An administrator account already exists. Please sign in as an admin to create another administrator.";
+
+                return RedirectToAction("Login", "Cust");
             }
 
             firstName = (firstName ?? string.Empty).Trim();
@@ -3586,9 +3588,10 @@ namespace WebApplication1.Controllers
         {
             if (!CanRegisterAdmin())
             {
-                return new HttpStatusCodeResult(
-                    (int)HttpStatusCode.Forbidden,
-                    "Administrator registration is restricted.");
+                TempData["AdminRegistrationMessage"] =
+                    "An administrator account already exists. Please sign in as an admin to create another administrator.";
+
+                return RedirectToAction("Login", "Cust");
             }
 
             return View();
