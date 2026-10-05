@@ -37,15 +37,6 @@
             ? (Model.Cust_Phone ?? "")
             : "";
 
-    var customerPasswordValue =
-        !customerFieldHasError("Cust_Passw") && Model != null
-            ? (Model.Cust_Passw ?? "")
-            : "";
-
-    var customerConfirmValue =
-        !customerFieldHasError("confirm")
-            ? (Request.Form["confirm"] ?? "")
-            : "";
 }
 
 <!DOCTYPE html>
@@ -564,7 +555,6 @@
                                 <input type="password"
                                        id="password"
                                        name="Cust_Passw"
-                                       value="@customerPasswordValue"
                                        placeholder="******"
                                        required
                                        pattern="(?=.*[A-Za-z])(?=.*\d).{6,}"
@@ -637,7 +627,6 @@
                             <input type="password"
                                    id="confirm"
                                    name="confirm"
-                                   value="@customerConfirmValue"
                                    placeholder="******"
                                    required />
 
