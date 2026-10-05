@@ -36,6 +36,13 @@
                     </div>
                 }
 
+                @if (TempData["AdminRegistrationMessage"] != null)
+                {
+                    <div class="login-error" role="status" aria-live="polite">
+                        @TempData["AdminRegistrationMessage"]
+                    </div>
+                }
+
                 <div class="role-switch" role="tablist" aria-label="Select role">
                     <button type="button" class="role-btn active" id="roleCustomerBtn" data-role="customer" role="tab" aria-selected="true">
                         Customer
@@ -91,9 +98,12 @@
                     <p>Don't have an account? <a class="register-link" href="@Url.Action("Customerregister", "Cust")">Create Account</a></p>
                 </div>
 
-                <div class="register-row" id="adminRegisterRow" style="display:none">
-                    <p>Don't have an admin account? <a class="register-link" href="@Url.Action("Adminregister", "Cust")">Create Admin Account</a></p>
-                </div>
+                @if (ViewBag.CanRegisterAdmin == true)
+                {
+                    <div class="register-row" id="adminRegisterRow" style="display:none">
+                        <p>Don't have an admin account? <a class="register-link" href="@Url.Action("Adminregister", "Cust")">Create Admin Account</a></p>
+                    </div>
+                }
 
                 <div class="register-row staff-login-entry" style="margin-top:18px;opacity:.72;font-size:.9rem;">
                     <p>AA Creations staff? <a class="register-link" href="@Url.Action("StaffLogin", "Cust")">Staff sign in</a></p>
