@@ -25,25 +25,55 @@ namespace WebApplication1.Controllers
 
         private static string GetAdminAccessCode()
         {
+            // Azure App Service exposes app settings as process environment
+            // variables. Prefer the production-only environment value, with
+            // Web.config kept as a local development fallback.
             var configured =
-                ConfigurationManager.AppSettings["AdminAccessCode"];
+                Environment.GetEnvironmentVariable(
+                    "AA_ADMIN_ACCESS_CODE",
+                    EnvironmentVariableTarget.Process);
 
-            // Keep local development compatible with the existing project
-            // default while using Web.config whenever it is supplied.
+            if (string.IsNullOrWhiteSpace(configured))
+            {
+                configured =
+                    ConfigurationManager.AppSettings["AdminAccessCode"];
+            }
+
+            // Never fall back to a known/default administrator code.
             return string.IsNullOrWhiteSpace(configured)
-                ? "AACode"
+                ? null
                 : configured.Trim();
         }
 
         private static bool IsValidAdminAccessCode(string suppliedCode)
         {
-            if (string.IsNullOrWhiteSpace(suppliedCode))
+            var configuredCode = GetAdminAccessCode();
+
+            if (string.IsNullOrWhiteSpace(suppliedCode) ||
+                string.IsNullOrWhiteSpace(configuredCode))
+            {
                 return false;
+            }
 
             return string.Equals(
                 suppliedCode.Trim(),
-                GetAdminAccessCode(),
+                configuredCode,
                 StringComparison.Ordinal);
+        }
+
+        private bool IsAdminAuthenticated()
+        {
+            return Session["AdminId"] != null &&
+                   Session["AdminAuthenticated"] != null &&
+                   (bool)Session["AdminAuthenticated"];
+        }
+
+        private bool CanRegisterAdmin()
+        {
+            // First-run bootstrap: a strong deployment secret is still required.
+            // After the first admin exists, only an authenticated admin can open
+            // or submit the administrator registration flow.
+            return !db.Admins.Any() || IsAdminAuthenticated();
         }
 
         [HttpPost]
@@ -598,6 +628,13 @@ namespace WebApplication1.Controllers
             bool? termsAccepted,
             string adminAccessCode)
         {
+            if (!CanRegisterAdmin())
+            {
+                return new HttpStatusCodeResult(
+                    (int)HttpStatusCode.Forbidden,
+                    "Administrator registration is restricted.");
+            }
+
             firstName = (firstName ?? string.Empty).Trim();
             lastName = (lastName ?? string.Empty).Trim();
             email = (email ?? string.Empty).Trim();
@@ -3551,6 +3588,13 @@ namespace WebApplication1.Controllers
         [HttpGet]
         public ActionResult Adminregister()
         {
+            if (!CanRegisterAdmin())
+            {
+                return new HttpStatusCodeResult(
+                    (int)HttpStatusCode.Forbidden,
+                    "Administrator registration is restricted.");
+            }
+
             return View();
         }
 
