@@ -76,11 +76,12 @@ namespace WebApplication1.Controllers
             return !db.Admins.Any() || IsAdminAuthenticated();
         }
 
-        [HttpPost]
+        [HttpGet]
         public ActionResult Bankingdetails()
         {
-            var model = new BankingDetailsViewModel(); // or fetch/populate as needed
-            return View(model);
+            // Legacy standalone payment page. The active school-project
+            // simulation lives inside Booking and BalancePayment.
+            return RedirectToAction("Booking", "Cust");
         }
         // GET: Cust
         public ActionResult Index()
