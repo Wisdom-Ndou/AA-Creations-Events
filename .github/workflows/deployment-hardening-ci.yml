@@ -33,6 +33,55 @@ jobs:
       - name: Build Release
         run: msbuild WebApplication1.sln /m /p:Configuration=Release /p:Platform="Any CPU" /p:RunCodeAnalysis=false /v:minimal
 
+      - name: Publish Release artifact
+        shell: powershell
+        run: |
+          $publishDir = Join-Path $env:RUNNER_TEMP "aa-creations-publish"
+
+          msbuild WebApplication1.csproj /m `
+            /p:Configuration=Release `
+            /p:DeployOnBuild=true `
+            /p:WebPublishMethod=FileSystem `
+            /p:DeleteExistingFiles=true `
+            /p:publishUrl="$publishDir" `
+            /v:minimal
+
+          if ($LASTEXITCODE -ne 0) {
+            throw "Release publish failed with exit code $LASTEXITCODE."
+          }
+
+          $publishedConfigPath = Join-Path $publishDir "Web.config"
+
+          if (-not (Test-Path $publishedConfigPath)) {
+            throw "Published Web.config was not found."
+          }
+
+          [xml]$publishedConfig = Get-Content $publishedConfigPath
+
+          if ($publishedConfig.configuration.'system.web'.compilation.debug -eq "true") {
+            throw "Release publish still has debug=true."
+          }
+
+          if ($publishedConfig.configuration.'system.web'.customErrors.mode -ne "On") {
+            throw "Release customErrors is not set to On."
+          }
+
+          if ($publishedConfig.configuration.'system.web'.httpCookies.requireSSL -ne "true") {
+            throw "Release cookies are not configured with requireSSL=true."
+          }
+
+          if ($publishedConfig.configuration.'system.web'.httpCookies.httpOnlyCookies -ne "true") {
+            throw "Release cookies are not configured as HttpOnly."
+          }
+
+          $headers = $publishedConfig.configuration.'system.webServer'.httpProtocol.customHeaders.add
+
+          if (-not ($headers | Where-Object { $_.name -eq "X-Content-Type-Options" -and $_.value -eq "nosniff" })) {
+            throw "X-Content-Type-Options production header is missing."
+          }
+
+          Write-Host "PASS: Release publish configuration is hardened."
+
       - name: Verify clean database migrations
         shell: powershell
         run: |
