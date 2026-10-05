@@ -1322,7 +1322,8 @@ namespace WebApplication1.Controllers
                 lon);
         }
 
-                [HttpPost]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
         public JsonResult CreateBooking(CreateBookingRequest request)
         {
             if (Session["CustomerId"] == null)
