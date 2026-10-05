@@ -32,3 +32,80 @@ jobs:
 
       - name: Build Release
         run: msbuild WebApplication1.sln /m /p:Configuration=Release /p:Platform="Any CPU" /p:RunCodeAnalysis=false /v:minimal
+
+      - name: Verify clean database migrations
+        shell: powershell
+        run: |
+          $ErrorActionPreference = "Stop"
+
+          $databaseName = "AADeploymentHardening_$env:GITHUB_RUN_ID"
+          $connectionString = "Data Source=(LocalDB)\MSSQLLocalDB;Initial Catalog=$databaseName;Integrated Security=True;MultipleActiveResultSets=True"
+          $masterConnectionString = "Data Source=(LocalDB)\MSSQLLocalDB;Initial Catalog=master;Integrated Security=True"
+
+          $ef = (Resolve-Path "packages\EntityFramework.6.5.1\tools\net45\any\ef6.exe").Path
+          $assembly = (Resolve-Path "bin\WebApplication1.dll").Path
+          $config = (Resolve-Path "Web.config").Path
+          $projectDir = (Resolve-Path "bin").Path
+
+          Write-Host "Creating clean test database through EF6 migrations: $databaseName"
+
+          & $ef database update `
+            --assembly $assembly `
+            --config $config `
+            --project-dir $projectDir `
+            --migrations-config WebApplication1.Migrations.Configuration `
+            --connection-string $connectionString `
+            --connection-provider System.Data.SqlClient `
+            --verbose
+
+          if ($LASTEXITCODE -ne 0) {
+            throw "EF6 clean-database migration test failed with exit code $LASTEXITCODE."
+          }
+
+          $connection = New-Object System.Data.SqlClient.SqlConnection($connectionString)
+
+          try {
+            $connection.Open()
+
+            function Assert-Scalar([string]$sql, [int]$expected, [string]$description) {
+              $command = $connection.CreateCommand()
+              $command.CommandText = $sql
+              $actual = [int]$command.ExecuteScalar()
+
+              if ($actual -ne $expected) {
+                throw "$description failed. Expected $expected, got $actual."
+              }
+
+              Write-Host "PASS: $description"
+            }
+
+            Assert-Scalar "SELECT CASE WHEN OBJECT_ID(N'dbo.Staffs', N'U') IS NOT NULL THEN 1 ELSE 0 END" 1 "Staffs table exists"
+            Assert-Scalar "SELECT CASE WHEN OBJECT_ID(N'dbo.StaffTasks', N'U') IS NOT NULL THEN 1 ELSE 0 END" 1 "StaffTasks table exists"
+            Assert-Scalar "SELECT CASE WHEN OBJECT_ID(N'dbo.StaffComplaints', N'U') IS NOT NULL THEN 1 ELSE 0 END" 1 "StaffComplaints table exists"
+            Assert-Scalar "SELECT CASE WHEN OBJECT_ID(N'dbo.TermsAndConditions', N'U') IS NOT NULL THEN 1 ELSE 0 END" 1 "TermsAndConditions table exists"
+            Assert-Scalar "SELECT CASE WHEN OBJECT_ID(N'dbo.CustomerAgreements', N'U') IS NOT NULL THEN 1 ELSE 0 END" 1 "CustomerAgreements table exists"
+            Assert-Scalar "SELECT CASE WHEN OBJECT_ID(N'dbo.CustomerComplaints', N'U') IS NOT NULL THEN 1 ELSE 0 END" 1 "CustomerComplaints table exists"
+            Assert-Scalar "SELECT CASE WHEN OBJECT_ID(N'dbo.Expenditures', N'U') IS NOT NULL THEN 1 ELSE 0 END" 1 "Expenditures table exists"
+            Assert-Scalar "SELECT CASE WHEN COL_LENGTH('dbo.Bookings', 'AmountPaid') IS NOT NULL THEN 1 ELSE 0 END" 1 "Bookings payment columns exist"
+            Assert-Scalar "SELECT COUNT(*) FROM dbo.TermsAndConditions WHERE Version = N'1.0' AND IsActive = 1" 1 "Approved Terms v1.0 is seeded and active"
+            Assert-Scalar "SELECT COUNT(*) FROM dbo.Packages WHERE PackageId IN (N'basic', N'standard', N'premium')" 3 "Core packages are seeded"
+            Assert-Scalar "SELECT COUNT(*) FROM dbo.AddOns" 6 "Core add-ons are seeded"
+          }
+          finally {
+            if ($connection.State -ne [System.Data.ConnectionState]::Closed) {
+              $connection.Close()
+            }
+
+            $master = New-Object System.Data.SqlClient.SqlConnection($masterConnectionString)
+            $master.Open()
+
+            try {
+              $cleanup = $master.CreateCommand()
+              $cleanup.CommandText = "IF DB_ID(N'$databaseName') IS NOT NULL BEGIN ALTER DATABASE [$databaseName] SET SINGLE_USER WITH ROLLBACK IMMEDIATE; DROP DATABASE [$databaseName]; END"
+              [void]$cleanup.ExecuteNonQuery()
+              Write-Host "Cleaned up test database: $databaseName"
+            }
+            finally {
+              $master.Close()
+            }
+          }
