@@ -24,14 +24,26 @@
             <li><a href="@Url.Action("FinancialOverview","Cust")">FINANCE</a></li>
             <li><a href="@Url.Action("AdminCustomerComplaints","Cust")">CUSTOMER COMPLAINTS</a></li>
             <li><a href="@Url.Action("AdminStaffComplaints","Cust")">STAFF COMPLAINTS</a></li>
-            <li><a href="@Url.Action("AdminLogout","Cust")" class="login-btn">SIGN OUT</a></li>
+            <li>
+                @using (Html.BeginForm("AdminLogout", "Cust", FormMethod.Post, new { style = "display:inline" }))
+                {
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="login-btn" style="border:0;cursor:pointer;">SIGN OUT</button>
+                }
+            </li>
         }
         else if (isStaff)
         {
             <li><a href="@Url.Action("StaffTasks","Cust")">TASKS & EVENTS</a></li>
             <li><a href="@Url.Action("StaffComplaints","Cust")">COMPLAINTS</a></li>
             <li><a href="@Url.Action("StaffProfile","Cust")">STAFF INFO</a></li>
-            <li><a href="@Url.Action("StaffLogout","Cust")" class="login-btn">SIGN OUT</a></li>
+            <li>
+                @using (Html.BeginForm("StaffLogout", "Cust", FormMethod.Post, new { style = "display:inline" }))
+                {
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="login-btn" style="border:0;cursor:pointer;">SIGN OUT</button>
+                }
+            </li>
         }
         else
         {
@@ -73,6 +85,5 @@
 @Scripts.Render("~/bundles/jquery")
 @Scripts.Render("~/bundles/bootstrap")
 @RenderSection("scripts", required: false)
-<script type="module" src="~/Scripts/firebase-config.js"></script>
 </body>
 </html>
