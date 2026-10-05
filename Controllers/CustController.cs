@@ -1864,13 +1864,7 @@ namespace WebApplication1.Controllers
         [ValidateAntiForgeryToken]
         public ActionResult BalancePayment(
             int bookingId,
-            string cardholderName,
-            string cardNumber,
-            string expiryDate,
-            string cvv,
-            string streetAddress,
-            string billingCity,
-            string postalCode)
+            bool simulationConfirmed = false)
         {
             if (Session["CustomerId"] == null)
             {
@@ -1916,30 +1910,18 @@ namespace WebApplication1.Controllers
                 return RedirectToAction("ViewBooking", "Cust");
             }
 
-            string cardDigits = new string((cardNumber ?? "").Where(char.IsDigit).ToArray());
-            string cvvDigits = new string((cvv ?? "").Where(char.IsDigit).ToArray());
-            string postalDigits = new string((postalCode ?? "").Where(char.IsDigit).ToArray());
-
-            bool detailsValid =
-                !string.IsNullOrWhiteSpace(cardholderName) &&
-                cardDigits.Length >= 13 &&
-                cardDigits.Length <= 16 &&
-                !string.IsNullOrWhiteSpace(expiryDate) &&
-                (cvvDigits.Length == 3 || cvvDigits.Length == 4) &&
-                !string.IsNullOrWhiteSpace(streetAddress) &&
-                !string.IsNullOrWhiteSpace(billingCity) &&
-                postalDigits.Length == 4;
-
-            if (!detailsValid)
+            if (!simulationConfirmed)
             {
                 ViewBag.Booking = booking;
                 ViewBag.OutstandingBalance = balance;
-                ViewBag.PaymentError = "Please complete all banking details correctly before paying the remaining balance.";
+                ViewBag.PaymentError =
+                    "Please complete the simulated payment form before continuing.";
                 return View();
             }
 
-            // This project uses a simulated card-payment screen.
-            // Card/billing details are validated for the UI flow only and are never stored.
+            // School-project simulation only:
+            // no card, CVV or billing values are posted to this action.
+            // The demo simply records the remaining balance as paid.
             booking.AmountPaid = booking.TotalPrice;
             booking.PaymentStatus = "Fully Paid";
             booking.BalanceDueDate = null;
@@ -1947,8 +1929,8 @@ namespace WebApplication1.Controllers
             db.SaveChanges();
 
             TempData["PaymentSuccess"] =
-                "Your remaining balance of R" + balance.ToString("N2") +
-                " has been paid. This booking is now fully paid.";
+                "Simulated payment of R" + balance.ToString("N2") +
+                " completed successfully. This booking is now fully paid.";
 
             return RedirectToAction("ViewBooking", "Cust");
         }
