@@ -7,12 +7,35 @@
     {
         public override void Up()
         {
-            // Add the required city field to the existing Staffs table.
-            AddColumn(
-                "dbo.Staffs",
-                "staff_City",
-                c => c.String(nullable: false, maxLength: 100)
-            );
+            // Some development databases received dbo.Staffs manually or through
+            // an untracked migration. A clean production database does not.
+            //
+            // Make this migration safe in both situations:
+            // 1. Fresh database: create Staffs with the current required schema.
+            // 2. Existing database: add staff_City only when it is missing.
+            Sql(@"
+IF OBJECT_ID(N'dbo.Staffs', N'U') IS NULL
+BEGIN
+    CREATE TABLE dbo.Staffs
+    (
+        staff_ID INT IDENTITY(1,1) NOT NULL
+            CONSTRAINT PK_Staffs PRIMARY KEY,
+        staff_FName NVARCHAR(MAX) NOT NULL,
+        staff_LName NVARCHAR(MAX) NOT NULL,
+        staff_Email NVARCHAR(MAX) NOT NULL,
+        staff_Passw NVARCHAR(MAX) NOT NULL,
+        staff_Phone NVARCHAR(9) NOT NULL,
+        staff_Type NVARCHAR(50) NULL,
+        staff_City NVARCHAR(100) NOT NULL
+    );
+END
+ELSE IF COL_LENGTH('dbo.Staffs', 'staff_City') IS NULL
+BEGIN
+    ALTER TABLE dbo.Staffs
+    ADD staff_City NVARCHAR(100) NOT NULL
+        CONSTRAINT DF_Staffs_staff_City DEFAULT ('');
+END
+");
 
             // Create StaffTasks.
             CreateTable(
@@ -76,8 +99,27 @@
             DropTable("dbo.StaffComplaints");
             DropTable("dbo.StaffTasks");
 
-            // Remove the city field from the existing Staffs table.
-            DropColumn("dbo.Staffs", "staff_City");
+            // Preserve dbo.Staffs because older development databases may have
+            // created it outside this migration. Only remove the city column.
+            Sql(@"
+IF OBJECT_ID(N'dbo.Staffs', N'U') IS NOT NULL
+   AND COL_LENGTH('dbo.Staffs', 'staff_City') IS NOT NULL
+BEGIN
+    DECLARE @constraintName nvarchar(128);
+
+    SELECT @constraintName = dc.name
+    FROM sys.default_constraints dc
+    INNER JOIN sys.columns c
+        ON c.default_object_id = dc.object_id
+    WHERE dc.parent_object_id = OBJECT_ID(N'dbo.Staffs')
+      AND c.name = N'staff_City';
+
+    IF @constraintName IS NOT NULL
+        EXEC(N'ALTER TABLE dbo.Staffs DROP CONSTRAINT [' + @constraintName + N']');
+
+    ALTER TABLE dbo.Staffs DROP COLUMN staff_City;
+END
+");
         }
     }
 }
