@@ -68,14 +68,6 @@ namespace WebApplication1.Controllers
                    (bool)Session["AdminAuthenticated"];
         }
 
-        private bool CanRegisterAdmin()
-        {
-            // First-run bootstrap: a strong deployment secret is still required.
-            // After the first admin exists, only an authenticated admin can open
-            // or submit the administrator registration flow.
-            return !db.Admins.Any() || IsAdminAuthenticated();
-        }
-
         [HttpGet]
         public ActionResult Bankingdetails()
         {
@@ -143,7 +135,6 @@ namespace WebApplication1.Controllers
         [HttpGet]
         public ActionResult Login()
         {
-            ViewBag.CanRegisterAdmin = CanRegisterAdmin();
             return View();
         }
 
@@ -637,14 +628,6 @@ namespace WebApplication1.Controllers
             bool? termsAccepted,
             string adminAccessCode)
         {
-            if (!CanRegisterAdmin())
-            {
-                TempData["AdminRegistrationMessage"] =
-                    "An administrator account already exists. Please sign in as an admin to create another administrator.";
-
-                return RedirectToAction("Login", "Cust");
-            }
-
             firstName = (firstName ?? string.Empty).Trim();
             lastName = (lastName ?? string.Empty).Trim();
             email = (email ?? string.Empty).Trim();
@@ -3568,14 +3551,6 @@ namespace WebApplication1.Controllers
         [HttpGet]
         public JsonResult AdminExists(string email)
         {
-            if (!CanRegisterAdmin())
-            {
-                Response.StatusCode = (int)HttpStatusCode.Forbidden;
-                return Json(
-                    new { success = false, message = "Not authorized." },
-                    JsonRequestBehavior.AllowGet);
-            }
-
             if (string.IsNullOrWhiteSpace(email))
                 return Json(new { success = false, message = "Email required" }, JsonRequestBehavior.AllowGet);
 
@@ -3586,14 +3561,6 @@ namespace WebApplication1.Controllers
         [HttpGet]
         public ActionResult Adminregister()
         {
-            if (!CanRegisterAdmin())
-            {
-                TempData["AdminRegistrationMessage"] =
-                    "An administrator account already exists. Please sign in as an admin to create another administrator.";
-
-                return RedirectToAction("Login", "Cust");
-            }
-
             return View();
         }
 
