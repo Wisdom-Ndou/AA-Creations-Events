@@ -167,11 +167,10 @@ namespace WebApplication1.Services
             catch (SmtpException ex)
             {
                 Trace.TraceError(
-                    "AA Creations SMTP delivery failed. Recipient={0}; Subject={1}; StatusCode={2}; Error={3}",
-                    recipientEmail,
-                    subject,
+                    "AA Creations SMTP delivery failed. StatusCode={0}; ErrorType={1}; Message={2}",
                     ex.StatusCode,
-                    ex);
+                    ex.GetType().FullName,
+                    ex.Message);
 
                 LastDiagnostic = BuildDiagnostic(ex);
 
