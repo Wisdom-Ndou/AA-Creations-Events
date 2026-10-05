@@ -90,13 +90,13 @@
             </div>
 
             <div class="trust-badges">
-                <span>🔒 Simulated secure payment</span>
-                <span class="dot">•</span>
+                <span>Simulated secure payment</span>
+                <span class="dot">.</span>
                 <span>No card details are stored</span>
             </div>
 
             <div class="form-actions">
-                <a class="btn-back" href="@Url.Action("ViewBooking", "Cust")">← Back to My Bookings</a>
+                <a class="btn-back" href="@Url.Action("ViewBooking", "Cust")">Back to My Bookings</a>
                 <button type="submit" class="btn-confirm" id="confirmBalancePayment" disabled>
                     Pay R @outstanding.ToString("N2")
                 </button>
@@ -104,7 +104,7 @@
         }
     </main>
 
-    <p class="payment-footer">AA Creations & Events</p>
+    <p class="payment-footer"></p>
 </div>
 
 @section scripts {

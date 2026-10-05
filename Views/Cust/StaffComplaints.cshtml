@@ -9,7 +9,7 @@
 <main class="staff-page">
     <div style="display:flex;justify-content:space-between;align-items:center">
         <div><h1>Staff Complaints</h1><p class="staff-muted">Report customer or event issues to the admin.</p></div>
-        <a href="@Url.Action("StaffDashboard","Cust")">← Dashboard</a>
+        <a href="@Url.Action("StaffDashboard","Cust")"></a>
     </div>
 
     @if (TempData["ComplaintError"] != null) { <div class="alert">@TempData["ComplaintError"]</div> }

@@ -35,7 +35,7 @@
     </header>
     <div class="staff-toolbar">
         <strong>@Model.Count() task(s)</strong>
-        <a class="staff-link" href="@Url.Action("StaffDashboard","Cust")">← Back to dashboard</a>
+        <a class="staff-link" href="@Url.Action("StaffDashboard","Cust")"></a>
     </div>
 
     @if (TempData["StaffTaskError"] != null) { <div class="alert">@TempData["StaffTaskError"]</div> }
@@ -59,7 +59,7 @@
                         @if (task.Booking != null)
                         {
                             <p class="staff-task-meta"><strong>Customer:</strong> @task.Booking.FirstName @task.Booking.LastName</p>
-                            <p class="staff-task-meta"><strong>Event:</strong> @task.Booking.Occasion · @task.Booking.EventDate.ToString("dd MMM yyyy") @task.Booking.EventTime</p>
+                            <p class="staff-task-meta"><strong>Event:</strong> @task.Booking.Occasion  @task.Booking.EventDate.ToString("dd MMM yyyy") @task.Booking.EventTime</p>
                             <p class="staff-task-meta"><strong>Location:</strong> @task.Booking.Address, @task.Booking.City</p>
                         }
                         <p class="staff-task-meta"><strong>Priority:</strong> @task.Priority</p>
@@ -76,25 +76,25 @@
 
                         <div class="staff-task-actions">
                             <button class="task-complete-btn" type="submit" name="status" value="Completed">
-                                ✓ Mark Complete
+                                 Mark Complete
                             </button>
 
                             <div class="task-unable-panel">
                                 <div class="task-reason-group">
                                     <label class="task-reason-label" for="reason-@task.TaskId">
                                         Reason if you cannot complete the task
-                                        <span>· required only for Unable</span>
+                                        <span> required only for Unable</span>
                                     </label>
                                     <textarea class="task-reason-input"
                                               id="reason-@task.TaskId"
                                               name="completionReason"
                                               rows="2"
                                               maxlength="1000"
-                                              placeholder="Briefly explain what is preventing completion…"></textarea>
+                                              placeholder="Briefly explain what is preventing completion"></textarea>
                                 </div>
 
                                 <button class="task-unable-btn" type="submit" name="status" value="Unable">
-                                    ! Unable to Complete
+                                     Unable to Complete
                                 </button>
                             </div>
                         </div>

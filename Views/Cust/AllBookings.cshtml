@@ -23,8 +23,8 @@
 </head>
 <body>
 <section class="page-head">
-    <div class="badge">Admin Access</div>
-    <h1>All <em>Bookings</em></h1>
+    <div class="badge"></div>
+    <h1><em>All Bookings</em></h1>
     <p>Review customer bookings without losing your place.</p>
 </section>
 
@@ -62,7 +62,7 @@
                         var lower = status.ToLowerInvariant();
                         var statusClass = lower == "approved" ? "approved" : (lower == "declined" || lower == "cancelled" ? "declined" : "pending");
                         <tr data-booking-row="@booking.BookingId" data-booking-status="@lower">
-                            <td class="cell-id">#BK-@booking.BookingId</td>
+                            <td class="cell-id">#@booking.BookingId</td>
                             <td>@clientName</td>
                             <td>@booking.Occasion</td>
                             <td>@booking.City</td>
@@ -93,7 +93,7 @@
         <div class="table-foot"><span>Showing @Model.TotalBookings booking(s)</span></div>
     </section>
 
-    <a href="@Url.Action("AdminDashboard","Cust")" class="quick-action" style="max-width:260px">← Back to Admin Dashboard</a>
+    <a href="@Url.Action("AdminDashboard","Cust")" class="quick-action" style="max-width:260px">Back to Admin Dashboard</a>
 </main>
 
 <div id="aaModalBackdrop" class="aa-modal-backdrop" role="presentation">

@@ -3,7 +3,7 @@
 @{ ViewBag.Title = "Staff Dashboard"; }
 <link rel="stylesheet" href="~/Content/StaffPortal.css" />
 <main class="staff-page">
-    <header class="staff-hero"><div class="staff-eyebrow">Staff Portal · @Model.TeamCity</div><h1>Welcome, @Model.StaffMember.staff_FName</h1><p>Your event workload, priorities and support tools in one place.</p></header>
+    <header class="staff-hero"><div class="staff-eyebrow">Staff Portal  @Model.TeamCity</div><h1>Welcome, @Model.StaffMember.staff_FName</h1><p>Your event workload, priorities and support tools in one place.</p></header>
     <section class="staff-stats">
         <div class="staff-stat"><span>Tasks Due Today</span><strong>@Model.TodayTasks</strong></div>
         <div class="staff-stat"><span>High Priority</span><strong>@Model.HighPriorityTasks</strong></div>
@@ -15,12 +15,12 @@
         @if (!Model.TasksDueToday.Any()){<p>No pending tasks are due today.</p>}else{
         <div style="overflow:auto"><table class="staff-table"><thead><tr><th>Task</th><th>Event</th><th>Priority</th></tr></thead><tbody>
         @foreach(var task in Model.TasksDueToday.Take(5)){<tr><td>@task.TaskName</td><td>@(task.Booking == null ? "General" : task.Booking.Occasion)</td><td>@task.Priority</td></tr>}
-        </tbody></table></div>}<p><a class="staff-link" href="@Url.Action("StaffTasks","Cust")">View all tasks →</a></p></section>
+        </tbody></table></div>}<p><a class="staff-link" href="@Url.Action("StaffTasks","Cust")">View all tasks</a></p></section>
         <section class="staff-panel"><h2>Assigned Events</h2>
         @if (!Model.UpcomingEvents.Any()){<p>No approved assigned events in the next seven days.</p>}else{
         <div style="overflow:auto"><table class="staff-table"><thead><tr><th>Event</th><th>Date</th><th>Location</th></tr></thead><tbody>
         @foreach(var item in Model.UpcomingEvents){<tr><td>@item.Occasion</td><td>@item.EventDate.ToString("dd MMM") @item.EventTime</td><td>@item.City</td></tr>}
         </tbody></table></div>} </section>
     </div>
-    <section class="staff-panel"><h2>Staff Support</h2><p>Need to report a customer or event issue?</p><a class="staff-link" href="@Url.Action("StaffComplaints","Cust")">Open complaints centre →</a></section>
+    <section class="staff-panel"><h2>Staff Support</h2><p>Need to report a customer or event issue?</p><a class="staff-link" href="@Url.Action("StaffComplaints","Cust")">Open complaints centre</a></section>
 </main>

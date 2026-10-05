@@ -7,8 +7,7 @@
 <link rel="stylesheet" href="~/Content/AdminDashboard.css" />
 
 <section class="page-head">
-    <div class="badge">Admin Access</div>
-    <h1>Admin <em>Dashboard</em></h1>
+    <h1><em>Dashboard</em></h1>
     <p>Welcome, @ViewBag.AdminFirstName. Here's an overview of the platform.</p>
 </section>
 
@@ -33,7 +32,7 @@
     <section class="panel staff-dashboard-panel">
         <div class="panel-head">
             <div><h2>Staff Overview</h2><p>Live workload based on pending assigned event tasks.</p></div>
-            <a href="@Url.Action("StaffManagement","Cust")" class="panel-link">Manage Staff →</a>
+            <a href="@Url.Action("StaffManagement","Cust")" class="panel-link">Manage Staff</a>
         </div>
         <div class="staff-overview-grid">
             <div class="staff-overview-item"><span>Total Staff</span><strong>@Model.TotalStaff</strong></div>
@@ -46,7 +45,7 @@
         <div class="panel">
             <div class="panel-head">
                 <div><h2>Recent Bookings</h2><p>Approve or decline pending customer bookings.</p></div>
-                <a href="@Url.Action("AllBookings","Cust")" class="panel-link">View all →</a>
+                <a href="@Url.Action("AllBookings","Cust")" class="panel-link">View all</a>
             </div>
             <div class="table-wrap">
                 <table>
@@ -60,7 +59,7 @@
                         {
                             var status = string.IsNullOrWhiteSpace(booking.Status) ? "Pending" : booking.Status;
                             <tr data-dashboard-booking-row="@booking.BookingId">
-                                <td>#BK-@booking.BookingId</td>
+                                <td>#@booking.BookingId</td>
                                 <td>@booking.FirstName @booking.LastName</td>
                                 <td>@booking.Occasion</td>
                                 <td>@booking.City</td>

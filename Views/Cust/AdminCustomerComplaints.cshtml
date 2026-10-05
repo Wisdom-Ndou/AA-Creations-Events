@@ -48,8 +48,7 @@
 </style>
 
 <section class="page-head">
-    <div class="badge">Admin Support</div>
-    <h1>Customer <em>Complaints</em></h1>
+    <h1><em>Customer Complaints</em></h1>
     <p>Review booking-linked customer complaints, respond clearly, and track their resolution.</p>
 </section>
 
@@ -104,10 +103,10 @@
                             <div>
                                 <h3 class="admin-complaint-title">@item.Subject</h3>
                                 <div class="admin-complaint-meta">
-                                    #BK-@item.BookingId ·
+                                    #@item.BookingId 
                                     @(item.Customer == null ? "Customer" : item.Customer.Cust_FName + " " + item.Customer.Cust_LName)
-                                    · @item.Category
-                                    · @item.CreatedAt.ToString("dd MMM yyyy HH:mm")
+                                     @item.Category
+                                     @item.CreatedAt.ToString("dd MMM yyyy HH:mm")
                                 </div>
                             </div>
 
@@ -141,6 +140,6 @@
     </section>
 
     <a href="@Url.Action("AdminDashboard","Cust")" class="quick-action" style="max-width:260px">
-        ← Back to Admin Dashboard
+        Back to Admin Dashboard
     </a>
 </main>
