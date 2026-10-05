@@ -3,14 +3,6 @@
 @{
     ViewBag.Title = "Register Staff";
 
-    var staffPasswordHasError =
-        ViewData.ModelState["staff_Passw"] != null &&
-        ViewData.ModelState["staff_Passw"].Errors.Count > 0;
-
-    var retainedStaffPassword =
-        !staffPasswordHasError && Model != null
-            ? (Model.staff_Passw ?? "")
-            : "";
 }
 
 <link rel="stylesheet"
@@ -334,7 +326,6 @@
                            id="staff_Passw"
                            name="staff_Passw"
                            class="form-control"
-                           value="@retainedStaffPassword"
                            placeholder="Enter password"
                            required />
 
