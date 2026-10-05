@@ -427,7 +427,11 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />
-    <Folder Include="Content\Images\" />
+    <Content Include="Content\Images\A1.JPEG" />
+    <Content Include="Content\Images\A2.JPEG" />
+    <Content Include="Content\Images\A3.JPEG" />
+    <Content Include="Content\Images\A4.JPEG" />
+    <Content Include="Content\Images\A5.JPEG" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Migrations\202608251303244_InitialCreate.resx">
